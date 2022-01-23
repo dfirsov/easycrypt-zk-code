@@ -44,23 +44,23 @@ qed.
 
 
 module type Prover = {
-  proc commit() : int
+  proc commit(N : int, y : int) : int
   proc response(b : bool) : int
 }.
 
 
 module type Verifier = {
-  proc challenge(c : int) : bool  
+  proc challenge(N : int, y : int, c : int) : bool  
   proc verify(c : int, b : bool, r : int) : bool
 }.
 
 
-module QR_Protocol(P : Prover, V : Verifier) = {
+module QRP(P : Prover, V : Verifier) = {
   
-  proc main() = {
+  proc main(N : int, y : int) = {
     var c,b,r,result;
-    c <- P.commit();  
-    b <- V.challenge(c);
+    c <- P.commit(N, y);  
+    b <- V.challenge(N,y,c);
     r <- P.response(b);
     result <- V.verify(c,b,r);
     return result;
@@ -69,34 +69,64 @@ module QR_Protocol(P : Prover, V : Verifier) = {
 
 
 
-op zn :  int distr.
+op zn :  int -> int distr.
+op qr : int -> int -> int option.
 
-module HonestProver : Prover = {
-    var c : int
-  proc commit() : int = {  
-    c <$ zn;
-    return c*c;
+axiom qr_prop1 (Na ya z : int) : qr Na ya = Some z => z * z = ya.
+axiom qr_prop2 (Na ya z : int) : z * z = ya => qr Na ya = Some z.
+
+
+module HP : Prover = {
+  var z, n, y : int
+
+  proc commit(n1 : int, y1 : int) : int = {  
+    (n,y) <- (n1, y1);
+    z <$ zn n;
+    return z*z;
   }
 
   proc response(b : bool) : int = {
-    return c * (if b then witness else 1);
+    return z * (if b then (oget (qr n y)) else 1);
  } 
 }.
 
 
+module HV : Verifier = {
+  var n,y : int
 
-
-module HonestVerifier : Verifier = {
-  proc challenge(c : int) : bool = {
+  proc challenge(n1 : int, y1 : int, c : int) : bool = {
    var b : bool;
+   (n,y) <- (n1,y1);
    b <$ {0,1};
    return b;
   }
 
   proc verify(c : int,b : bool, r : int) : bool = {
-    return witness;
+    return (if b then c * y = r * r else c = r * r);
  } 
 }.
 
 
+
+lemma qrp_complt Na ya z :
+ qr Na ya = Some z => hoare [ QRP(HP,HV).main : arg = (Na,ya) ==> res  ].
+proof. move => qra.
+proc.  inline*.  wp. 
+rnd. wp.  rnd.  wp. 
+skip. progress. rewrite qra. simplify.
+smt.
+qed.
+
+
+section.
+
+declare module P : Prover.
+
+lemma qrp_sound Na ya :
+ qr Na ya = None => phoare [ QRP(P,HV).main : arg = (Na,ya) ==> res ] = (1%r/2%r).
+proof. move => qra.
+proc. inline*. swap 6 -5.
+admitted. 
+
+end section.
 
