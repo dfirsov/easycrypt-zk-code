@@ -1,55 +1,40 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List.
+require import AllCore DBool Bool List Distr.
+
+
+(*
+
+https://crypto.stanford.edu/pbc/notes/numbertheory/qr.html
+
+
+  *)
+
+(* require import Group.  *)
+(* clone import ZModPCyclic. *)
+(* clone import ZModRing as Z. *)
+
+op sqDist :  int -> int distr. 
+op sqRoot :  int -> int -> int.
+op inv : int -> int -> int.
+
+op IsQR : int -> int -> bool.
+
+axiom sqDistr_uni N :  is_uniform (sqDist N).
+axiom sqDist_prop0 N x : IsQR N x => x \in sqDist N.
+axiom sqDist_prop N x : x \in sqDist N => IsQR N x.
+axiom qr_prop (N x : int) : IsQR N x => (sqRoot N x) * (sqRoot N x) = x.
+axiom qr_prop1 (N x : int) : IsQR N x => x * (inv N x) = 1.
+axiom qr_prop2 (N x : int) : IsQR N x => IsQR N (inv N x).
+axiom qr_prop3 (N x y : int) : IsQR N x => IsQR N y => IsQR N (x * y).
+
+
 
 
 (*
 - computationally unbounded
 - knows the proof
-- wants to convinvce the verifier that the knows the proof
-
+- wants to convinvce the verifier that he knows the proof
 *)
-
-
-(* require import Group. *)
-(* clone import ZModPCyclic. *)
-
-
-
-(* independence and group op *)
-module Exp = {
-  var b1, b2 : bool
-  proc main1() = {
-   b1 <$ {0,1};
-   b2 <$ {0,1};
-   return (b1, b2);
-  }
-
-  proc main2() = {
-   b1 <$ {0,1};
-   b2 <$ {0,1};
-   return (b1 ^^  b2, b2);
-  }
-  
-}.
-
-
-lemma exp_lemma : equiv[ Exp.main1 ~ Exp.main2 : true ==> ={res} ].
-proof. proc. swap 1 1.
-rnd (fun x => x ^^ Exp.b2{1}). rnd. 
-skip. progress;smt.
-qed.
-
-
-lemma exp_lemmaaa : equiv[ Exp.main1 ~ Exp.main2 : true ==> ={res} /\ (res{2}.`2 = false => res{1}.`1 = res{2}.`1) ].
-proof. proc. swap 1 1.
-rnd (fun x => x ^^ Exp.b2{1}). rnd. 
-skip. progress;smt.
-qed.
-
-
-
-
-
 module type Prover = {
   proc commit(N : int, y : int) : int
   proc response(b : bool) : int
@@ -62,13 +47,10 @@ module type Verifier = {
 }.
 
 
-
 module type VerifierA = {
   proc challenge(N : int, y : int, c : int) : bool  
   proc summitup(c : int, b : bool, r : int) : bool list
 }.
-
-
 
 
 module type Simulator = {
@@ -77,29 +59,20 @@ module type Simulator = {
 
 
 
-
-module QRP(P : Prover, V : Verifier) = {
+(* correctness of quadratic resisdue protocol  *)
+module QRP_Correctness(P : Prover, V : Verifier) = {
   var c, r : int
   var b, result : bool
   proc main(N : int, y : int) = {
     c <- P.commit(N, y);  
     b <- V.challenge(N,y,c);
     r <- P.response(b);
-    result <- V.verify(c,b,r);  (*  *)
+    result <- V.verify(c,b,r);  
     return result;
   }
 }.
 
-
-
-op sqDist :  int -> int distr.
-op sqRoot : int -> int -> int.
-
-
-axiom qr_prop1 (Na ya z : int) : sqRoot Na ya = z => z * z = ya.
-axiom qr_prop2 (Na ya z : int) : z * z = ya => sqRoot Na ya = z.
-
-
+(* honest prover  *)
 module HP : Prover = {
   var rr, n, y : int
 
@@ -114,7 +87,7 @@ module HP : Prover = {
  } 
 }.
 
-
+(* honest verifier  *)
 module HV : Verifier = {
   var n,y : int
 
@@ -131,27 +104,49 @@ module HV : Verifier = {
 }.
 
 
-
-lemma qrp_complt Na ya z :
- sqRoot Na ya =  z => hoare [ QRP(HP,HV).main : arg = (Na,ya) ==> res  ].
-proof. move => qra.
-proc.  inline*.  wp. 
+lemma qrp_complete_ph Na ya : IsQR Na ya
+   => hoare [ QRP_Correctness(HP,HV).main : arg = (Na,ya) ==> res  ].
+move => qra.
+proc. inline*.  wp. 
 rnd. wp.  rnd.  wp. 
-skip. progress. rewrite qra. simplify. smt.
-(* smt. *)
-admit.
+skip. progress.  simplify. smt. smt. 
 qed.
 
 
 section.
 
-declare module P : Prover.
+declare module P : Prover {HV,QRP_Correctness}.
 
 lemma qrp_sound Na ya :
- sqRoot Na ya = 0 => phoare [ QRP(P,HV).main : arg = (Na,ya) ==> res ] = (1%r/2%r).
+ !IsQR Na ya => phoare [ QRP_Correctness(P,HV).main : arg = (Na,ya) ==> res ] <= (1%r/2%r).
 proof. move => qra.
-proc. inline*. swap 6 -5.
-admitted. 
+proc. inline*. 
+wp.
+seq 5 : ((N,y) = (Na,ya)) (1%r) (1%r/2%r) (0%r) (1%r).
+admit.
+admit.
+exists* c. elim*. move => cv.
+case (!IsQR Na cv).
+seq 1 : (!b) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = c /\ (N,y) = (Na,ya) /\ !IsQR Na cv).
+rnd.  skip. auto.
+hoare. call (_:true ==> true). admit. 
+wp. auto. progress. rewrite H0.  simplify. admit.
+simplify.
+rnd. skip. smt.
+conseq (_: _ ==> true). call (_: true ==> true). admit.
+wp. skip. auto. auto.
+  simplify.
+seq 1 : (b) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = c /\ (N,y) = (Na,ya) /\ IsQR Na cv). 
+rnd. skip. auto.
+hoare. 
+call (_:true ==> true).  admit.
+wp. skip. progress. rewrite H0. simplify. admit.
+rnd. skip. progress. smt.
+conseq (_: _ ==> true). call (_:true ==> true). admit.
+wp. skip. auto. auto.
+hoare.
+simplify. auto. call (_ : true ==> true).  admit.  skip. auto. auto.
+qed.
 
 end section.
 
@@ -160,20 +155,6 @@ end section.
 section.
 
 declare module V : VerifierA {HP}.
-
-
-
-(*
-?? transcript := network messages AND internal states
-
-Defs:
-- ZK wrt. transcript
-- ZK wrt. transcript + output bitstring
-- ZK wrt. output bitstring
-
-All equiv.
-
-*)
 
 
 
@@ -233,7 +214,6 @@ skip. progress;smt.
 qed.
 
 
-op inv : int -> int -> int.
 local lemma init_lemma_t :
  equiv[ Inits.init1_t ~ Inits.init2_t : ={arg} ==> ={res} ].
 proof. proc. simplify.
@@ -298,62 +278,51 @@ local module Sim1'  = {
 }.
 
 
-local lemma exss Na ya : equiv[ Sim1.sinit ~ Sim1'.sinit : ={arg} /\ arg{1} = (Na,ya) ==> (res{1}.`1, res{1}.`2) = res{2} /\ (res{1}.`1 = true => res{1}.`2 = res{1}.`3 * (inv Na ya)) /\ (res{1}.`1 = false => res{1}.`2 = res{1}.`3 /\ res{1}.`2 = res{2}.`2)  ].
-proof. proc. swap {2} 1 1.
+local lemma exss Na ya : IsQR Na ya => equiv[ Sim1.sinit ~ Sim1'.sinit : ={arg} /\ arg{1} = (Na,ya) ==> (res{1}.`1, res{1}.`2) = res{2} /\ (res{1}.`1 = true => res{1}.`2 = res{1}.`3 * (inv Na ya)) /\ (res{1}.`1 = false => res{1}.`2 = res{1}.`3 /\ res{1}.`2 = res{2}.`2)  ].
+proof. move => isqr. proc. swap {2} 1 1.
 seq 1 1 : (={N,y,bb} /\ (N{1},y{1}) = (Na,ya)). rnd. skip. auto.
 exists* bb{1}. elim*. progress.
 wp.
-
 case (bb_L = true).
 rnd  (fun x => x * (inv N{1} y{1})) (fun x => x * y{1}).  skip. progress.
-admit. admit.  admit. admit.
-progress. rnd. skip. progress . smt.
+smt. smt. smt. smt. 
+progress. rnd. skip. progress. smt.
 qed.
 
 
-
-local lemma qkok Na ya P : 
-  equiv [ Sim1.simulate ~ Sim1'.simulate : ={arg, glob V} /\ (Na,ya) = (N{1},y{1}) ==> res{1}.`1 /\ P res{1}.`2 => res{2}.`1 /\ P res{2}.`2   ].
-proof. proc.
-
-seq 1 1 : (={N,y,glob V,b',z} /\ (b'{1} = true => z{1} = rr{1} * (inv Na ya)) /\ (b'{2} = false => z{1} = rr{1} /\ z{1} = z{2}) ).
-
+local lemma qkok Na ya P : IsQR Na ya =>
+  equiv [ Sim1.simulate ~ Sim1'.simulate
+  : ={arg, glob V} /\ (Na,ya) = (N{1},y{1})
+      ==> (res{1}.`1 /\ P res{1}.`2) <=> (res{2}.`1 /\ P res{2}.`2) ].
+proof. move => isqr. proc.
+seq 1 1 : (={N,y,glob V,b',z} /\ (b'{1} = true => z{1} = rr{1} * (inv Na ya)) /\ (b'{2} = false => z{1} = rr{1} /\ z{1} = z{2}) /\  (Na, ya) = (Na{2},y{2}) ).
 call (exss Na ya). skip. progress.
-
-seq 1 1 : (={b,N,y,glob V,b',z} /\ (b'{1} = true => z{1} = rr{1} * (inv Na ya)) /\ (b'{2} = false => z{1} = rr{1} /\ z{1} = z{2})).
+seq 1 1 : (={b,N,y,glob V,b',z} /\ (b'{1} = true => z{1} = rr{1} * (inv Na ya)) /\ (b'{2} = false => z{1} = rr{1} /\ z{1} = z{2}) /\  (Na, ya) = (Na{2},y{2}) ).
 call (_:true). skip. progress.
-
 exists* b'{1}. elim*. progress.
-
 case (b'_L = true).
 exists* b{1}. elim*. progress.
 case (b_L = true).
-
-
-seq 1 1 : (={b,N,y,glob V,b',z,ryb} /\ (b'{1} = true => z{1} = rr{1} * (inv Na ya)) /\ (b'{2} = false => z{1} = rr{1} /\ z{1} = z{2})).
+seq 1 1 : (={b,N,y,glob V,b',z,ryb} /\ (b'{1} = true => z{1} = rr{1} * (inv Na ya)) /\ (b'{2} = false => z{1} = rr{1} /\ z{1} = z{2}) /\  (Na, ya) = (Na{2},y{2})).
 wp. skip. progress. rewrite H. auto.
-
-  call (_:true). skip. progress.
-
-sp.
-
-
-
-seq 1 1 : ((b'_L = b'{1} /\ ={N, y, b', glob V}) /\ b'_L = true /\ rr{2} *  inv N{2} y{2} = rr{1} ).
-
-
-skip. progress. admit.
-admit.
-admit.
-admit.
-admit.
-sp.
-
-conseq (_:  z{1} = rr{1} * inv N{1} y{1} /\ b'{1} = true /\ ={N, y, b', glob V} /\ rr{2} * inv N{2} y{2} = rr{1} ==> _).
 smt.
-
-seq 1 1 : (z{1} = rr{1} * inv N{1} y{1} /\ b'{1} = true /\ ={N, y, b', b, glob V} /\ rr{2} * inv N{2} y{2} = rr{1}).
-call (_:true). skip. progress.
+auto.
+  call (_:true). skip. progress.
+sp.
+conseq (_:   b{1} <> b'{1}
+ ==> b{1} <> b'{1}). smt. smt.
+call {1}  (_: true ==> true).  admit.
+call {2}  (_: true ==> true). admit.
+   skip. auto.
+exists* b{1}. elim*. progress.
+case (b_L = false).
+sp. call (_:true). skip. progress.  smt.
+conseq (_:   b{1} <> b'{1}
+ ==> b{1} <> b'{1}). smt. smt.
+call {1}  (_: true ==> true).  admit.
+call {2}  (_: true ==> true). admit.
+wp.    skip. auto.
+qed.
 
 
 module ZK(P : Prover, V : VerifierA) = {
@@ -378,6 +347,7 @@ call (_:true).
 wp. call (_:true).
 wp. swap {2} 2 -1.
 rnd. rnd {2}. skip. progress.
+admit.
 qed.
 
 
@@ -393,23 +363,6 @@ qed.
 
 
 
-
-local lemma qrp_zk Na ya : equiv [ZK(HP, V).main ~ Sim1.simulate : ={arg} /\ arg{1} = (Na, ya) ==> 
-  ={res} ].
-proof.
-proc.  inline*.
-admitted.
-
-
-
-
-
-(* rewinds Sim1 N times *)
-local module SimN = {
-
-
-    
-}.
 
 
 end section.
