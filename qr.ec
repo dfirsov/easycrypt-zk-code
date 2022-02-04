@@ -17,16 +17,23 @@ op IsSqRoot (N y w : int) = y %% N  = (w * w) %% N.
 op IsQR (N y : int) = exists w, IsSqRoot N y w.
 
 
+axiom d_prop0 N : is_uniform (ZNS_dist N).
 axiom d_prop1 N r rr :  (r, rr) \in ZNS_dist N => r * r %% N = rr %% N.
 axiom d_prop2 N r rr :  (r, rr) \in ZNS_dist N => (r, rr) = (r %% N, rr %% N).
+axiom d_prop3 (N r rr : int) :  r * r %% N = rr %% N => (r %%N, rr %%N) \in ZNS_dist N.
+axiom d_prop4 N r rr :  (r, rr) \in ZNS_dist N => invertible N rr.
 
 
-axiom qr_prop6 (N x y r : int) : IsQR N x => !IsQR N y => x * y %% N <> r * r %% N.
+
 axiom qr_prop1 (N x : int) : invertible N x => x * (inv N x) %% N = 1.
-axiom qr_prop11 (N x : int) : invertible N x => (inv N x) * x  %% N = 1.
 axiom qr_prop2 (N x y w : int) : invertible N y => IsSqRoot N y w => invertible N w.
+axiom qr_prop3 (N y w : int) : invertible N y => IsSqRoot N y w => inv N (w * w %%N) %%N = (inv N w) * (inv N w) %%N.
+axiom qr_prop4 (N y : int) : invertible N y => inv N y = inv N (y %%N).
+axiom qr_prop5 (N x y r : int) : IsQR N x => invertible N x => !IsQR N y => invertible N y => x * y %% N <> r * r %% N.
 
 
+lemma qr_prop11 (N x : int) : invertible N x => (inv N x) * x  %% N = 1.
+proof.  smt. qed.
 
 
 (*
@@ -97,23 +104,23 @@ module HV : Verifier = {
   }
 
   proc verify(c : int,b : bool, r : int) : bool = {
-    return (if b then (c * y)  %% n = (r * r) %% n else (c %% n) = (r * r)%%n);
+    return  (if b then invertible n c /\ invertible n y /\ (c * y)  %% n = (r * r) %% n else invertible n c /\ (c %% n) = (r * r)%%n);
  } 
 }.
 
-lemma qrp_complete_ph Na ya wa : IsSqRoot Na ya wa
+lemma qrp_complete_ph Na ya wa : IsSqRoot Na ya wa => invertible Na ya
    => hoare [ Correct(HP,HV).main : arg = (Na,ya,wa) ==> res ].
-move => qra.
+move => qra invrtbl.
 proc. inline*.  wp. 
 rnd. wp.  rnd.  wp. 
 skip. progress.   
  have f : y{hr} %% N{hr} = (w{hr} * w{hr}) %% N{hr}.
 apply qra. 
-clear qra.
+clear qra. smt( d_prop4).
 rewrite - (modzMml rrr.`2 y{hr} N{hr}).   
 rewrite -  (d_prop1 N{hr} rrr.`1 rrr.`2). smt.
 rewrite (modzMml (rrr.`1 * rrr.`1) y{hr} N{hr} ).
-smt (modzMml modzMmr modzMm). smt (d_prop1 modzMml modzMmr modzMm).
+smt (modzMml modzMmr modzMm). smt (d_prop4). smt (d_prop1 modzMml modzMmr modzMm).
 qed.
 
 
@@ -142,7 +149,7 @@ have : forall (w : int), Correct.c{hr} %% N{hr} <> w * w %% N{hr}. clear qra H0.
 
   case (Correct.c{hr} %% N{hr} = w * w %% N{hr}). move => ass.
   simplify. apply H. rewrite /IsQR. exists w. rewrite /IsSqRoot. apply ass. auto.
-progress. apply H1.
+progress. smt. 
 
 simplify.
 rnd. skip. smt.
@@ -154,7 +161,9 @@ rnd. skip. auto.
 hoare. 
 call (_:true ==> true). auto.  
 wp. skip. progress. rewrite H0. simplify. 
-apply (qr_prop6 N{hr} Correct.c{hr} y{hr} result). auto. auto.
+
+smt (qr_prop5).
+
 rnd. skip. progress. smt.
 conseq (_: _ ==> true). call (_:true ==> true). auto.
 wp. skip. auto. auto.
@@ -288,8 +297,45 @@ smt (modzMml modzMmr modzMm).
 have ->: rrrR.`2 * y{2} * inv N{2} y{2} = rrrR.`2 * (y{2} * inv N{2} y{2}).
 smt.
 smt (modzMml modzMmr modzMm qr_prop1).
-admit. 
-admit. 
+
+
+apply (d_prop0 N{2}). auto.
+apply (d_prop3 N{2}).
+
+ have ->: rrrR.`1 * wa * (rrrR.`1 * wa) =
+(rrrR.`1 * rrrR.`1) * (wa *  wa). smt.
+ have ->: (rrrR.`1 * rrrR.`1) * (wa *  wa) %%N{2}
+ = (rrrR.`1 * rrrR.`1) %%N{2} * ( wa *  wa) %%N{2}. 
+smt (modzMml modzMmr modzMm).
+ have ->: (rrrR.`1 * rrrR.`1) %%N{2} = (rrrR.`2) %%N{2}.
+  smt.
+have ->: rrrR.`2 %% N{2} * ( wa *  wa) %% N{2}
+ = ( wa *  wa) %% N{2} * rrrR.`2 %% N{2}. 
+smt (modzMml modzMmr modzMm).
+rewrite - isqr. 
+smt (modzMml modzMmr modzMm).
+apply d_prop3. 
+have f1 : invertible N{2} wa. smt.
+clear H H0.
+
+
+ have ->: rrrL.`1 * inv N{2} wa * (rrrL.`1 * inv N{2} wa) =
+(rrrL.`1 * rrrL.`1) * (inv N{2} wa * inv N{2} wa). smt.
+
+ have ->: (rrrL.`1 * rrrL.`1) * (inv N{2} wa * inv N{2} wa) %%N{2}
+ = (rrrL.`1 * rrrL.`1) %%N{2} * (inv N{2} wa * inv N{2} wa) %%N{2}. 
+smt (modzMml modzMmr modzMm).
+ have ->: (rrrL.`1 * rrrL.`1) %%N{2} = (rrrL.`2) %%N{2}.
+  smt.
+have ->: rrrL.`2 %% N{2} * (inv N{2} wa * inv N{2} wa) %% N{2}
+ = (inv N{2} wa * inv N{2} wa) %% N{2} * rrrL.`2 %% N{2}.
+smt (modzMml modzMmr modzMm).
+have ->: inv N{2} wa * inv N{2} wa %% N{2}
+ = inv N{2} y{2} %% N{2}. 
+rewrite -  (qr_prop3 N{2} y{2} wa).    auto.
+auto. rewrite - isqr. smt (qr_prop4). 
+smt (modzMml modzMmr modzMm).
+
 
 have ->: rrrL = (rrrL.`1 %% N{2}, rrrL.`2 %% N{2}). smt (d_prop2).
 simplify. split. 
