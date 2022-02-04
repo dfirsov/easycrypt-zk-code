@@ -2,7 +2,7 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr.
 
 
-  (* https://crypto.stanford.edu/pbc/notes/numbertheory/qr.html *)
+(* https://crypto.stanford.edu/pbc/notes/numbertheory/qr.html *)
 
 (*  
 replace IsQR with IsSqRoot ((N, y), w)
@@ -22,8 +22,8 @@ axiom qr_prop1 (N x : int) : IsQR N x => x * (inv N x) = 1.
 axiom qr_prop2 (N x : int) : IsQR N x => IsQR N (inv N x).
 axiom qr_prop3 (N x y : int) : IsQR N x => IsQR N y => IsQR N (x * y).
 axiom qr_prop4 (N : int) : sqRoot N 1 = 1.
-(* axiom qr_prop5 (N x y : int) : IsQR N x => IsQR N y => *)
-(*   sqRoot N (x * y) = sqRoot N x * sqRoot N y. *)
+axiom qr_prop5 (N x y : int) : IsQR N x => IsQR N y => 
+   sqRoot N (x * y) = sqRoot N x * sqRoot N y. 
 axiom qr_prop6 (N x y r : int) : IsQR N x => !IsQR N y => (x * y) <> r * r.
 axiom qr_prop7 (N y r : int) : !IsQR N y => y <> r * r.
 
