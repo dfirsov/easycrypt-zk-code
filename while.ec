@@ -107,14 +107,15 @@ qed.
 
 
 lemma okk &m ca na ba ra P : 
- phoare[ M.whp : arg = (ca,na,ba,ra) ==> P res] =  Pr[M.whp(ca,na,ba,ra) @ &m : P res].
-proof. bypr.
-progress.
+   phoare[ M.whp : arg = (ca,na,ba,ra) ==> P res]
+     = Pr[M.whp(ca,na,ba,ra) @ &m : P res].
+bypr. progress.
 byequiv (_: ={arg} ==> _).
-proc.  while (={c,n,b,r}). wp. rnd. rnd. skip. progress. skip. progress. 
-smt.
-auto.
+proc. while (={c,n,b,r}). wp. rnd.
+rnd. skip. progress. skip. progress.
+smt. auto.
 qed.
+
 
 lemma zz &m P : forall np, 0 < np => Pr[ M.main'_split(np) @ &m : P res ] = mu myd P.
 proof.  apply ge0ind.
