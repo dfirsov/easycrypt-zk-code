@@ -4,6 +4,7 @@ require import AllCore DBool Bool List Distr Int IntDiv.
 
 (* https://crypto.stanford.edu/pbc/notes/numbertheory/qr.html *)
 
+
 (*  
 replace IsQR with IsSqRoot ((N, y), w)
 add invertability assumption into qr_prop7
@@ -22,7 +23,6 @@ axiom d_prop1 N r rr :  (r, rr) \in ZNS_dist N => r * r %% N = rr %% N.
 axiom d_prop2 N r rr :  (r, rr) \in ZNS_dist N => (r, rr) = (r %% N, rr %% N).
 axiom d_prop3 (N r rr : int) :  r * r %% N = rr %% N => (r %%N, rr %%N) \in ZNS_dist N.
 axiom d_prop4 N r rr :  (r, rr) \in ZNS_dist N => invertible N rr.
-
 
 
 axiom qr_prop1 (N x : int) : invertible N x => x * (inv N x) %% N = 1.
