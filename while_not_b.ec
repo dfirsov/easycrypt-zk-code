@@ -68,6 +68,7 @@ conseq H. auto. auto. byequiv.
 conseq whp_split_if_end. smt. auto. auto. auto.
 qed.
 
+
 lemma lll (b a c : real) : a <= b => b <= c => a <= c.
 smt. qed.
 
