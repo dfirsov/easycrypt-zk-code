@@ -378,41 +378,31 @@ seq 1 1 : (={N,y,glob V,b',z}
                      /\ r{1} * (inv Na wa) %% Na = r{2} %% Na )
          /\ (b'{2} = false => z{1} %% Na = r{1} * r{1} %% Na /\ r{1} = r{2})
          /\ (Na, ya,wa) = (N{2},y{2},w{2}) ).
-
-call (exss Na ya wa). skip. progress. smt.  smt. 
-    
+call (exss Na ya wa). skip. progress. smt.  smt.     
 seq 1 1 : (={b,N,y,glob V,b',z} 
          /\ (b'{1} = true => z{1} %% Na = r{1} * r{1} * (inv Na ya) %% Na
                      /\ r{1} * (inv Na wa) %% Na = r{2} %% Na )
          /\ (b'{2} = false => z{1} %% Na = r{1} * r{1} %% Na /\ r{1} = r{2})
          /\ (Na, ya,wa) = (N{2},y{2},w{2}) ).
-
-
 call (_:true). skip. progress.
 exists* b'{1}. elim*. progress.
 case (b'_L = true).
 exists* b{1}. elim*. progress.
-case (b_L = true).
-    
+case (b_L = true).    
 seq 1 1 : (={ryb,b,N,y,glob V,b',z} 
          /\ (b'{1} = true => z{1} %% Na = r{1} * r{1} * (inv Na ya) %% Na
                      /\ r{1} * (inv Na wa) %% Na = r{2} %% Na )
          /\ (b'{2} = false => z{1} %% Na = r{1} * r{1} %% Na /\ r{1} = r{2})
          /\ (Na, ya,wa) = (N{2},y{2},w{2}) ).
-
-
-wp. skip. progress.  
-  
+wp. skip. progress.    
 have : r{1} * inv N{2} w{2} %% N{2} = r{2} %% N{2}.  smt.
 move => qq. clear H H0. 
-
 have : r{1} * inv N{2} w{2} %% N{2} * w{2} = r{2} %% N{2} * w{2}.
 smt. clear qq. move => qq. 
 have : r{1} * inv N{2} w{2} %% N{2} * w{2} %% N{2} = r{2} %% N{2} * w{2} %% N{2}.
 smt. clear qq. move => qq.
 have : invertible N{2} w{2}. smt.
 move => iwa.
-
 have <-: r{1} * inv N{2} w{2} %% N{2} * w{2} %% N{2} = r{1} %% N{2}.
   have ->: r{1} * inv N{2} w{2} %% N{2} * w{2} %% N{2}
           = r{1} * inv N{2} w{2} * w{2} %% N{2}.
@@ -421,7 +411,6 @@ smt (modzMml modzMmr modzMm qr_prop1).
   smt .
       smt (modzMml modzMmr modzMm qr_prop11).
       smt (modzMml modzMmr modzMm ).
-
          smt. smt.
 auto. call (_:true). skip. progress. sp.
 conseq (_: b{1} <> b'{1} ==> b{1} <> b'{1}). smt. smt.
@@ -438,7 +427,6 @@ wp. skip. auto.
 qed.
 
 
-
 local lemma qrp_zk2_pr &m Na ya wa a : IsSqRoot Na ya wa =>
     Pr[ZK(HP, V).main(Na,ya,wa) @ &m : res = a ] 
      = Pr[ Sim1'.simulate(Na,ya,wa) @ &m : res.`2 = a ].
@@ -446,6 +434,36 @@ proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
 conseq (qrp_zk2_eq Na ya wa isqr ). auto. auto. auto.
 qed.
+
+
+local lemma sd &m (P : bool list -> bool) Na ya wa : IsSqRoot Na ya wa =>
+     Pr[ Sim1'.simulate(Na,ya,wa) @ &m : P res.`2 /\ res.`1 ]
+    = (1%r/2%r) * Pr[ Sim1'.simulate(Na,ya,wa) @ &m : P res.`2 ].
+admitted.
+
+
+(*
+
+
+
+[ Sim1 ~ Sim1' : !b ~ !b ] 
+[ Sim1 ~ Sim1' : P a /\ b ~ P a /\ b ] 
+
+Pr[Rew : P a /\ b ] = Pr[ Rew' : P a /\ b ]
+
+Pr[ Rew' : P a /\ b /\ c = n + 1 ] = (1/2)^n * Pr[ Sim1' : P a /\ b ]
+                                   = (1/2)^n * Pr[ Sim1 : P a /\ b ]
+                                   = (1/2)^n+1 * Pr[ ZK : P a ]
+
+Pr[ Rew' : P a /\ b /\ c = n + 1 ]
+  = Pr[ Rew' : P a /\ b /\ c = n + 1 ]
+  = 
+
+
+                             
+
+*)
+    
 
 
 end section.
