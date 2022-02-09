@@ -1,13 +1,13 @@
 pragma Goals:printall.
-
 require import AllCore DBool.
-
 require import Int.
 
 type rt.
 
 op myd : rt distr.
 op MyP : rt -> bool.
+
+
 
 module M = {
   var c : int
@@ -154,6 +154,7 @@ qed.
 lemma asdsadq r:  MyP r = false => forall e, 0 <= e =>
   phoare[ M.whp : arg = (1,e+1,r) ==> !MyP res ] = ((1%r/2%r) ^ (e+1)).
 progress.
-have fact1  : phoare[ M.whp_if_end : arg = (1,e,r) ==> !MyP res ] = ((1%r/2%r) ^ (e+1)). apply (asdsad r H e H0). auto.
- conseq (whp_split_if_end' 1 e r ((inv 2%r)^(e+1)) (fun x => !MyP x)  fact1 ).
+have fact1  : phoare[ M.whp_if_end : arg = (1,e,r) ==> !MyP res ] = ((1%r/2%r) ^ (e+1)).
+apply (asdsad r H e H0). auto.
+conseq (whp_split_if_end' 1 e r ((inv 2%r)^(e+1)) (fun x => !MyP x) fact1).
 qed.
