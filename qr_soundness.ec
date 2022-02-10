@@ -25,12 +25,18 @@ require Reflection.
 clone import Reflection.Refl as Re with
                                   type at  <- irt,
                                   type rt  <- rrt.
-                                 
+
+op MyP : rrt -> bool.  
                                   
+require While_not_b.                                  
+clone import While_not_b as WNB with type rt <- rrt ,
+                                     op MyP <- MyP.
+
+
 section.
 
 
-op MyP : rrt -> bool.  
+
 
 
 module W(A : RewRun) = {
@@ -131,7 +137,7 @@ qed.
 lemma zz  (da : (glob A) -> irt -> rrt distr) :  
  (forall &m (M : rrt -> bool) (a : irt),
        mu (da (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res])
- => forall &m P e (s : int) r ia,  0 <= s =>  
+ => forall &m P e (s : int) r ia,  
   Pr[ W(A).whp_d(da (glob A){m} ia,s,e,r) @ &m : P res ]
    = Pr[ W(A).whp_A(ia, s,e,r) @ &m : P res ].
 progress. 
@@ -147,7 +153,40 @@ progress. auto.
 qed.
 
 
-lemma final_zz &m i e r : 
-   Pr[ A.run(i) @ &m : MyP res ]  = 1%r/2%r
-  => Pr[ W(A).whp_A(i, 1,e+1,r) @ &m : MyP res ] = ((1%r/2%r) ^ (e+1)).
-admitted.
+
+
+lemma final_zz &m i e r :  MyP r = false => 0 <= e =>
+   Pr[ A.run(i) @ &m : !MyP res ]  = 1%r/2%r
+  => Pr[ W(A).whp_A(i, 1,e+1,r) @ &m : !MyP res ] = ((1%r/2%r) ^ (e+1)).
+move => sf ep.
+have exD :  exists (D : (glob A) -> irt -> rrt distr),
+      forall &m (M : rrt -> bool) (a : irt),
+        mu (D (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res].
+apply (reflection_simple_res (GetRunSet(A))).
+elim exD. progress.
+rewrite - (zz D H &m (fun x => !MyP x)).
+have ->: Pr[W(A).whp_d(D (glob A){m} i, 1, e + 1, r) @ &m : !MyP res]
+ = Pr[M.whp(D (glob A){m} i, 1, e + 1, r) @ &m : !MyP res].
+byequiv. proc.  sp. sim.
+conseq (_: ={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}  ==> _). auto.
+while (={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline*. wp.  rnd. wp. 
+skip. progress. 
+skip. progress. auto. auto.
+byphoare(_: arg = (D (glob A){m} i, 1, e + 1, r ) ==> _).
+conseq (asdsadq r (D (glob A){m} i) sf e ep). auto.
+auto.
+qed.
+
+
+
+lemma final_zz_ph &m i e r :  MyP r = false => 0 <= e =>
+   phoare[ A.run : arg = i ==> !MyP res ] = (1%r/2%r) =>
+   phoare [ W(A).whp_A : arg = (i, 1,e+1,r) ==> !MyP res ] = ((1%r/2%r) ^ (e+1)).
+move => sf ep ph1.
+bypr. progress.
+rewrite -  (final_zz &m0 i e r sf ep).
+byphoare (_: arg = i ==> _). conseq ph1. auto. auto.
+rewrite H. auto.
+qed.
+
+end section.
