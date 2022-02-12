@@ -125,7 +125,7 @@ qed.
 
 
 
-local lemma whp_premat_1 q &m pa ia sa ea ra ja : sa <= ja => ja <= ea =>
+local lemma whp_premat_1 q &m pa ia sa ea ra ja : sa <= ja => ja <= ea + 1 =>
   Pr[ W(A).whp(pa,ia,sa,ja-1,ra) @ &m : W.c = ja /\ pa res /\ q res ]
    =   Pr[ W(A).whp_split(pa,ia,sa,ja-1,ea,ra) @ &m : W.c = ja /\ pa res /\ q res ].
 proof. move => hp ph.
@@ -154,7 +154,7 @@ rcondf {2} 1. progress. skip. smt. auto. auto.
 qed.
 
 
-lemma whp_cap q &m p i s ea r ja :  s <= ja => ja <= ea =>
+lemma whp_cap q &m p i s ea r ja :  s <= ja => ja <= ea + 1 =>
    Pr[ W(A).whp(p,i,s,ea,r) @ &m : W.c = ja /\ p res /\ q res ] 
    =   Pr[ W(A).whp(p,i,s,ja-1,r) @ &m : W.c = ja /\ p res /\ q res ].
 move => sjp jap.
@@ -171,40 +171,32 @@ progress.
 smt. auto.
 qed.
 
-(* 
-W.c = N := make exactly N iterations
 
-*)
 require import Real.
 lemma whp_cap_fin &m pa q ia (ea : int) r ja (p1 : real) (p2 : int -> real) :
-  1 <= ja - 1 => ja  <= ea =>
-  pa r = false => 0 <= ea =>
+  0 <= ja - 2 => ja <= ea + 1 =>
+  pa r = false =>
   (phoare[ A.run : arg = ia ==> pa res /\  q res ] = p1) =>
   (forall ea pa ia ra, pa r = false => 0 <= ea => phoare[ W(A).whp : arg = (pa,ia, 1,ea,ra) ==>  !pa res ] = (p2 ea)) =>
-   Pr[ W(A).whp(pa,ia,1,ea,r) @ &m : W.c = ja /\ pa res /\ q res ] 
+   Pr[ W(A).whp(pa,ia,1,ea,r) @ &m : W.c = ja /\ pa res /\ q res ]  
     = p2 (ja - 2) * p1. 
 progress.
 rewrite  (whp_cap q &m pa ia 1 ea r ja ). smt. smt.
-
 have ->: Pr[W(A).whp(pa, ia, 1, ja-1, r) @ &m : W.c = ja /\ pa res /\ q res]
  = Pr[W(A).whp_if(pa, ia, 1, ja -1, r) @ &m : W.c = ja /\ pa res /\ q res].
 byequiv. conseq whp_if_prop. progress. admit.
 progress. auto. auto.
-    
-byphoare (_: arg = (pa, ia, 1, ja - 1, r) ==> _).
+ byphoare (_: arg = (pa, ia, 1, ja - 1, r) ==> _).
 proc. sp.
-
 seq 1 : (! p ri) (p2 (ja - 2))  p1 1%r 0%r (e = ja - 1 /\ W.c <= e  /\ i = ia /\ p = pa 
  /\ (!p ri => W.c = e) ).
 inline*. sp.
 wp.
 while (W.c <= e0 + 1 ). wp. 
-call (_:true ==> true). auto. skip. progress. smt. skip. progress.   smt.
-
- 
-call (H4 (ja - 2) pa ia r).  smt. skip. progress.  
+call (_:true ==> true). auto. skip. progress. smt. skip. progress.   smt. smt.
+call (H3 (ja - 2) pa ia r).  skip. progress.  
 rcondt 1. skip. progress. 
-wp. call H3. skip. progress. 
+wp. call H2. skip. progress. 
 smt.
 hoare.
 simplify.
@@ -212,5 +204,30 @@ if. wp. call (_:true ==> true). auto.
 skip. smt.
 skip. smt.  auto. auto. auto.
 qed.
- end section.
+
+
+lemma whp_cap_fin_int &m pa ia (ea : int) ra :
+  pa ra = false => 1 <= ea =>
+   Pr[ W(A).whp(pa,ia,1,ea,ra) @ &m : 1 < W.c <= ea + 1 ] = 1%r.
+progress.
+byphoare (_: arg = (pa, ia, 1, ea, ra) ==> _).
+proc. sp.
+unroll 1.
+rcondt 1. skip. smt.
+seq 2 : (W.c = 2 /\ (p, i, s, e) = (pa, ia, 1, ea)).
+wp. call (_: true ==> true). auto.
+skip. auto.
+wp. call (_: true ==> true). apply A_ll.
+skip. progress.
+while (1 < W.c && W.c <= e + 1) (e + 1 - W.c).
+progress. 
+wp. call (_: true ==> true). apply A_ll.
+skip. progress. smt. smt. smt. skip. progress.
+smt.  smt.
+hoare. simplify.
+wp. call (_: true ==> true). auto. skip. auto. auto. auto.
+auto.
+qed.
+
+end section.
   

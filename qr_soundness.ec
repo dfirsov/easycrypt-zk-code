@@ -155,25 +155,35 @@ qed.
 
 
 
-lemma final_zz &m i e r :  MyP r = false => 0 <= e =>
+lemma final_zz &m i e ra :  MyP ra = false => 0 <= e =>
    Pr[ A.run(i) @ &m : !MyP res ]  = 1%r/2%r
-  => Pr[ W(A).whp_A(i, 1,e+1,r) @ &m : !MyP res ] = ((1%r/2%r) ^ (e+1)).
-move => sf ep.
+  => Pr[ W(A).whp_A(i, 1,e,ra) @ &m : !MyP res ] = ((1%r/2%r) ^ (e)).
+case (e = 0).
+progress.
+byphoare (_: e = 0 /\ s = 1 /\ MyP ra = false /\ r = ra ==> _).
+simplify. proc.
+sp.
+rcondf 1. skip. progress. skip. smt. smt. auto.  auto.
+ 
+move => ez sf ep.
+have :  exists e', e' + 1 = e /\ 0 <= e'. smt.
+elim. progress.
+
 have exD :  exists (D : (glob A) -> irt -> rrt distr),
       forall &m (M : rrt -> bool) (a : irt),
         mu (D (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res].
 apply (reflection_simple_res (GetRunSet(A))).
-elim exD. progress.
-rewrite - (zz D H &m (fun x => !MyP x)).
-have ->: Pr[W(A).whp_d(D (glob A){m} i, 1, e + 1, r) @ &m : !MyP res]
- = Pr[M.whp(D (glob A){m} i, 1, e + 1, r) @ &m : !MyP res].
+elim exD. progress. 
+rewrite - (zz D H1 &m (fun x => !MyP x)).
+have ->: Pr[W(A).whp_d(D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyP res]
+ = Pr[M.whp(D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyP res].
 byequiv. proc.  sp. sim.
 conseq (_: ={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}  ==> _). auto.
 while (={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline*. wp.  rnd. wp. 
 skip. progress. 
 skip. progress. auto. auto.
-byphoare(_: arg = (D (glob A){m} i, 1, e + 1, r ) ==> _).
-conseq (asdsadq r (D (glob A){m} i) sf e ep). auto.
+byphoare(_: arg = (D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
+conseq (asdsadq ra (D (glob A){m} i) sf e' H ). auto.
 auto.
 qed.
 
@@ -181,7 +191,7 @@ qed.
 
 lemma final_zz_ph &m i e r :  MyP r = false => 0 <= e =>
    phoare[ A.run : arg = i ==> !MyP res ] = (1%r/2%r) =>
-   phoare [ W(A).whp_A : arg = (i, 1,e+1,r) ==> !MyP res ] = ((1%r/2%r) ^ (e+1)).
+   phoare [ W(A).whp_A : arg = (i, 1,e,r) ==> !MyP res ] = ((1%r/2%r) ^ (e)).
 move => sf ep ph1.
 bypr. progress.
 rewrite -  (final_zz &m0 i e r sf ep).
