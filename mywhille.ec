@@ -78,9 +78,10 @@ qed.
 
 
 lemma whp_if_prop : 
-  equiv [ W(A).whp ~ W(A).whp_if : s{2} <= e{2} /\ ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
+  equiv [ W(A).whp ~ W(A).whp_if : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
 proc.
 inline*. sp. 
+case (s{2} <= e{2}).
 splitwhile {1} 1 : (W.c <= e-1).
 seq 1 1 : (={W.c, glob A,e,p,i} /\ e{1} = e0{2} + 1  /\ p{1} = p0{2} /\ r{1} = r0{2} /\ i{1} = i0{2} /\ (! p r => W.c = e){1}).
 while (={W.c, glob A,e,p,i} /\ e{1} = e0{2} + 1 /\ p{1} = p0{2}  /\ r{1} = r0{2} /\ i{1} = i0{2} /\ (! p r => W.c <= e){1}).
@@ -92,6 +93,11 @@ unroll {1} 1.
 seq 1 1 : (={glob A, W.c,e,p,i} /\ ri{2} = r{1} /\ (! p{1} r{1} => W.c{1} = e{1}+1)). 
 if. progress. wp. call (_:true). skip. progress. smt. skip. progress. smt.
 rcondf {1} 1. progress. skip. progress. smt. skip. progress.
+rcondf {1} 1. progress. skip. progress. smt.
+rcondf {2} 1. progress. skip. progress. smt.
+sp. 
+rcondf {2} 1. progress. skip. progress. smt.
+skip. progress.
 qed.
 
 
@@ -170,22 +176,22 @@ W.c = N := make exactly N iterations
 
 *)
 require import Real.
-lemma whp_cap_fin &m pa q ia (s ea : int) r ja (p1 : real) (p2 : int -> real) :
-  s <= ja - 1 => ja  <= ea =>
+lemma whp_cap_fin &m pa q ia (ea : int) r ja (p1 : real) (p2 : int -> real) :
+  1 <= ja - 1 => ja  <= ea =>
   pa r = false => 0 <= ea =>
   (phoare[ A.run : arg = ia ==> pa res /\  q res ] = p1) =>
-  (forall ea, phoare[ W(A).whp : e = ea ==>  !pa res ] = (p2 ea)) =>
-   Pr[ W(A).whp(pa,ia,s,ea,r) @ &m : W.c = ja /\ pa res /\ q res ] 
+  (forall ea pa ia ra, pa r = false => 0 <= ea => phoare[ W(A).whp : arg = (pa,ia, 1,ea,ra) ==>  !pa res ] = (p2 ea)) =>
+   Pr[ W(A).whp(pa,ia,1,ea,r) @ &m : W.c = ja /\ pa res /\ q res ] 
     = p2 (ja - 2) * p1. 
 progress.
-rewrite  (whp_cap q &m pa ia s ea r ja ). smt. smt.
+rewrite  (whp_cap q &m pa ia 1 ea r ja ). smt. smt.
 
-have ->: Pr[W(A).whp(pa, ia, s, ja-1, r) @ &m : W.c = ja /\ pa res /\ q res]
- = Pr[W(A).whp_if(pa, ia, s, ja -1, r) @ &m : W.c = ja /\ pa res /\ q res].
-byequiv. conseq whp_if_prop. progress. admit. admit.
+have ->: Pr[W(A).whp(pa, ia, 1, ja-1, r) @ &m : W.c = ja /\ pa res /\ q res]
+ = Pr[W(A).whp_if(pa, ia, 1, ja -1, r) @ &m : W.c = ja /\ pa res /\ q res].
+byequiv. conseq whp_if_prop. progress. admit.
 progress. auto. auto.
     
-byphoare (_: arg = (pa, ia, s, ja - 1, r) ==> _).
+byphoare (_: arg = (pa, ia, 1, ja - 1, r) ==> _).
 proc. sp.
 
 seq 1 : (! p ri) (p2 (ja - 2))  p1 1%r 0%r (e = ja - 1 /\ W.c <= e  /\ i = ia /\ p = pa 
@@ -196,7 +202,7 @@ while (W.c <= e0 + 1 ). wp.
 call (_:true ==> true). auto. skip. progress. smt. skip. progress.   smt.
 
  
-call (H4 (ja - 2)). skip. progress.  
+call (H4 (ja - 2) pa ia r).  smt. skip. progress.  
 rcondt 1. skip. progress. 
 wp. call H3. skip. progress. 
 smt.
