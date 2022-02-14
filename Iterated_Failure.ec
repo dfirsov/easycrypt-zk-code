@@ -26,11 +26,10 @@ clone import Reflection.Refl as Re with
                                   type at  <- irt,
                                   type rt  <- rrt.
 
-op MyP : rrt -> bool.  
+
                                   
 require While_not_b.                                  
-clone import While_not_b as WNB with type rt <- rrt ,
-                                     op MyP <- MyP.
+clone import While_not_b as WNB with type rt <- rrt.
 
 
 section.
@@ -43,7 +42,7 @@ module W(A : RewRun) = {
   module GRS = GetRunSet(A)
   module PA = PP(GRS)
   var c : int
-  proc whp_A(i : irt, s : int, e : int, r : rrt) = {
+  proc whp_A(MyP : rrt -> bool,i : irt, s : int, e : int, r : rrt) = {
     c <- s;
     while(c <= e /\ !MyP r){
      r <- GRS.main(i);
@@ -52,7 +51,7 @@ module W(A : RewRun) = {
     return r;
   }
 
-  proc whp_d(d : rrt distr, s : int, e : int, r : rrt) = { 
+  proc whp_d(MyP : rrt -> bool,d : rrt distr, s : int, e : int, r : rrt) = { 
     c <- s;
     while(c <= e /\ !MyP r){
      r <- PA.sampleFrom(d);
@@ -134,18 +133,18 @@ qed.
 
 
   
-lemma zz  (da : (glob A) -> irt -> rrt distr) :  
+lemma zz MyPa  (da : (glob A) -> irt -> rrt distr) :  
  (forall &m (M : rrt -> bool) (a : irt),
        mu (da (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res])
  => forall &m P e (s : int) r ia,  
-  Pr[ W(A).whp_d(da (glob A){m} ia,s,e,r) @ &m : P res ]
-   = Pr[ W(A).whp_A(ia, s,e,r) @ &m : P res ].
+  Pr[ W(A).whp_d(MyPa,da (glob A){m} ia,s,e,r) @ &m : P res ]
+   = Pr[ W(A).whp_A(MyPa,ia, s,e,r) @ &m : P res ].
 progress. 
-byequiv (_: ={s,e,r, glob A} /\ d{1} = (da (glob A){m} ia) /\ i{2} = ia
+byequiv (_: ={MyP,s,e,r, glob A} /\ d{1} = (da (glob A){m} ia) /\ i{2} = ia
      /\ (glob A){2} = (glob A){m} ==> _). proc.
 sp. 
 exists* (glob A){2} . elim*. progress.
-while (={W.c,r,e,glob A} /\ d{1} = da (glob A){m} ia /\ i{2} = ia /\ (glob A){m} = (glob A){2}).
+while (={MyP,W.c,r,e,glob A} /\ d{1} = da (glob A){m} ia /\ i{2} = ia /\ (glob A){m} = (glob A){2}).
 wp.
 call (asdistr_rew  da H &m ia).
 skip. progress.    progress.
@@ -155,9 +154,48 @@ qed.
 
 
 
-lemma final_zz &m i e ra :  MyP ra = false => 0 <= e =>
-   Pr[ A.run(i) @ &m : !MyP res ]  = 1%r/2%r
-  => Pr[ W(A).whp_A(i, 1,e,ra) @ &m : !MyP res ] = ((1%r/2%r) ^ (e)).
+lemma final_zz &m (p : real) MyPa i e ra :  MyPa ra = false => 0 <= e =>
+   Pr[ A.run(i) @ &m : !MyPa res ]  = p
+  => Pr[ W(A).whp_A(MyPa,i, 1,e,ra) @ &m : !MyPa res ] = (p ^ (e)).
+case (e = 0).
+progress.
+have ->: Pr[A.run(i) @ &m : ! MyPa res] ^ 0 = 1%r. smt.
+byphoare (_: e = 0 /\ s = 1 /\ MyPa ra = false /\ r = ra ==> _).
+simplify. proc. 
+sp.
+rcondf 1. skip. progress. skip. smt. smt. auto.  auto. 
+move => ez sf ep.
+have :  exists e', e' + 1 = e /\ 0 <= e'. smt.
+elim. progress.
+have exD :  exists (D : (glob A) -> irt -> rrt distr),
+      forall &m (M : rrt -> bool) (a : irt),
+        mu (D (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res].
+apply (reflection_simple_res (GetRunSet(A))).
+elim exD. progress. 
+rewrite - (zz MyPa D H0 &m (fun x => !MyPa x)).
+have ->: Pr[W(A).whp_d(MyPa, D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPa res]
+ = Pr[M.whp(MyPa, D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPa res].
+byequiv. proc. simplify.  sp. 
+conseq (_: ={MyP,e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}  ==> _). auto.
+while (={e,r,MyP} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline*. wp.  rnd. wp. 
+skip. progress. 
+skip. progress. auto. auto.
+byphoare(_: arg = (MyPa,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
+
+have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPa x) =
+  Pr[A.run(i) @ &m : ! MyPa res].
+rewrite H0.
+admit.
+
+conseq (asdsadq (Pr[A.run(i) @ &m : ! MyPa res]) MyPa  ra (D (glob A){m} i) lf sf e' H ). auto.
+auto.
+qed.
+
+
+
+lemma final_zz_le &m p MyPa i e ra :  MyPa ra = false => 0 <= e =>
+   Pr[ A.run(i) @ &m : !MyPa res ]  <= p
+  => Pr[ W(A).whp_A(MyPa,i, 1,e,ra) @ &m : !MyPa res ] <= (p ^ (e)).
 case (e = 0).
 progress.
 byphoare (_: e = 0 /\ s = 1 /\ MyP ra = false /\ r = ra ==> _).
@@ -172,72 +210,43 @@ have exD :  exists (D : (glob A) -> irt -> rrt distr),
         mu (D (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res].
 apply (reflection_simple_res (GetRunSet(A))).
 elim exD. progress. 
-rewrite - (zz D H1 &m (fun x => !MyP x)).
-have ->: Pr[W(A).whp_d(D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyP res]
- = Pr[M.whp(D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyP res].
-byequiv. proc.  sp. sim.
-conseq (_: ={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}  ==> _). auto.
-while (={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline*. wp.  rnd. wp. 
+rewrite - (zz MyPa D H1 &m (fun x => !MyPa x)).
+have ->: Pr[W(A).whp_d(MyPa,D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPa res]
+ = Pr[M.whp(MyPa,D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPa res].
+byequiv. proc.  sp. 
+conseq (_: ={e,r,MyP} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}  ==> _). auto.
+while (={e,r,MyP} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline*. wp.  rnd. wp. 
 skip. progress. 
 skip. progress. auto. auto.
-byphoare(_: arg = (D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
-conseq (asdsadq ra (D (glob A){m} i) sf e' H ). auto.
+byphoare(_: arg = (MyPa,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
+
+have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPa x) <= p. rewrite H1. 
+admit.
+conseq (asdsadq_le p MyPa ra (D (glob A){m} i) lf sf e' H ). auto.
 auto.
 qed.
 
 
 
-lemma final_zz_le &m i e ra :  MyP ra = false => 0 <= e =>
-   Pr[ A.run(i) @ &m : !MyP res ]  <= 1%r/2%r
-  => Pr[ W(A).whp_A(i, 1,e,ra) @ &m : !MyP res ] <= ((1%r/2%r) ^ (e)).
-case (e = 0).
-progress.
-byphoare (_: e = 0 /\ s = 1 /\ MyP ra = false /\ r = ra ==> _).
-simplify. proc.
-sp.
-rcondf 1. skip. progress. skip. smt. smt. auto.  auto. 
-move => ez sf ep.
-have :  exists e', e' + 1 = e /\ 0 <= e'. smt.
-elim. progress.
-have exD :  exists (D : (glob A) -> irt -> rrt distr),
-      forall &m (M : rrt -> bool) (a : irt),
-        mu (D (glob A){m} a) M = Pr[GetRunSet(A).main(a) @ &m : M res].
-apply (reflection_simple_res (GetRunSet(A))).
-elim exD. progress. 
-rewrite - (zz D H1 &m (fun x => !MyP x)).
-have ->: Pr[W(A).whp_d(D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyP res]
- = Pr[M.whp(D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyP res].
-byequiv. proc.  sp. sim.
-conseq (_: ={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}  ==> _). auto.
-while (={e,r} /\ W.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline*. wp.  rnd. wp. 
-skip. progress. 
-skip. progress. auto. auto.
-byphoare(_: arg = (D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
-conseq (asdsadq ra (D (glob A){m} i) sf e' H ). auto.
-auto.
-qed.
-
-
-
-lemma final_zz_ph_le &m i e r :  MyP r = false => 0 <= e =>
-   phoare[ A.run : arg = i ==> !MyP res ] <= (1%r/2%r) =>
-   phoare [ W(A).whp_A : arg = (i, 1,e,r) ==> !MyP res ] <= ((1%r/2%r) ^ (e)).
+lemma final_zz_ph_le &m p MyPa i e r :  MyPa r = false => 0 <= e =>
+   phoare[ A.run : arg = i ==> !MyPa res ] <= p =>
+   phoare [ W(A).whp_A : arg = (MyPa, i, 1,e,r) ==> !MyPa res ] <= (p ^ (e)).
 move => sf ep ph1.
 bypr. progress.
-have ff : Pr[A.run(i) @ &m0 : ! MyP res] <= 1%r / 2%r. 
+have ff : Pr[A.run(i) @ &m0 : ! MyPa res] <= p. 
 byphoare (_: arg = i ==> _). apply ph1. auto. auto.
 rewrite H. simplify.
-apply (final_zz_le &m0 i e r sf ep ff).
+apply (final_zz_le &m0 p MyPa i e r sf ep ff).
 qed.
 
 
 
-lemma final_zz_ph &m i e r :  MyP r = false => 0 <= e =>
-   phoare[ A.run : arg = i ==> !MyP res ] = (1%r/2%r) =>
-   phoare [ W(A).whp_A : arg = (i, 1,e,r) ==> !MyP res ] = ((1%r/2%r) ^ (e)).
+lemma final_zz_ph &m p MyPa i e r :  MyPa r = false => 0 <= e =>
+   phoare[ A.run : arg = i ==> !MyPa res ] = p =>
+   phoare [ W(A).whp_A : arg = (MyPa,i, 1,e,r) ==> !MyPa res ] = (p ^ (e)).
 move => sf ep ph1.
 bypr. progress.
-rewrite -  (final_zz &m0 i e r sf ep).
+rewrite -  (final_zz &m0 p MyPa i e r sf ep).
 byphoare (_: arg = i ==> _). conseq ph1. auto. auto.
 rewrite H. auto.
 qed.

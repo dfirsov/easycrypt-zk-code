@@ -14,13 +14,14 @@ op ZNS_dist :  int -> (int * int) distr.     (* ZN* *)
 op inv : int -> int -> int.
 op invertible : int -> int -> bool.
 
+
 type qr_c  =  int * int.
 type qr_w  = int.
+type sbits.
+
 
 op IsSqRoot (Ny : qr_c) (w : qr_w) = Ny.`2 %% Ny.`1  = (w * w) %% Ny.`1. 
 op IsQR (Ny : qr_c) = exists w, IsSqRoot Ny w.
-
-
 
 
 axiom d_prop0 N : is_uniform (ZNS_dist N).
@@ -95,6 +96,13 @@ module HP : Prover = {
   proc response(b : bool) : int = {
     return (r * (if b then w else 1)) %% n;
  } 
+ proc getState() : sbits = {
+   return witness;
+ }
+
+ proc setState(s : sbits) : unit = {
+     (HP.n, HP.r, HP.rr, HP.w, HP.y) <- witness;
+ }
 }.
 
 
@@ -113,7 +121,7 @@ module HV : Verifier = {
  } 
 }.
 
-lemma qrp_complete_ph Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya
+lemma qrp_complete_h Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya
    => hoare [ Correct(HP,HV).main : arg = ((Na,ya),wa) ==> res ].
 move => qra invrtbl.
 proc. inline*.  wp. 
@@ -127,6 +135,14 @@ rewrite -  (d_prop1 Na rrr.`1 rrr.`2). smt.
 rewrite (modzMml (rrr.`1 * rrr.`1) ya Na ).
 smt (modzMml modzMmr modzMm). smt (d_prop4). smt (d_prop1 modzMml modzMmr modzMm).
 qed.
+
+
+lemma qr_complete_ph Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya
+   => phoare [ Correct(HP,HV).main : arg = ((Na,ya),wa) ==> res ] = 1%r.
+move => qra invrtbl.
+admitted.
+
+
 
 
 
@@ -195,12 +211,7 @@ end section.
  *)
 
 
-section.
-declare module V : VerifierA {HP}.
-
-axiom summitup_ll :  islossless V.summitup.
-
-local module Sim1  = {
+module Sim1(V : VerifierA)  = {
   var result : bool list
 
   proc sinit(N : int, y : int) : bool * int * int = {
@@ -219,6 +230,12 @@ local module Sim1  = {
     return (b = b', result);    
   }
 }.
+
+
+section.
+declare module V : VerifierA {HP}.
+
+axiom summitup_ll :  islossless V.summitup.
 
 
 local module Sim1'  = {
@@ -270,7 +287,7 @@ qed.
 
 
 local lemma exss Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya =>
- equiv[ Sim1.sinit ~ Sim1'.sinit
+ equiv[ Sim1(V).sinit ~ Sim1'.sinit
    : ={arg} /\ arg{1} = (Na,ya) ==>
        (res{1}.`1, res{1}.`2) = (res{2}.`1, res{2}.`2)
         /\ (res{1}.`1 = true  => res{1}.`2 %% Na = res{1}.`3 * res{1}.`3 * (inv Na ya) %% Na
@@ -375,7 +392,7 @@ qed.
 
 
 local lemma qkok Na ya wa P : IsSqRoot (Na, ya) wa => invertible Na ya =>
-  equiv [ Sim1.simulate ~ Sim1'.simulate
+  equiv [ Sim1(V).simulate ~ Sim1'.simulate
    :   ={glob V} /\ (Na,ya) = (N{1},y{1}) /\ (Na,ya,wa) = (N{2},y{2},w{2})
        ==> (res{1}.`1 /\ P res{1}.`2) <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => isqr invrtbl. proc.
@@ -432,13 +449,15 @@ call {2} (_: true ==> true). apply summitup_ll.
 wp. skip. auto.
 qed.
 
-
+lemma simnres : phoare[ Sim1(V).simulate : true ==> !res.`1 ] = (1%r/2%r).
+admitted.
+    
 local lemma qrp_zk2_pr &m Na ya wa a : IsSqRoot (Na, ya) wa =>
     Pr[ZK(HP, V).main(Na,ya,wa) @ &m : res = a ] 
      = Pr[ Sim1'.simulate(Na,ya,wa) @ &m : res.`2 = a ].
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
-conseq (qrp_zk2_eq Na ya wa isqr ).  progress. smt. smt.  auto. auto.
+conseq (qrp_zk2_eq Na ya wa isqr).  progress. smt. smt.  auto. auto.
 qed.
 
 
