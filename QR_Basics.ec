@@ -29,6 +29,7 @@ axiom d_prop1 N r rr :  (r, rr) \in ZNS_dist N => r * r %% N = rr %% N.
 axiom d_prop2 N r rr :  (r, rr) \in ZNS_dist N => (r, rr) = (r %% N, rr %% N).
 axiom d_prop3 (N r rr : int) :  r * r %% N = rr %% N => (r %%N, rr %%N) \in ZNS_dist N.
 axiom d_prop4 N r rr :  (r, rr) \in ZNS_dist N => invertible N rr.
+axiom d_prop5 N : weight (ZNS_dist N) = 1%r.
 
 
 axiom qr_prop1 (N x : int) : invertible N x => x * (inv N x) %% N = 1.
@@ -69,8 +70,7 @@ module type Simulator = {
 }.
 
 
-
-(* correctness of quadratic resisdue protocol  *)
+(* correctness *)
 module Correct(P : Prover, V : Verifier) = {
   var c, r : int
   var b, result : bool
@@ -105,7 +105,7 @@ module HP : Prover = {
  }
 }.
 
-
+(* honest verifier *)
 module HV : Verifier = {
   var n,y : int
 
@@ -121,7 +121,8 @@ module HV : Verifier = {
  } 
 }.
 
-lemma qrp_complete_h Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya
+
+lemma qr_complete_h Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya
    => hoare [ Correct(HP,HV).main : arg = ((Na,ya),wa) ==> res ].
 move => qra invrtbl.
 proc. inline*.  wp. 
@@ -137,13 +138,19 @@ smt (modzMml modzMmr modzMm). smt (d_prop4). smt (d_prop1 modzMml modzMmr modzMm
 qed.
 
 
+
 lemma qr_complete_ph Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya
    => phoare [ Correct(HP,HV).main : arg = ((Na,ya),wa) ==> res ] = 1%r.
-move => qra invrtbl.
-admitted.
-
-
-
+move => qra invrtbl. 
+proc*.
+seq 1 : (true) 1%r 1%r 1%r 0%r (r).
+call (qr_complete_h Na ya wa). auto.
+conseq (_: true ==> true). inline*. sp. 
+wp.  progress. rnd. simplify.
+conseq (_: true ==> true). smt.
+wp.  rnd. skip. simplify.
+progress. apply d_prop5. auto. auto. auto.
+qed.
 
 
 section.
@@ -157,7 +164,6 @@ lemma qr_sound_ph Na ya :
 proof. move => qra.
 proc. inline*. 
 wp.
-
 seq 4 : ((Ny) = (Na,ya) /\ HV.y = Ny.`2 /\ HV.n = Ny.`1) (1%r) (1%r/2%r) (0%r) (1%r).  auto.
 auto.
 exists* Correct.c. elim*. move => cv.
@@ -168,11 +174,9 @@ hoare. call (_:true ==> true). auto.
 wp. auto. progress. rewrite H0. simplify.   
 have : forall (w : int), Correct.c{hr} %% HV.n{hr} <> w * w %% HV.n{hr}. clear qra H0. 
    move => w.  
-
   case (Correct.c{hr} %% HV.n{hr} = w * w %% HV.n{hr}). move => ass.
   simplify. apply H. rewrite /IsQR. exists w. rewrite /IsSqRoot. apply ass. auto.
 progress. smt. 
-
 simplify.
 rnd. skip. smt.
 conseq (_: _ ==> true). call (_: true ==> true). auto. 
@@ -183,9 +187,7 @@ rnd. skip. auto.
 hoare. 
 call (_:true ==> true). auto.  
 wp. skip. progress. rewrite H0. simplify. 
-
 smt (qr_prop5).
-
 rnd. skip. progress. smt.
 conseq (_: _ ==> true). call (_:true ==> true). auto.
 wp. skip. auto. auto.
@@ -193,24 +195,11 @@ hoare.
 simplify. auto. call (_ : true ==> true).  auto. skip. auto. auto.
 qed.
 
+
 end section.
 
 
-
-  (* 
-  lemma nosmt modzMml: forall (m n d : int), m %% d * n %% d = m * n %% d.
-  lemma nosmt modzMmr: forall (m n d : int), m * (n %% d) %% d = m * n %% d.
-  lemma nosmt modzMm:
-    forall (m n d : int), m %% d * (n %% d) %% d = m * n %% d.
-  lemma nosmt modzNm: forall (m d : int), (- m %% d) %% d = (-m) %% d.
-  lemma nosmt mulz_modr:
-    forall (p m d : int), 0 < p => p * (m %% d) = p * m %% (p * d).
-  lemma nosmt mulz_modl:
-    forall (p m d : int), 0 < p => m %% d * p = m * p %% (d * p).
-
- *)
-
-
+(* one-time simulator  *)
 module Sim1(V : VerifierA)  = {
   var result : bool list
 
@@ -221,21 +210,24 @@ module Sim1(V : VerifierA)  = {
     return (bb,(rr * if bb then (inv N y) else 1) %% N,r);
   }
 
-  proc simulate(N : int, y : int) : bool * bool list  = {
+  proc simulate(Ny : int * int) : bool * bool list  = {
     var r,z,b',b,ryb;
-    (b',z,r) <- sinit(N,y);
-    b  <- V.challenge((N,y),z);   
-    ryb  <- r %% N;
+    (b',z,r) <- sinit(Ny);
+    b  <- V.challenge(Ny,z);   
+    ryb  <- r %% Ny.`1;
     result <- V.summitup(z,b,ryb); 
     return (b = b', result);    
   }
 }.
 
 
+
 section.
+
 declare module V : VerifierA {HP}.
 
 axiom summitup_ll :  islossless V.summitup.
+axiom challenge_ll :  islossless V.challenge.
 
 
 local module Sim1'  = {
@@ -248,22 +240,35 @@ local module Sim1'  = {
     return (bb,rr %% N,r);
   }
     
-  proc simulate(N : int, y : int, w : int) : bool * bool list  = {
+  proc simulate(Ny : int * int, w : int) : bool * bool list  = {
     var z,r,b',b,ryb,result;
-    (b',z,r) <- sinit(N,y);
-    b  <- V.challenge((N,y),z);
-    ryb  <- (r * if b then w else 1) %% N  ;
+    (b',z,r) <- sinit(Ny);
+    b  <- V.challenge(Ny,z);
+    ryb  <- (r * if b then w else 1) %% Ny.`1  ;
     result <- V.summitup(z,b,ryb);
     return (b = b', result);
+  }
+
+ proc allinone(Ny : int * int, w : int) = {
+    var z,r,bb,rr,b',b,ryb,result;
+    (r,rr)  <$ ZNS_dist Ny.`1;    
+    bb <$ {0,1};
+    b' <- bb;
+    z <- rr %%Ny.`1;
+    b  <- V.challenge(Ny,z);
+    ryb  <- (r * if b then w else 1) %% Ny.`1  ;
+    result <- V.summitup(z,b,ryb);
+    return (b = b', result);
+
   }
 }.
 
 
 module ZK(P : Prover, V : VerifierA) = {
-  proc main(N : int, y : int, w : int) = {
+  proc main(Ny : int * int, w : int) = {
     var c,b,r,result;
-    c <- P.commit((N, y),w);
-    b <- V.challenge((N,y),c);
+    c <- P.commit((Ny.`1, Ny.`2),w);
+    b <- V.challenge(Ny,c);
     r <- P.response(b);
     result <- V.summitup(c,b,r);
     return result;
@@ -273,7 +278,7 @@ module ZK(P : Prover, V : VerifierA) = {
 
 local lemma qrp_zk2_eq Na ya wa : IsSqRoot (Na, ya) wa =>
   equiv [ZK(HP, V).main ~ Sim1'.simulate
-         : ={arg, glob V} /\ arg{1} = (Na, ya, wa)
+         : ={arg, glob V} /\ arg{1} = ((Na, ya), wa)
           ==> res{1} = res{2}.`2 ].
 move => isqr. proc.
 inline*. sp.
@@ -301,30 +306,24 @@ exists* bb{1}. elim*. progress.
 wp. case (bb_L = true).     
 rnd (fun (x : int * int) => (x.`1 * inv N{1} wa %% N{1}, x.`2 * (inv N{1} y{1}) %% N{1} ))
       (fun (x : int * int) => (x.`1 * wa %% N{1}, x.`2 * y{1} %% N{1})). skip. progress.
-
 have ->: rrrR = (rrrR.`1 %% N{2}, rrrR.`2 %% N{2}). smt (d_prop2).
 simplify. split. 
   have : invertible N{2} wa.  smt.
 move => iwa. 
-
 have ->:  rrrR.`1 %% N{2} * wa %% N{2} * inv N{2} wa %% N{2}
  =  (rrrR.`1  * wa  * inv N{2} wa) %% N{2}.
 smt (modzMml modzMmr modzMm).
 have ->: rrrR.`1 * wa * inv N{2} wa = rrrR.`1 * (wa * inv N{2} wa).
 smt.
 smt (modzMml modzMmr modzMm qr_prop1).
-
 have ->:  rrrR.`2 %% N{2} * y{2} %% N{2} * inv N{2} y{2} %% N{2}
  =  (rrrR.`2  * y{2}  * inv N{2} y{2}) %% N{2}.
 smt (modzMml modzMmr modzMm).
 have ->: rrrR.`2 * y{2} * inv N{2} y{2} = rrrR.`2 * (y{2} * inv N{2} y{2}).
 smt.
 smt (modzMml modzMmr modzMm qr_prop1).
-
-
 apply (d_prop0 N{2}). auto.
 apply (d_prop3 N{2}).
-
  have ->: rrrR.`1 * wa * (rrrR.`1 * wa) =
 (rrrR.`1 * rrrR.`1) * (wa *  wa). smt.
  have ->: (rrrR.`1 * rrrR.`1) * (wa *  wa) %%N{2}
@@ -340,11 +339,8 @@ smt (modzMml modzMmr modzMm).
 apply d_prop3. 
 have f1 : invertible N{2} wa. smt.
 clear H H0.
-
-
  have ->: rrrL.`1 * inv N{2} wa * (rrrL.`1 * inv N{2} wa) =
 (rrrL.`1 * rrrL.`1) * (inv N{2} wa * inv N{2} wa). smt.
-
  have ->: (rrrL.`1 * rrrL.`1) * (inv N{2} wa * inv N{2} wa) %%N{2}
  = (rrrL.`1 * rrrL.`1) %%N{2} * (inv N{2} wa * inv N{2} wa) %%N{2}. 
 smt (modzMml modzMmr modzMm).
@@ -358,8 +354,6 @@ have ->: inv N{2} wa * inv N{2} wa %% N{2}
 rewrite -  (qr_prop3 N{2} y{2} wa).    auto.
 auto. rewrite - isqr. smt (qr_prop4). 
 smt (modzMml modzMmr modzMm).
-
-
 have ->: rrrL = (rrrL.`1 %% N{2}, rrrL.`2 %% N{2}). smt (d_prop2).
 simplify. split. 
   have : invertible N{2} wa.  smt.
@@ -393,44 +387,44 @@ qed.
 
 local lemma qkok Na ya wa P : IsSqRoot (Na, ya) wa => invertible Na ya =>
   equiv [ Sim1(V).simulate ~ Sim1'.simulate
-   :   ={glob V} /\ (Na,ya) = (N{1},y{1}) /\ (Na,ya,wa) = (N{2},y{2},w{2})
+   :   ={glob V} /\ (Na,ya) = (Ny{1}) /\ ((Na,ya),wa) = (Ny{2},w{2})
        ==> (res{1}.`1 /\ P res{1}.`2) <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => isqr invrtbl. proc.
-seq 1 1 : (={N,y,glob V,b',z} 
+seq 1 1 : (={Ny,glob V,b',z} 
          /\ (b'{1} = true => z{1} %% Na = r{1} * r{1} * (inv Na ya) %% Na
                      /\ r{1} * (inv Na wa) %% Na = r{2} %% Na )
          /\ (b'{2} = false => z{1} %% Na = r{1} * r{1} %% Na /\ r{1} = r{2})
-         /\ (Na, ya,wa) = (N{2},y{2},w{2}) ).
+         /\ ((Na, ya),wa) = (Ny{2},w{2}) ).
 call (exss Na ya wa). skip. progress. smt.  smt.     
-seq 1 1 : (={b,N,y,glob V,b',z} 
+seq 1 1 : (={b,Ny,glob V,b',z} 
          /\ (b'{1} = true => z{1} %% Na = r{1} * r{1} * (inv Na ya) %% Na
                      /\ r{1} * (inv Na wa) %% Na = r{2} %% Na )
          /\ (b'{2} = false => z{1} %% Na = r{1} * r{1} %% Na /\ r{1} = r{2})
-         /\ (Na, ya,wa) = (N{2},y{2},w{2}) ).
+         /\ ((Na, ya),wa) = (Ny{2},w{2}) ).
 call (_:true). skip. progress.
 exists* b'{1}. elim*. progress.
 case (b'_L = true).
 exists* b{1}. elim*. progress.
 case (b_L = true).    
-seq 1 1 : (={ryb,b,N,y,glob V,b',z} 
+seq 1 1 : (={ryb,b,Ny,glob V,b',z} 
          /\ (b'{1} = true => z{1} %% Na = r{1} * r{1} * (inv Na ya) %% Na
                      /\ r{1} * (inv Na wa) %% Na = r{2} %% Na )
          /\ (b'{2} = false => z{1} %% Na = r{1} * r{1} %% Na /\ r{1} = r{2})
-         /\ (Na, ya,wa) = (N{2},y{2},w{2}) ).
+         /\ ((Na, ya),wa) = (Ny{2},w{2}) ).
 wp. skip. progress.    
-have : r{1} * inv N{2} w{2} %% N{2} = r{2} %% N{2}.  smt.
+have : r{1} * inv Na w{2} %% Na = r{2} %% Na.  smt.
 move => qq. clear H H0. 
-have : r{1} * inv N{2} w{2} %% N{2} * w{2} = r{2} %% N{2} * w{2}.
+have : r{1} * inv Na w{2} %% Na * w{2} = r{2} %% Na * w{2}.
 smt. clear qq. move => qq. 
-have : r{1} * inv N{2} w{2} %% N{2} * w{2} %% N{2} = r{2} %% N{2} * w{2} %% N{2}.
+have : r{1} * inv Na w{2} %% Na * w{2} %% Na = r{2} %% Na * w{2} %% Na.
 smt. clear qq. move => qq.
-have : invertible N{2} w{2}. smt.
+have : invertible Na w{2}. smt.
 move => iwa.
-have <-: r{1} * inv N{2} w{2} %% N{2} * w{2} %% N{2} = r{1} %% N{2}.
-  have ->: r{1} * inv N{2} w{2} %% N{2} * w{2} %% N{2}
-          = r{1} * inv N{2} w{2} * w{2} %% N{2}.
+have <-: r{1} * inv Na w{2} %% Na * w{2} %% Na = r{1} %% Na.
+  have ->: r{1} * inv Na w{2} %% Na * w{2} %% Na
+          = r{1} * inv Na w{2} * w{2} %% Na.
 smt (modzMml modzMmr modzMm qr_prop1).
-  have ->: r{1} * inv N{2} w{2} * w{2} = r{1} * (inv N{2} w{2} * w{2}).
+  have ->: r{1} * inv Na w{2} * w{2} = r{1} * (inv Na w{2} * w{2}).
   smt .
       smt (modzMml modzMmr modzMm qr_prop11).
       smt (modzMml modzMmr modzMm ).
@@ -449,35 +443,88 @@ call {2} (_: true ==> true). apply summitup_ll.
 wp. skip. auto.
 qed.
 
-lemma simnres : phoare[ Sim1(V).simulate : true ==> !res.`1 ] = (1%r/2%r).
-admitted.
+
+
+
+local lemma ssim Na ya wa  : IsSqRoot (Na, ya) wa => invertible Na ya =>
+ equiv [ Sim1(V).simulate ~ Sim1'.simulate : ={glob V} /\ (Na,ya) = (Ny{1}) /\ ((Na,ya),wa) = (Ny{2},w{2}) ==> res.`1{1} = res.`1{2} ].
+move => isr invr.
+conseq (qkok Na ya wa (fun x => true) isr invr). smt.
+qed.
+
+local lemma sim1'not &m Na ya wa : 
+     Pr[Sim1'.simulate((Na, ya), wa) @ &m : ! res.`1] = inv 2%r.
+proof.
+have ->: Pr[Sim1'.simulate((Na, ya), wa) @ &m : ! res.`1] = Pr[Sim1'.allinone((Na, ya), wa) @ &m : ! res.`1]. byequiv. proc.
+sim. wp.  inline*.  wp. rnd.  rnd.  wp. skip. progress. auto. auto.
+byphoare. proc. inline*. simplify. 
+swap [2..3] 4. wp.
+seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
+auto.
+call summitup_ll. wp. 
+call challenge_ll. wp. rnd. skip. smt. rnd. skip. progress.
+smt. exfalso. auto. auto.  auto. auto.
+qed.
+
+
+lemma simnres Na ya wa : IsSqRoot (Na, ya) wa => invertible Na ya =>
+  phoare[ Sim1(V).simulate : arg = (Na,ya) ==> !res.`1 ] = (1%r/2%r).
+move => isr invr.
+bypr. progress.
+rewrite H. clear H.
+have <-: Pr[Sim1'.simulate((Na, ya),wa) @ &m : ! res.`1] = inv 2%r.
+apply sim1'not.
+byequiv (_: _ ==> res.`1{1} = res.`1{2}). conseq (ssim Na ya wa isr invr). smt.  progress. smt.
+qed.
+  
     
-local lemma qrp_zk2_pr &m Na ya wa q : IsSqRoot (Na, ya) wa =>
-    Pr[ZK(HP, V).main(Na,ya,wa) @ &m : q res  ] 
-     = Pr[ Sim1'.simulate(Na,ya,wa) @ &m : q res.`2  ].
+
+local lemma qrp_zk2_pr_l &m Na ya wa q : IsSqRoot (Na, ya) wa =>
+    Pr[ZK(HP, V).main((Na,ya),wa) @ &m : q res  ] 
+     = Pr[ Sim1'.simulate((Na,ya),wa) @ &m : q res.`2  ].
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
 conseq (qrp_zk2_eq Na ya wa isqr).  progress. smt. smt.  auto. auto.
 qed.
 
 
-local lemma sd &m (P : bool list -> bool) Na ya wa : IsSqRoot (Na, ya) wa =>
-     Pr[ Sim1'.simulate(Na,ya,wa) @ &m : res.`1 /\ P res.`2 ]
-    = (1%r/2%r) * Pr[ Sim1'.simulate(Na,ya,wa) @ &m : P res.`2 ].
-admitted.
+
+local lemma sd &m (P : bool list -> bool) Na ya wa : 
+     Pr[ Sim1'.simulate((Na,ya),wa) @ &m : res.`1 /\ P res.`2 ]
+    = (1%r/2%r) * Pr[ Sim1'.simulate((Na,ya),wa) @ &m : P res.`2 ].
+have : Pr[ Sim1'.simulate((Na,ya),wa) @ &m : res.`1 /\ P res.`2 ]
+ = Pr[ Sim1'.simulate((Na,ya),wa) @ &m : !res.`1 /\ P res.`2 ].
+byequiv (_: ={glob Sim1',arg} ==> _).  
+proc.  inline*.
+call (_:true). wp. 
+call (_:true). wp. 
+rnd (fun x => !x). rnd. wp. skip. progress.
+smt. smt. auto. auto.
+have ->: Pr[Sim1'.simulate((Na, ya), wa) @ &m : P res.`2] =
+ Pr[Sim1'.simulate((Na, ya), wa) @ &m : res.`1 /\ P res.`2] +
+   Pr[Sim1'.simulate((Na, ya), wa) @ &m : ! res.`1 /\ P res.`2].
+rewrite Pr[mu_split res.`1]. 
+have ->: Pr[Sim1'.simulate((Na, ya), wa) @ &m : P res.`2 /\ res.`1]
+ = Pr[Sim1'.simulate((Na, ya), wa) @ &m : res.`1 /\ P res.`2]. smt.
+have ->: Pr[Sim1'.simulate((Na, ya), wa) @ &m : P res.`2 /\ !res.`1]
+ = Pr[Sim1'.simulate((Na, ya), wa) @ &m : !res.`1 /\ P res.`2]. smt.
+auto.
+move => q.
+rewrite - q. smt.
+qed.
+ 
 
 
 lemma sim1zk &m Na ya wa q :
-  IsSqRoot (Na, ya) wa =>  invertible Na ya =>
-       Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\  q res.`2] = Pr[ZK(HP, V).main(Na, ya, wa) @ &m : q res] / 2%r.
+  IsSqRoot (Na, ya) wa => invertible Na ya =>
+       Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\  q res.`2] = Pr[ZK(HP, V).main((Na, ya), wa) @ &m : q res] / 2%r.
 move => isr invr.
 have ->: Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\ q res.`2]
- = Pr[Sim1'.simulate(Na, ya,wa) @ &m : res.`1 /\ q res.`2].
+ = Pr[Sim1'.simulate((Na,ya),wa) @ &m : res.`1 /\ q res.`2].
 byequiv. 
-
 conseq (qkok Na ya wa q isr invr). progress;smt. auto. auto.
-rewrite (sd &m q Na ya wa isr).
-rewrite (qrp_zk2_pr &m Na ya wa q isr). auto.
+rewrite (sd &m q Na ya wa).
+rewrite (qrp_zk2_pr_l &m Na ya wa q isr). auto.
 qed.
 
     
