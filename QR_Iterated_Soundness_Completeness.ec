@@ -68,7 +68,7 @@ local lemma RewPropAHP :
   islossless A(HP).setState.
 admitted.
   
-local lemma qr_iterated_soundness &m e Na ya :
+lemma qr_iterated_soundness &m e Na ya :
   0 <= e =>
       ! IsQR (Na, ya) =>
   Pr[ W(A(P)).whp_A(fun x => !x, ((Na,ya),witness), 1,e,true) @ &m : res ] <= ((1%r/2%r) ^ e).
@@ -89,13 +89,11 @@ conseq (qr_sound_ph P P_commit_ll P_response_ll Na ya H0).
 auto. auto. simplify. auto.
 qed.
 
-
-local lemma qr_iterated_completeness wa &m e Na ya :
-    IsSqRoot (Na, ya) wa =>
-    invertible Na ya =>
+lemma qr_iterated_completeness wa &m e Na ya :
+    IsSqRoot (Na, ya) wa /\ invertible Na ya =>
     0 <= e =>
   Pr[ W(A(HP)).whp_A(fun x => !x, ((Na,ya),wa), 1,e,true) @ &m : res ] = 1%r.
-progress.
+move => ii. progress.
 have : Pr[W(A(HP)).whp_A(fun x => !x, ((Na, ya), wa), 1, e, true) @ &m : !!res] = 1%r ^ e. 
 apply (final_zz (A(HP)) AHP_run_ll RewPropAHP &m (1%r) (fun x => !x) ((Na, ya),wa) e true).
 auto.  auto.
@@ -105,6 +103,8 @@ have ->: Pr[A(HP).run((Na, ya), wa) @ &m : res]
 byequiv (_: ={glob HP,glob HV,arg} ==> _). proc*.
 inline A(HP).run. wp. sp. simplify. sim. auto.  auto.
 byphoare (_: arg = ((Na, ya), wa) ==> _).
-conseq (qr_complete_ph Na ya wa H H0 ).
+conseq (qr_complete_ph Na ya wa ii).
 auto. auto. smt.
 qed.
+
+end section.

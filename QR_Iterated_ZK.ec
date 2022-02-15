@@ -38,8 +38,7 @@ module A(V : RewVerifierA) = {
     return witness;
   }
   proc setState(s : sbits) = {
-    V.setState(s);
-    Sim1.result <- witness;
+    V.setState(s);   
   }
   proc run(i : qr_c * qr_w) : bool * bool list = {
     var r; 
@@ -68,17 +67,17 @@ axiom RewPropAV :  (exists (f : (glob A(V)) -> sbits),
 axiom A_ll : islossless GetRunSet(A(V)).main.
 axiom A_ll2 :   islossless A(V).run.
 axiom V_summitup_ll : islossless V.summitup.
+axiom V_challenge_ll : islossless V.challenge.
 
 
 
-lemma qrp_zk2_pr (e ja : int) q &m Na ya (wa : qr_w) : 
-    0 <= ja - 2 =>
+lemma qrp_zk2_pr (e ja : int) q &m Na ya wa : 
+    IsSqRoot (Na, ya) wa /\ invertible Na ya => 0 <= ja - 2 =>
     ja <= e + 1 =>
-    IsSqRoot (Na, ya) wa => invertible Na ya =>
     Pr[ W(A(V)).whp_A(fst, ((Na,ya),wa), 1,e,(false,[])) @ &m :
        W.c = ja /\ (fst res) /\ q (snd res) ]
     = (1%r/2%r)^(ja - 2) * ((1%r/2%r) * Pr[ZK(HP, V).main((Na,ya),wa) @ &m : q res ]).
-move => jap1 jap2 isr invr.
+move =>  [isr invr] jap1 jap2.
 have <-: Pr[ WW(GetRunSet(A(V))).whp(fst,((Na,ya),wa),1,e,(false,[])) @ &m : WW.c = ja /\ fst res /\ q (snd res) ]  
   = Pr[W(A(V)).whp_A(fst, ((Na, ya), wa), 1, e,
       (false, [])) @ &m : W.c = ja /\ res.`1 /\ q res.`2].
@@ -102,7 +101,7 @@ have ->:
   Pr[Sim1(V).simulate(Na, ya) @ &m0 : res.`1 /\ q res.`2]
   = Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\ q res.`2].
 byequiv (_: ={arg, glob V, glob Sim1} ==> ={glob Sim1, glob V, res} ). sim. auto. auto.
-apply (sim1zk V).   apply V_summitup_ll. auto. auto. 
+apply (sim1zk V). apply V_summitup_ll. apply V_challenge_ll. auto. auto. 
 progress. bypr.
 move => &n. elim.  move => ap ge. rewrite ap. simplify.
 have ->: Pr[WW(GetRunSet(A(V))).whp(fst, ((Na,ya),wa), 1, ea, (false,[])) @ &n : ! fst res]
@@ -115,7 +114,7 @@ apply RewPropAV.
 auto. auto. simplify. 
 byphoare (_: ((Na, ya), wa) = arg ==> _). 
 proc.
-call (simnres V V_summitup_ll Na ya wa).
+call (simnres V V_summitup_ll V_challenge_ll Na ya wa).
 skip. smt.  auto. auto. 
 conseq (dbl1 (A(V)) _  (fun x => true) (glob GetRunSet(A(V))){m} (1%r) _).
 apply RewPropAV. simplify. conseq A_ll2.
