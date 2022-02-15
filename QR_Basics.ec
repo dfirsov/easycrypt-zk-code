@@ -452,22 +452,34 @@ qed.
 lemma simnres : phoare[ Sim1(V).simulate : true ==> !res.`1 ] = (1%r/2%r).
 admitted.
     
-local lemma qrp_zk2_pr &m Na ya wa a : IsSqRoot (Na, ya) wa =>
-    Pr[ZK(HP, V).main(Na,ya,wa) @ &m : res = a ] 
-     = Pr[ Sim1'.simulate(Na,ya,wa) @ &m : res.`2 = a ].
+local lemma qrp_zk2_pr &m Na ya wa q : IsSqRoot (Na, ya) wa =>
+    Pr[ZK(HP, V).main(Na,ya,wa) @ &m : q res  ] 
+     = Pr[ Sim1'.simulate(Na,ya,wa) @ &m : q res.`2  ].
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
 conseq (qrp_zk2_eq Na ya wa isqr).  progress. smt. smt.  auto. auto.
 qed.
 
 
-
-
 local lemma sd &m (P : bool list -> bool) Na ya wa : IsSqRoot (Na, ya) wa =>
-     Pr[ Sim1'.simulate(Na,ya,wa) @ &m : P res.`2 /\ res.`1 ]
+     Pr[ Sim1'.simulate(Na,ya,wa) @ &m : res.`1 /\ P res.`2 ]
     = (1%r/2%r) * Pr[ Sim1'.simulate(Na,ya,wa) @ &m : P res.`2 ].
 admitted.
 
 
+lemma sim1zk &m Na ya wa q :
+  IsSqRoot (Na, ya) wa =>  invertible Na ya =>
+       Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\  q res.`2] = Pr[ZK(HP, V).main(Na, ya, wa) @ &m : q res] / 2%r.
+move => isr invr.
+have ->: Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\ q res.`2]
+ = Pr[Sim1'.simulate(Na, ya,wa) @ &m : res.`1 /\ q res.`2].
+byequiv. 
+
+conseq (qkok Na ya wa q isr invr). progress;smt. auto. auto.
+rewrite (sd &m q Na ya wa isr).
+rewrite (qrp_zk2_pr &m Na ya wa q isr). auto.
+qed.
+
+    
 end section.
 
