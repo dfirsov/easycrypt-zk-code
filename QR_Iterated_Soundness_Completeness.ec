@@ -84,7 +84,6 @@ have ->: Pr[A(P).run((Na, ya), witness) @ &m : res]
 byequiv (_: ={glob P,glob HV,arg} ==> _). proc*.
 inline A(P).run. wp. sp. sim. auto.  auto.
 byphoare (_: arg = ((Na, ya), witness) ==> _).
-print qr_sound_ph.
 conseq (qr_sound_ph P P_commit_ll P_response_ll Na ya H0).
 auto. auto. simplify. auto.
 qed.

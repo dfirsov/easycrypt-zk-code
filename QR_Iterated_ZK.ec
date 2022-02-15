@@ -9,8 +9,8 @@ clone import Iterated_Failure as IF with type irt <- (qr_c * qr_w),
 
 
 
-require Mywhile.
-clone import Mywhile as MW with type irt <- (qr_c * qr_w),
+require While_Props.
+clone import While_Props as MW with type irt <- (qr_c * qr_w),
                                          type rrt <- bool * bool list.
 
 

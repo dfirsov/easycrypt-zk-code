@@ -27,11 +27,8 @@ skip. progress;smt.
 qed.
 
 
-
-
-
-
-lemma exp_lemma_add_info : equiv[ Exp.main1 ~ Exp.main2 : true ==> ={res} /\ (res{2}.`2 = false => res{1}.`1 = res{2}.`1) ].
+lemma exp_lemma_add_info : 
+  equiv[ Exp.main1 ~ Exp.main2 : true ==> ={res} /\ (res{2}.`2 = false => res{1}.`1 = res{2}.`1) ].
 proof. proc. swap 1 1.
 rnd (fun x => x ^^ Exp.b2{1}). rnd. 
 skip. progress;smt.

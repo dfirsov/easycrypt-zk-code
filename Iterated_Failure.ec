@@ -103,7 +103,7 @@ have -> : Pr[GetRunSet(A).main(z{2}) @ &2 :
    rewrite - H2.
    byphoare (_: (glob A) = (glob A){2} ==> _ ). hoare.  simplify.
     have f : forall ga, phoare[ GetRunSet(A).main : (glob A) = ga ==> (glob A) = ga] = 1%r. 
-    print dbl1. move => ga.
+    move => ga.
     apply (dbl1 A RewProp (fun x => true) ). conseq A_ll. 
     conseq (f (glob A){2}).       auto. auto.
      smt.
@@ -124,7 +124,7 @@ rewrite hpp.
    rewrite - H2.
    byphoare (_: (glob A) = (glob A){2} ==> _ ). hoare.  simplify.
     have f : forall ga, phoare[ GetRunSet(A).main : (glob A) = ga ==> (glob A) = ga] = 1%r. 
-    print dbl1. move => ga.
+    move => ga.
     apply (dbl1 A RewProp (fun x => true) ). simplify. conseq A_ll.
     conseq (f (glob A){2}).       auto. auto.
      smt.
