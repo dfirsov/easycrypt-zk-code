@@ -9,12 +9,14 @@ type dl_prob = (int * int * int).
 type dl_wit  = int.
 type dl_com = int.
 type dl_resp = int.
-
+type dl_run = dl_prob * dl_com * bool * dl_resp.
 op IsPrime : int -> bool.
 
-op VerifyZK : dl_prob -> dl_com -> dl_resp -> bool.
+op VerifyZK : (dl_prob * dl_com * bool * dl_resp) -> bool.
 op VerifyWit : dl_prob -> dl_wit -> bool.
-op ExtractWit : dl_prob -> dl_com -> dl_resp -> dl_resp -> dl_wit option.
+op ExtractWit : dl_run -> dl_run -> dl_wit option.
+axiom ExLemma (r1 r2 : dl_run) : r1.`1 = r2.`1 => r1.`3 <> r2.`3 => VerifyZK r1 => VerifyZK r2
+  => VerifyWit r1.`1 (oget (ExtractWit r1 r2)).
 
 
 
@@ -89,7 +91,7 @@ module DL_HV : Verifier = {
 
 lemma dl_complete_h p (A : int) B (x : int) : 
   IsPrime p /\ A^x %% p = B %% p /\ 0 <= x
-   => hoare [ Correct(DL_HP,DL_HV).main : arg = ((p,A,B),x) ==> res ]. 
+   => hoare [ Correct(DL_HP,DL_HV).run : arg = ((p,A,B),x) ==> res ]. 
 move => [qra [invrtbl wpos]].
 proc. inline*.  wp. 
 rnd. wp.  rnd.  wp. 
@@ -111,7 +113,7 @@ require RewWithInit.
 clone import RewWithInit.RWI as MRWI with type sbits <- sbits,
                                           type iat   <- dl_prob,
                                           type irt   <- dl_prob * dl_com,
-                                          type rrt   <- (bool * bool).
+                                          type rrt   <- (dl_prob * dl_com * bool * dl_resp).
 
 
 module MyInit(P : Prover) : RW.Initializer = {
@@ -123,7 +125,7 @@ module MyInit(P : Prover) : RW.Initializer = {
 }.                                  
 
 
-module MyRewRun(P : Prover) : RW.RewRun = {
+module MyRewRun(P : RewProver) : RW.RewRun = {
 
   proc run(pa : dl_prob, ca : dl_com) = {
     var b : bool;
@@ -132,7 +134,7 @@ module MyRewRun(P : Prover) : RW.RewRun = {
 
     r <- P.response(b);
     
-    return (b, pa.`2 ^ r %% pa.`1 = ca * (if b then pa.`3 else 1) %% pa.`1);
+    return (pa, ca, b, r);
   }
 
   proc setState(s : sbits) = {
@@ -146,53 +148,53 @@ module MyRewRun(P : Prover) : RW.RewRun = {
 
 
 section.
-declare module P : Prover.
+declare module P : RewProver.
 
 lemma step1 &m : forall (i : dl_prob),
-        Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : snd (snd res)] ^ 2 <=
-        Pr[QQ(MyRewRun(P), MyInit(P)).main(i) @ &m : snd (snd res.`1) /\ snd (snd res.`2)].
+        Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] ^ 2 <=
+        Pr[QQ(MyRewRun(P), MyInit(P)).main(i) @ &m : VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2].
 proof. move => i.
-apply (rew_with_init (MyRewRun(P)) (MyInit(P)) _ _ _ _ _ &m (fun x => snd (snd x ))).
+apply (rew_with_init (MyRewRun(P)) (MyInit(P)) _ _ _ _ _ &m (fun x => VerifyZK ((snd x) )) ).
 sim. sim. admit. admit. admit.
 qed.
 
 
 lemma step2 &m : forall (i : dl_prob),
-    Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : snd (snd res)] ^ 2 <=
+    Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m :  VerifyZK res.`2] ^ 2 <=
     Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-      @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-         /\ res.`1.`2.`1 = res.`2.`2.`1 ]
+      @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+         /\ res.`1.`2.`3 = res.`2.`2.`3 ]
    + Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-      @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-         /\ res.`1.`2.`1 <> res.`2.`2.`1].
+      @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+         /\ res.`1.`2.`3 <> res.`2.`2.`3].
 proof. move => i.
 have <-: Pr[QQ(MyRewRun(P), MyInit(P)).main(i) @ &m :
-             (snd (snd res.`1) /\ snd (snd res.`2)) ] =
+             VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2 ] =
    Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-      @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-         /\ res.`1.`2.`1 = res.`2.`2.`1 ]
+      @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+         /\ res.`1.`2.`3 = res.`2.`2.`3 ]
    + Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-      @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-         /\ res.`1.`2.`1 <> res.`2.`2.`1].
-rewrite Pr[mu_split res.`1.`2.`1 = res.`2.`2.`1]. 
-auto.
+      @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+         /\ res.`1.`2.`3 <> res.`2.`2.`3].
+rewrite Pr[mu_split res.`1.`2.`3 = res.`2.`2.`3]. 
+auto. 
 apply step1.
 qed.
 
 lemma step3 &m : forall (i : dl_prob),
  Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-     @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-        /\ res.`1.`2.`1 <> res.`2.`2.`1] >= 
- Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : snd (snd res)] ^ 2
+     @ &m : ((VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2))
+        /\ res.`1.`2.`3 <> res.`2.`2.`3] >= 
+ Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] ^ 2
   -     Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-      @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-         /\ res.`1.`2.`1 = res.`2.`2.`1 ].
+      @ &m : ((VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2))
+         /\ res.`1.`2.`3 = res.`2.`2.`3 ].
 smt (step2).
 qed.  
 
 
 lemma qwe &m i :
- Pr[QQ(MyRewRun(P), MyInit(P)).main(i) @ &m : res.`1.`2.`1 = res.`2.`2.`1 ]
+ Pr[QQ(MyRewRun(P), MyInit(P)).main(i) @ &m : res.`1.`2.`3 = res.`2.`2.`3 ]
  = 1%r/2%r.
 proof. byphoare. proc.
 inline*. simplify. wp. simplify.
@@ -203,14 +205,14 @@ admitted.
 
 lemma step4 &m : forall (i : dl_prob),
  Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-     @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-        /\ res.`1.`2.`1 <> res.`2.`2.`1] >= 
- Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : snd (snd res)] ^ 2
+     @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+        /\ res.`1.`2.`3 <> res.`2.`2.`3] >= 
+ Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] ^ 2
     - 1%r/2%r.
 move => i.
 have f : Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-      @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-         /\ res.`1.`2.`1 = res.`2.`2.`1 ] <= 1%r/2%r.
+      @ &m : ((VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2))
+         /\ res.`1.`2.`3 = res.`2.`2.`3 ] <= 1%r/2%r.
 rewrite - (qwe &m i).
 rewrite Pr[mu_sub]. progress. auto.
 smt (step3).
@@ -219,11 +221,6 @@ qed.
 
 (*
 TODO:
-1/ embed verification into  (instead of just bools)
-
- Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
-     @ &m : (snd (snd res.`1) /\ snd (snd res.`2))
-        /\ res.`1.`2.`1 <> res.`2.`2.`1] 
 
 2/ show that if verification  succeeds and chals are different
 then  the above prob is equal to same probability but with
