@@ -21,14 +21,20 @@ type qr_wit  = int.
 type qr_com = int.
 type qr_resp = int.
 
-
-type qr_c  =  int * int.
-type qr_w  = int.
 type sbits.
 
 
-op IsSqRoot (Ny : qr_c) (w : qr_w) = Ny.`2 %% Ny.`1  = (w * w) %% Ny.`1. 
-op IsQR (Ny : qr_c) = exists w, IsSqRoot Ny w.
+require ZK_General.
+clone import ZK_General as ZK_defs with type prob  = qr_prob,
+                                        type wit   = qr_wit,
+                                        type chal  = bool,
+                                        type com   = qr_com,
+                                        type resp  = qr_resp,
+                                        type sbits = sbits.
+
+
+op IsSqRoot (Ny : qr_prob) (w : qr_wit) = Ny.`2 %% Ny.`1  = (w * w) %% Ny.`1. 
+op IsQR (Ny : qr_prob) = exists w, IsSqRoot Ny w.
 
 
 axiom d_prop0 N : is_uniform (ZNS_dist N).
@@ -50,64 +56,13 @@ lemma qr_prop11 (N x : int) : invertible N x => (inv N x) * x  %% N = 1.
 proof.  smt. qed.
 
 
-(*
-- computationally unbounded
-- knows the proof
-- wants to convinvce the verifier that he knows the proof
-*)
-module type Prover = {
-  proc commit(Ny : qr_c, w : int) : int
-  proc response(b : bool) : int
-}.
-
-module type Verifier = {
-  proc challenge(Ny : qr_c, c : int) : bool  
-  proc verify(c : int, b : bool, r : int) : bool
-}.
-
-
-module type VerifierA = {
-  proc challenge(Ny : qr_c, c : int) : bool  
-  proc summitup(c : int, b : bool, r : int) : bool list
-}.
-
-
-module type Simulator = {
-  proc simulate(Ny : qr_c) : bool list
-}.
-
-
-(* Correctness *)
-module Correct(P : Prover, V : Verifier) = {
-  var c, r : int
-  var b, result : bool
-  proc run(Ny:qr_c, w : int) = {
-    c <- P.commit(Ny,w);  
-    b <- V.challenge(Ny,c);
-    r <- P.response(b);
-    result <- V.verify(c,b,r);  
-    return result;
-  }
-}.
-
-(* ZK *)
-module ZK(P : Prover, V : VerifierA) = {
-  proc main(Ny : int * int, w : int) = {
-    var c,b,r,result;
-    c <- P.commit((Ny.`1, Ny.`2),w);
-    b <- V.challenge(Ny,c);
-    r <- P.response(b);
-    result <- V.summitup(c,b,r);
-    return result;
-  }
-}.
 
 
 (* honest prover  *)
 module HP : Prover = {
   var r,rr, n, y, w : int
 
-  proc commit(Ny1 : qr_c, w1 : int) : int = {  
+  proc commit(Ny1 : qr_prob, w1 : int) : int = {  
     (n,y,w) <- (Ny1.`1,Ny1.`2, w1);
     (r,rr) <$ ZNS_dist n;
     return rr;
@@ -128,17 +83,22 @@ module HP : Prover = {
 (* honest verifier *)
 module HV : Verifier = {
   var n,y : int
+  var b : bool
 
-  proc challenge(Ny1 : qr_c, c : int) : bool = {
-   var b : bool;
+  proc challenge(Ny1 : qr_prob, c : int) : bool = {
    (n,y) <- (Ny1.`1,Ny1.`2);
    b <$ {0,1};
    return b;
   }
 
-  proc verify(c : int,b : bool, r : int) : bool = {
+  proc verify(c : int, r : int) : bool = {
     return  (if b then invertible n c /\ invertible n y /\ (c * y)  %% n = (r * r) %% n else invertible n c /\ (c %% n) = (r * r)%%n);
  } 
+
+ proc summitup(c : int, r : int) : sbits = {
+    return  witness;
+ } 
+
 }.
 
 
@@ -179,22 +139,36 @@ declare module P : Prover {HV,Correct}.
 axiom P_ax1 : islossless P.commit.
 axiom P_ax2 : islossless P.response.
 
-lemma qr_sound_ph Na ya :
- !IsQR (Na, ya) => phoare [ Correct(P,HV).run : arg = ((Na,ya),witness) ==> res ] <= (1%r/2%r).
+(* Correctness *)
+local module CorrectL(P : Prover, V : Verifier) = {
+  var c, r : int
+  var b, result : bool
+  proc run(Ny:qr_prob, w : int) = {
+    c <- P.commit(Ny,w);  
+    b <- V.challenge(Ny,c);
+    r <- P.response(b);
+    result <- V.verify(c,r);  
+    return result;
+  }
+}.
+
+
+local lemma qr_sound_ph_loc Na ya :
+ !IsQR (Na, ya) => phoare [ CorrectL(P,HV).run : arg = ((Na,ya),witness) ==> res ] <= (1%r/2%r).
 proof. move => qra.
 proc. inline*. 
 wp.
 seq 4 : ((Ny) = (Na,ya) /\ HV.y = Ny.`2 /\ HV.n = Ny.`1) (1%r) (1%r/2%r) (0%r) (1%r).  auto.
 auto.
-exists* Correct.c. elim*. move => cv.
+exists* CorrectL.c. elim*. move => cv.
 case (!IsQR (Na, cv)).
-seq 1 : (!b) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = Correct.c /\ Ny = (Na,ya) /\ HV.y = Ny.`2 /\ HV.n = Ny.`1 /\ !IsQR (Na, cv)).
+seq 1 : (!HV.b) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = CorrectL.c /\ Ny = (Na,ya) /\ HV.y = Ny.`2 /\ HV.n = Ny.`1 /\ !IsQR (Na, cv)).
 rnd.  skip. auto.
 hoare. call (_:true ==> true). auto.
 wp. auto. progress. rewrite H0. simplify.   
-have : forall (w : int), Correct.c{hr} %% HV.n{hr} <> w * w %% HV.n{hr}. clear qra H0. 
+have : forall (w : int), CorrectL.c{hr} %% HV.n{hr} <> w * w %% HV.n{hr}. clear qra H0. 
    move => w.  
-  case (Correct.c{hr} %% HV.n{hr} = w * w %% HV.n{hr}). move => ass.
+  case (CorrectL.c{hr} %% HV.n{hr} = w * w %% HV.n{hr}). move => ass.
   simplify. apply H. rewrite /IsQR. exists w. rewrite /IsSqRoot. apply ass. auto.
 progress. smt. 
 simplify.
@@ -202,7 +176,7 @@ rnd. skip. smt.
 conseq (_: _ ==> true). call (_: true ==> true). auto. 
 wp. skip. auto. auto.
   simplify.
-seq 1 : (b) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = Correct.c /\ (Ny) = (Na,ya) /\ IsQR (Na, cv) /\ HV.y = Ny.`2 /\ HV.n = Ny.`1). 
+seq 1 : (HV.b) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = CorrectL.c /\ (Ny) = (Na,ya) /\ IsQR (Na, cv) /\ HV.y = Ny.`2 /\ HV.n = Ny.`1). 
 rnd. skip. auto.
 hoare. 
 call (_:true ==> true). auto.  
@@ -215,11 +189,25 @@ hoare.
 simplify. auto. call (_ : true ==> true).  auto. skip. auto. auto.
 qed.
 
+lemma qr_sound_ph Na ya :
+ !IsQR (Na, ya) => phoare [ Correct(P,HV).run : arg = ((Na,ya),witness) ==> res ] <= (1%r/2%r).
+progress.
+bypr. progress. rewrite H0. simplify.
+clear H0.
+have ->: Pr[Correct(P, HV).run((Na, ya), witness) @ &m : res]
+ = Pr[CorrectL(P, HV).run((Na, ya), witness) @ &m : res].
+byequiv. sim. auto. smt. auto. auto.
+byphoare (_: arg = ((Na, ya), witness) ==> _).
+apply (qr_sound_ph_loc Na ya). auto. auto. auto.
+qed.
+
+
+
 end section.
 
 
 (* one-time simulator  *)
-module Sim1(V : VerifierA)  = {
+module Sim1(V : Verifier)  = {
 
 
   proc sinit(N : int, y : int) : bool * int * int = {
@@ -229,12 +217,12 @@ module Sim1(V : VerifierA)  = {
     return (bb,(rr * if bb then (inv N y) else 1) %% N,r);
   }
 
-  proc simulate(Ny : int * int) : bool * bool list  = {
+  proc simulate(Ny : int * int) : bool * sbits  = {
     var r,z,b',b,ryb,result;
     (b',z,r) <- sinit(Ny);
     b  <- V.challenge(Ny,z);   
     ryb  <- r %% Ny.`1;
-    result <- V.summitup(z,b,ryb); 
+    result <- V.summitup(z,ryb); 
     return (b = b', result);    
   }
 }.
@@ -242,7 +230,7 @@ module Sim1(V : VerifierA)  = {
 
 section.
 
-declare module V : VerifierA {HP}.
+declare module V : Verifier {HP}.
 
 axiom summitup_ll  :  islossless V.summitup.
 axiom challenge_ll :  islossless V.challenge.
@@ -258,12 +246,12 @@ local module Sim1'  = {
     return (bb,rr %% N,r);
   }
     
-  proc simulate(Ny : int * int, w : int) : bool * bool list  = {
+  proc simulate(Ny : int * int, w : int) : bool * sbits  = {
     var z,r,b',b,ryb,result;
     (b',z,r) <- sinit(Ny);
     b  <- V.challenge(Ny,z);
     ryb  <- (r * if b then w else 1) %% Ny.`1;
-    result <- V.summitup(z,b,ryb);
+    result <- V.summitup(z,ryb);
     return (b = b', result);
   }
 
@@ -275,7 +263,7 @@ local module Sim1'  = {
     z <- rr %%Ny.`1;
     b  <- V.challenge(Ny,z);
     ryb  <- (r * if b then w else 1) %% Ny.`1;
-    result <- V.summitup(z,b,ryb);
+    result <- V.summitup(z,ryb);
     return (b = b', result);
   }
 }.
@@ -496,7 +484,7 @@ qed.
 
 
 
-local lemma sd &m (P : bool list -> bool) Na ya wa : 
+local lemma sd &m (P : sbits -> bool) Na ya wa : 
      Pr[ Sim1'.simulate((Na,ya),wa) @ &m : res.`1 /\ P res.`2 ]
     = (1%r/2%r) * Pr[ Sim1'.simulate((Na,ya),wa) @ &m : P res.`2 ].
 have : Pr[ Sim1'.simulate((Na,ya),wa) @ &m : res.`1 /\ P res.`2 ]

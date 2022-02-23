@@ -1,31 +1,18 @@
 require import AllCore.
-require import QR_Basics.
 
+require import QR_Basics.
+import ZK_defs.
 
 
 require While_not_b_proc.
-clone import While_not_b_proc as IF with type iat <- (qr_c * qr_w),
+clone import While_not_b_proc as IF with type iat <- (qr_prob * qr_wit),
                                          type rt <- bool.
 
-
-module type Prover = {
-  proc commit(Ny : qr_c, w : int) : int
-  proc response(b : bool) : int
-}.
-
-                                         
-(* require ZK_General. *)
-(* clone import ZK_General as ZK_defs with type prob  = int * int, *)
-(*                                         type wit   = int, *)
-(*                                         type chal  = bool, *)
-(*                                         type com   = int, *)
-(*                                         type resp  = int. *)
-(* print Prover. *)
 
                                          
 section.
 
-declare module P : Prover {M,HV,Correct}.
+declare module P : Prover {M,HV}.
 
 
 axiom P_commit_ll   : islossless P.commit.
