@@ -3,107 +3,73 @@ require import QR_Basics.
 
 
 
-require Iterated_Failure.
-clone import Iterated_Failure as IF with type irt <- (qr_c * qr_w),
-                                         type rrt <- bool,
-                                         type sbits <- sbits.
+require While_not_b_proc.
+clone import While_not_b_proc as IF with type iat <- (qr_c * qr_w),
+                                         type rt <- bool.
 
 
-module type RewProver = {
+module type Prover = {
   proc commit(Ny : qr_c, w : int) : int
   proc response(b : bool) : int
-  proc getState() : sbits
-  proc * setState(b : sbits) : unit 
 }.
+
+                                         
+(* require ZK_General. *)
+(* clone import ZK_General as ZK_defs with type prob  = int * int, *)
+(*                                         type wit   = int, *)
+(*                                         type chal  = bool, *)
+(*                                         type com   = int, *)
+(*                                         type resp  = int. *)
+(* print Prover. *)
 
                                          
 section.
 
-declare module P : RewProver {W,HV,Correct}.
-
+declare module P : Prover {M,HV,Correct}.
 
 
 axiom P_commit_ll   : islossless P.commit.
 axiom P_response_ll : islossless P.response.
-
-module A(P : RewProver) = {
-  module C = Correct(P,HV)
-  proc getState() : sbits = {
-    return witness;
-  }
-
-  proc setState(s : sbits) : unit = {
-    (Correct.c,Correct.b,Correct.r, Correct.result,HV.n,HV.y) <- (witness, witness, witness, witness, witness, witness);
-    P.setState(s);
-  }
-
-  proc run(i : qr_c * qr_w) : bool = {
-    var r;
-    r <- C.main(i.`1, i.`2);
-    return r;
-  }
-  
-}.
-
-local lemma A_run_ll : islossless A(P).run. admitted.
-local lemma AHP_run_ll : islossless A(HP).run. admitted.
-
-local lemma RewPropA :
-  exists (f : glob A(P) -> sbits),
-  injective f /\
-  (forall &m, Pr[ A(P).getState() @ &m : (glob A(P)) = ((glob A(P)){m})
-                                   /\ res = f ((glob A(P)){m} ) ] = 1%r) /\
-  (forall &m b (x: glob A(P)), b = f x =>
-    Pr[A(P).setState(b) @ &m : glob A(P) = x] = 1%r) /\
-  islossless A(P).setState.
-admitted.
-
-local lemma RewPropAHP :
-  exists (f : glob A(HP) -> sbits),
-  injective f /\
-  (forall &m, Pr[ A(HP).getState() @ &m : (glob A(HP)) = ((glob A(HP)){m})
-                                   /\ res = f ((glob A(HP)){m} ) ] = 1%r) /\
-  (forall &m b (x: glob A(HP)), b = f x =>
-    Pr[A(HP).setState(b) @ &m : glob A(HP) = x] = 1%r) /\
-  islossless A(HP).setState.
-admitted.
   
 lemma qr_iterated_soundness &m e Na ya :
-  0 <= e =>
-      ! IsQR (Na, ya) =>
-  Pr[ W(A(P)).whp_A(fun x => !x, ((Na,ya),witness), 1,e,true) @ &m : res ] <= ((1%r/2%r) ^ e).
+  0 <= e => ! IsQR (Na, ya) =>
+    Pr[ M(Correct(P,HV)).whp(((Na,ya),witness), fun x => !x, 1,e+1,true) @ &m : res ]
+       <= ((1%r/2%r) ^ (e + 1)).
 proof. 
 progress.
-have :   Pr[W(A(P)).whp_A(fun x => !x, ((Na, ya), witness), 1, e, true) @ &m : !!res] <=
-  (1%r / 2%r) ^ e. 
-apply (final_zz_le (A(P)) A_run_ll RewPropA &m (1%r/2%r) (fun x => !x) ((Na, ya),witness) e true).
-auto.  auto.
+have :  phoare[ M(Correct(P,HV)).whp : arg = (((Na,ya),witness), fun x => !x, 1,e+1,true) ==> res ] <= ((1%r/2%r) ^ (e+1)).
+conseq (asdsadq_le (Correct(P,HV)) _ (1%r/2%r) ((Na,ya),witness) [!] true _ _ e _) .
+proc. inline*. wp.  call P_response_ll. wp.  rnd. wp. call P_commit_ll. skip.  smt.
 simplify.
-have ->: Pr[A(P).run((Na, ya), witness) @ &m : res]
- = Pr[Correct(P,HV).main((Na,ya),witness) @ &m : res].
-byequiv (_: ={glob P,glob HV,arg} ==> _). proc*.
-inline A(P).run. wp. sp. sim. auto.  auto.
-byphoare (_: arg = ((Na, ya), witness) ==> _).
-conseq (qr_sound_ph P P_commit_ll P_response_ll Na ya H0).
-auto. auto. simplify. auto.
+conseq (qr_sound_ph P _ _ Na ya H0). smt.
+apply P_commit_ll.
+apply P_response_ll.
+auto.
+assumption.
+progress.
+byphoare (_: arg = (((Na, ya), witness), [!], 1, e + 1, true) ==> _).
+conseq H1. auto.  auto.
 qed.
 
-lemma qr_iterated_completeness wa &m e Na ya :
-    IsSqRoot (Na, ya) wa /\ invertible Na ya =>
-    0 <= e =>
-  Pr[ W(A(HP)).whp_A(fun x => !x, ((Na,ya),wa), 1,e,true) @ &m : res ] = 1%r.
-move => ii. progress.
-have : Pr[W(A(HP)).whp_A(fun x => !x, ((Na, ya), wa), 1, e, true) @ &m : !!res] = 1%r ^ e. 
-apply (final_zz (A(HP)) AHP_run_ll RewPropAHP &m (1%r) (fun x => !x) ((Na, ya),wa) e true).
-auto.  auto.
-simplify.
-have ->: Pr[A(HP).run((Na, ya), wa) @ &m : res]
- = Pr[Correct(HP,HV).main((Na,ya),wa) @ &m : res].
-byequiv (_: ={glob HP,glob HV,arg} ==> _). proc*.
-inline A(HP).run. wp. sp. simplify. sim. auto.  auto.
-byphoare (_: arg = ((Na, ya), wa) ==> _).
-conseq (qr_complete_ph Na ya wa ii).
-auto. auto. smt.
-qed.
 
+lemma qr_iterated_completeness &m e Na ya wa :
+  IsSqRoot (Na, ya) wa /\ invertible Na ya =>
+   0 <= e =>
+     Pr[ M(Correct(HP,HV)).whp(((Na,ya),wa), fun x => !x, 1,e+1,true) @ &m : res ]
+        = 1%r.
+proof. 
+progress.
+  have :  phoare[ M(Correct(HP,HV)).whp : arg = (((Na,ya),wa), fun x => !x, 1,e+1,true) ==> res ]
+    = ((1%r) ^ (e+1)).
+conseq (asdsadq (Correct(HP,HV)) _ (1%r) ((Na,ya),wa) [!] true _ _ e _).
+proc. inline*. wp.  simplify. rnd. wp. rnd.  simplify.  wp.  skip.  smt.
+simplify.
+conseq (qr_complete_ph  Na ya wa _). smt. auto.
+auto.
+assumption.
+progress.
+byphoare (_: arg = (((Na, ya), wa), [!], 1, e + 1, true) ==> _).
+conseq H2. auto.  auto. smt.  smt.  auto.
+qed.
+    
 end section.

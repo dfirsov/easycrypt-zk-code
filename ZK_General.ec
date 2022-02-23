@@ -2,12 +2,29 @@ require import AllCore.
 
 type prob, wit, chal, com, resp, sbits.
 
+
 module type Prover = {
   proc commit(x : prob, w : wit) : com
   proc response(ch : chal) : resp
 }.
 
 module type Verifier = {
+  proc challenge(Ny : prob, c : com) : chal
+  proc verify(c : com, r : resp)     : bool
+  proc summitup(c : com, r : resp)   : sbits
+}.
+
+
+module type RewProver = {
+  proc * setState(s : sbits) : unit
+  proc getState() : sbits
+  proc commit(x : prob, w : wit) : com
+  proc response(ch : chal) : resp
+}.
+
+module type RewVerifier = {
+  proc * setState(s : sbits) : unit
+  proc getState() : sbits
   proc challenge(Ny : prob, c : com) : chal
   proc verify(c : com, r : resp)     : bool
   proc summitup(c : com, r : resp)   : sbits

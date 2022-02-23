@@ -15,6 +15,13 @@ op inv : int -> int -> int.
 op invertible : int -> int -> bool.
 
 
+
+type qr_prob = (int * int).
+type qr_wit  = int.
+type qr_com = int.
+type qr_resp = int.
+
+
 type qr_c  =  int * int.
 type qr_w  = int.
 type sbits.
@@ -74,7 +81,7 @@ module type Simulator = {
 module Correct(P : Prover, V : Verifier) = {
   var c, r : int
   var b, result : bool
-  proc main(Ny:qr_c, w : int) = {
+  proc run(Ny:qr_c, w : int) = {
     c <- P.commit(Ny,w);  
     b <- V.challenge(Ny,c);
     r <- P.response(b);
@@ -136,7 +143,7 @@ module HV : Verifier = {
 
 
 lemma qr_complete_h Na ya wa : IsSqRoot (Na, ya) wa /\ invertible Na ya
-   => hoare [ Correct(HP,HV).main : arg = ((Na,ya),wa) ==> res ].
+   => hoare [ Correct(HP,HV).run : arg = ((Na,ya),wa) ==> res ].
 move => [qra invrtbl].
 proc. inline*.  wp. 
 rnd. wp.  rnd.  wp. 
@@ -153,7 +160,7 @@ qed.
 
 
 lemma qr_complete_ph Na ya wa : IsSqRoot (Na, ya) wa /\ invertible Na ya
-   => phoare [ Correct(HP,HV).main : arg = ((Na,ya),wa) ==> res ] = 1%r.
+   => phoare [ Correct(HP,HV).run : arg = ((Na,ya),wa) ==> res ] = 1%r.
 move => [qra invrtbl]. 
 proc*.
 seq 1 : (true) 1%r 1%r 1%r 0%r (r).
@@ -173,7 +180,7 @@ axiom P_ax1 : islossless P.commit.
 axiom P_ax2 : islossless P.response.
 
 lemma qr_sound_ph Na ya :
- !IsQR (Na, ya) => phoare [ Correct(P,HV).main : arg = ((Na,ya),witness) ==> res ] <= (1%r/2%r).
+ !IsQR (Na, ya) => phoare [ Correct(P,HV).run : arg = ((Na,ya),witness) ==> res ] <= (1%r/2%r).
 proof. move => qra.
 proc. inline*. 
 wp.

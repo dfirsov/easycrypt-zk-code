@@ -17,6 +17,7 @@ check() {
 # list of files to check
 check Iterated_Failure.ec
 check while_not_b.ec
+check while_not_b_proc.ec
 check While_Props.ec
 check QR/QR_Basics.ec
 check QR/QR_Iterated_Soundness_Completeness.ec
