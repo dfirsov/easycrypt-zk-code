@@ -218,18 +218,68 @@ rewrite Pr[mu_sub]. progress. auto.
 smt (step3).
 qed.
 
+lemma step5 &m : forall (i : dl_prob),
+   Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
+     @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+        /\ res.`1.`2.`3 <> res.`2.`2.`3]
+  =  Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
+     @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+        /\ res.`1.`2.`3 <> res.`2.`2.`3
+        /\ res.`1.`2.`1 = res.`2.`2.`1 ].
+move => i. byequiv. proc. simplify. inline*. wp. call (_:true).
+simplify. rnd. wp. call (_:true). wp. call(_:true). rnd.  wp.  call (_:true).
+wp. skip. progress. auto.  auto.
+qed.
+
+
+
+lemma step6 &m : forall (i : dl_prob),
+ Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
+     @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+        /\ res.`1.`2.`3 <> res.`2.`2.`3
+        /\ res.`1.`2.`1 = res.`2.`2.`1 
+        /\ VerifyWit res.`1.`2.`1 (oget (ExtractWit res.`1.`2 res.`2.`2)) ]
+  >=  Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] ^ 2
+    - 1%r/2%r.
+move => i.
+   have ->:  Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
+     @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+        /\ res.`1.`2.`3 <> res.`2.`2.`3
+        /\ res.`1.`2.`1 = res.`2.`2.`1
+        /\ VerifyWit res.`1.`2.`1 (oget (ExtractWit res.`1.`2 res.`2.`2)) ] 
+         =  Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
+     @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+        /\ res.`1.`2.`3 <> res.`2.`2.`3
+        /\ res.`1.`2.`1 = res.`2.`2.`1 ] .
+rewrite Pr[mu_eq]. progress. smt (ExLemma). auto.
+smt (step5 step4).
+qed.
+
+require import RealExp.
+
+
+lemma onreals (a b c : real) : a >= 0%r => b >= 0%r => c >= 0%r
+   => a >= b ^ 2 - c  =>  b > sqrt c => a > 0%r.
+smt.
+qed.
+
+
+lemma step7 &m : forall (i : dl_prob),
+  Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] > sqrt (1%r/2%r)
+   => Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
+        @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
+         /\ res.`1.`2.`3 <> res.`2.`2.`3
+         /\ res.`1.`2.`1 =  res.`2.`2.`1 
+         /\ VerifyWit res.`1.`2.`1 (oget (ExtractWit res.`1.`2 res.`2.`2)) ] > 0%r.
+proof. move => i.
+apply onreals.
+smt. smt. smt.
+apply step6.
+qed.
+
 
 (*
 TODO:
-
-2/ show that if verification  succeeds and chals are different
-then  the above prob is equal to same probability but with
-witness extraction
-
-3/ assuming that single run succeeds with prob > sqrt(1/2) we
-have extraction prob > 0.
-
-4/ prove that there exists "p" equal to that prob and p > 0
 
 5/ apply "whp_cap_fin" to show the probability of extraction
 on i-th iteration.
