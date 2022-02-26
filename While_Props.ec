@@ -51,6 +51,10 @@ module WW(A : Run) = {
 
 
 
+require Pr_interval_to_sum.
+clone import Pr_interval_to_sum as PIT with type rt <- rrt,
+                                            type iat <- (rrt -> bool) * irt * int * int * rrt .
+
 section.
 
 declare module A : Run {WW}.
@@ -175,21 +179,21 @@ qed.
 require import Real.
 
 lemma whp_cap_fin &m pa q ia (ea : int) r ja (p1 : real) (p2 : int -> real) :
-  0 <= ja - 2 => ja <= ea + 1 =>
+  2  <= ja     =>
+  ja <= ea + 1 =>
   pa r = false =>
+
+  (* prob. of success *)
   (phoare[ A.main : arg = ia /\ (glob A) = (glob A){m}  ==> pa res /\  q res ] = p1) =>
 
-
-  (forall ea, 0 <= ea => phoare[ WW(A).whp : arg = (pa,ia, 1,ea,r) /\ (glob A) = (glob A){m} ==>  (!pa res)   ] = (p2 ea)) =>
-
-    (hoare[ A.main :  (glob A) = (glob A){m}  ==> (glob A) = (glob A){m} ]) => 
+  (* prob. of failure  *)
+  (forall ea, 0 <= ea => phoare[ WW(A).whp : arg = (pa,ia, 1,ea,r) /\ (glob A) = (glob A){m}
+                               ==> !pa res ] = (p2 ea)) =>
+  (* module is rewinded or stateless  *)
+  (hoare[ A.main :  (glob A) = (glob A){m}  ==> (glob A) = (glob A){m} ]) => 
    Pr[ WW(A).whp(pa,ia,1,ea,r) @ &m : WW.c = ja /\ pa res /\ q res ]  
-    = p2 (ja - 2) * p1. 
-
-
-
-
-
+     = p2 (ja - 2) * p1. 
+proof.
 progress.
 rewrite  (whp_cap q &m pa ia 1 ea r ja ). smt. smt.
 have ->: Pr[WW(A).whp(pa, ia, 1, ja-1, r) @ &m : WW.c = ja /\ pa res /\ q res]
@@ -204,7 +208,7 @@ inline*. sp.
 wp.
 while (WW.c <= e0 + 1 /\  (glob A) = (glob A){m} ). wp. 
 call H4.   skip. progress. smt. skip. progress.   smt. smt.  
-  call (H3 (ja - 2)  ).  skip. progress.  
+  call (H3 (ja - 2)  ).  smt. skip. progress.  
 rcondt 1. skip. progress. 
 wp. call H2. skip. progress. 
 smt.
@@ -216,6 +220,47 @@ skip. smt.  auto. auto. auto.
 qed.
 
 
+require import AllCore Distr FSet StdRing StdOrder StdBigop List.
+(*---*) import RField RealOrder Bigreal BRA.
+
+local module CA = {
+  proc run(a : (rrt -> bool) * irt * int * int * rrt) = {
+    var r;
+    r <@ WW(A).whp(a);
+    return r;
+  }
+
+}.
+
+
+lemma whp_cap_fin_int_sum &m ia pa M (ea : int) ra :
+   Pr[ WW(A).whp(pa,ia,1,ea,ra) @ &m : 1 < WW.c <= ea + 1  /\ M res ] = 
+    big predT
+      (fun i => Pr[ WW(A).whp(pa,ia,1,ea,ra) @ &m : WW.c = i /\ M res ])
+      (range 2 (ea + 2)).
+progress.
+pose f := fun (x : glob CA) => x.`1.
+have ->: Pr[ WW(A).whp(pa,ia,1,ea,ra) @ &m : 1 < WW.c <= ea + 1  /\ M res ]
+ = Pr[ CA.run(pa,ia,1,ea,ra) @ &m : 2 <= f (glob CA) <= ea + 1  /\ M res ].
+byequiv (_: ={arg, glob CA} ==> ={res, glob CA}). proc.
+inline*. sp.  wp. 
+conseq (_: ={glob CA} /\ ={e, p, i} /\ r{1} = r0{2} ==> ={glob CA} /\ r{1} = r0{2}). smt. smt.
+sim. auto. smt. 
+rewrite (pr_interval_to_sum_lemma CA &m (pa, ia, 1, ea, ra) f (fun _ x _ => M x)).
+simplify.
+have <-: 
+ (fun (i : int) => Pr[WW(A).whp(pa, ia, 1, ea, ra) @ &m : WW.c = i /\ M res])
+ = (fun (i : int) =>
+     Pr[CA.run(pa, ia, 1, ea, ra) @ &m : f (WW.c, (glob A)) = i /\ M res]).
+apply fun_ext. move => x.
+byequiv (_: ={arg, glob CA} ==> ={res, glob CA}). proc.
+inline*.  wp.  sp.
+conseq (_: ={glob CA} /\ ={e, p, i} /\ r{1} = r0{2} ==> ={glob CA} /\ r{1} = r0{2}). smt. smt.
+sim. auto. smt. 
+auto.
+qed.
+
+   
 lemma whp_cap_fin_int &m pa ia (ea : int) ra :
   pa ra = false => 1 <= ea =>
    Pr[ WW(A).whp(pa,ia,1,ea,ra) @ &m : 1 < WW.c <= ea + 1 ] = 1%r.
@@ -238,6 +283,9 @@ hoare. simplify.
 wp. call (_: true ==> true). auto. skip. auto. auto. auto.
 auto.
 qed.
+
+
+
 
 end section.
   

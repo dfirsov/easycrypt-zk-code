@@ -5,13 +5,13 @@ type rt, iat.
 
 
 
-module type Run = {
+module type RunMain = {
   proc run(i:iat) : rt
 }.
 
 section.
 
-declare module A : Run.
+declare module A : RunMain.
 local lemma zzz &m : forall (a : iat) (f : (glob A) -> int) 
   (P : iat -> rt -> (glob A) -> bool) (s e : int),
   0 <= e =>
@@ -54,11 +54,10 @@ auto. auto.
 qed.
 
 
-lemma pr_interval_to_sum &m : forall (a : iat) 
+lemma pr_interval_to_sum_lemma &m : forall (a : iat) 
   (f : (glob A) -> int) 
   (P : iat -> rt -> (glob A) -> bool) 
   (s e : int),
-  0 <= e =>
   Pr[ A.run(a) @ &m : s <= f (glob A) <= e /\ P a res (glob A) ]
    = big predT
       (fun i => Pr[ A.run(a) @ &m : f (glob A) = i 

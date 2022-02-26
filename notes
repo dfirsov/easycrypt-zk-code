@@ -17,7 +17,7 @@ Final "basic proof":
 |Pr[Sim1 : res1 /\ q res2] / Pr[Sim1 : res1] - Pr[ZK : q res2]| <= eps
 
 
-Goal: |Pr[ Sim(n) ] - C(n) * Pr[ZK]| <= C(n) * eps, and C(n) -> 1
+Goal: |Pr[ Sim(n) : res1 /\ q res2 ] - C(n) * Pr[ZK]| <= C(n) * eps, and C(n) -> 1
 
 Derivation:
 
@@ -27,8 +27,10 @@ exists p,  0 <= p <= eps  =>
 
 => N iterations and success and i-th:
 
-  Pr[Sim(n) : counter = i /\ res1 /\ q res2] = (Pr[Sim1 : !res1]^i  * Pr[Sim1 : res1]) * (Pr[ZK : q res2] + p) \/
-  Pr[Sim(n) : counter = i /\ res1 /\ q res2] = (Pr[Sim1 : !res1]^i  * Pr[Sim1 : res1]) * (Pr[ZK : q res2] - p)
+  Pr[Sim(n) : counter = i /\ res1 /\ q res2]
+    = (Pr[Sim1 : !res1]^i  * Pr[Sim1 : res1]) * (Pr[ZK : q res2] + p) \/
+  Pr[Sim(n) : counter = i /\ res1 /\ q res2]
+    = (Pr[Sim1 : !res1]^i  * Pr[Sim1 : res1]) * (Pr[ZK : q res2] - p)
 
 
 |Pr[ Sim(n) ] - C(n) * Pr[ZK]| = C(n) * p, where C(n) has limit at 1
