@@ -32,7 +32,7 @@ module type RewVerifierA = {
   proc * setState(b : sbits) : unit 
 }.
 
-
+    (* A must be called simulator since it is a simulator *)
 module A(V : RewVerifierA) = {
   module S = Sim1(V)
   proc getState() : sbits = {
@@ -71,13 +71,21 @@ axiom V_summitup_ll : islossless V.summitup.
 axiom V_challenge_ll : islossless V.challenge.
 
 
+(* 
+Generalization ideas 
 
+
+ *)
 lemma qrp_zk2_pr (e ja : int) q &m Na ya wa : 
     IsSqRoot (Na, ya) wa /\ invertible Na ya => 0 <= ja - 2 =>
     ja <= e + 1 =>
-    Pr[ W(A(V)).whp_A(fst, ((Na,ya),wa), 1,e,(false,witness)) @ &m :
+
+    Pr[ W(A(V)).whp_A(fst, ((Na,ya),wa), 1,e,(false,witness)) @ &m : (* sin! *)
        W.c = ja /\ (fst res) /\ q (snd res) ]
+
     = (1%r/2%r)^(ja - 2) * ((1%r/2%r) * Pr[ZK(HP, V).main((Na,ya),wa) @ &m : q res ]).
+      (* if eps zero then probably the same, otherwise approx. the same (figure out the new eps)  *)
+
 move =>  [isr invr] jap1 jap2.
 have <-: Pr[ WW(GetRunSet(A(V))).whp(fst,((Na,ya),wa),1,e,(false,witness)) @ &m : WW.c = ja /\ fst res /\ q (snd res) ]  
   = Pr[W(A(V)).whp_A(fst, ((Na, ya), wa), 1, e,

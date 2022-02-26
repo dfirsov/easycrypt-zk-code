@@ -173,15 +173,23 @@ qed.
 
 
 require import Real.
+
 lemma whp_cap_fin &m pa q ia (ea : int) r ja (p1 : real) (p2 : int -> real) :
   0 <= ja - 2 => ja <= ea + 1 =>
   pa r = false =>
   (phoare[ A.main : arg = ia /\ (glob A) = (glob A){m}  ==> pa res /\  q res ] = p1) =>
+
+
   (forall ea, 0 <= ea => phoare[ WW(A).whp : arg = (pa,ia, 1,ea,r) /\ (glob A) = (glob A){m} ==>  (!pa res)   ] = (p2 ea)) =>
 
     (hoare[ A.main :  (glob A) = (glob A){m}  ==> (glob A) = (glob A){m} ]) => 
    Pr[ WW(A).whp(pa,ia,1,ea,r) @ &m : WW.c = ja /\ pa res /\ q res ]  
     = p2 (ja - 2) * p1. 
+
+
+
+
+
 progress.
 rewrite  (whp_cap q &m pa ia 1 ea r ja ). smt. smt.
 have ->: Pr[WW(A).whp(pa, ia, 1, ja-1, r) @ &m : WW.c = ja /\ pa res /\ q res]

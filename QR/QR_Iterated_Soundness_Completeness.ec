@@ -17,7 +17,11 @@ declare module P : Prover {M,HV}.
 
 axiom P_commit_ll   : islossless P.commit.
 axiom P_response_ll : islossless P.response.
-  
+
+(* 
+- argument order for prover and verifier
+- e + 1
+*)
 lemma qr_iterated_soundness &m e Na ya :
   0 <= e => ! IsQR (Na, ya) =>
     Pr[ M(Correct(P,HV)).whp(((Na,ya),witness), fun x => !x, 1,e+1,true) @ &m : res ]
@@ -60,3 +64,25 @@ conseq H2. auto.  auto. smt.  smt.  auto.
 qed.
     
 end section.
+
+
+
+lemma zk_base_def_1 (a r b c : real) : 
+  `| a/r - b | <= c => a/r >= b - c .
+smt.
+qed.
+
+
+
+
+lemma zk_base_def_2 (a r b c : real) : 
+  r > 0%r =>
+  `| a/r - b | <= c => a >= (b - c) * r .
+have fact : forall (a r b : real),    r > 0%r =>  a / r >= b => a >= b * r.
+smt.
+smt.  
+qed.
+
+
+
+

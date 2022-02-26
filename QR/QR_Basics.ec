@@ -513,7 +513,8 @@ qed.
 lemma sim1zk &m Na ya wa q :
   IsSqRoot (Na, ya) wa /\ invertible Na ya =>
     Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\ q res.`2]
-      = Pr[ZK(HP, V).main((Na, ya), wa) @ &m : q res] / 2%r.
+     = Pr[ZK(HP, V).main((Na, ya), wa) @ &m : q res] / 2%r.
+    
 move => ii.
 have ->: Pr[Sim1(V).simulate(Na, ya) @ &m : res.`1 /\ q res.`2]
  = Pr[Sim1'.simulate((Na,ya),wa) @ &m : res.`1 /\ q res.`2].

@@ -1,0 +1,91 @@
+Split Verifier/Prover to (A,H)Verifier/Prover
+==================
+
+
+Pr[Sim1 : q res2 | res1=true] ~= Pr[ZK : q res2]
+
+i.e.,
+
+Pr[Sim1 : res1 /\ q res2] / Pr[Sim1 : res1] ~= Pr[ZK : q res2]
+
+i.e.,
+
+|Pr[Sim1 : res1 /\ q res2] / Pr[Sim1 : res1] - Pr[ZK : q res2]| <= eps
+
+Final "basic proof":
+
+|Pr[Sim1 : res1 /\ q res2] / Pr[Sim1 : res1] - Pr[ZK : q res2]| <= eps
+
+
+Goal: |Pr[ Sim(n) ] - C(n) * Pr[ZK]| <= C(n) * eps, and C(n) -> 1
+
+Derivation:
+
+exists p,  0 <= p <= eps  =>
+  Pr[Sim1 : res1 /\ q res2]  = Pr[Sim1 : res1]  * (Pr[ZK : q res2] + p) \/
+  Pr[Sim1 : res1 /\ q res2]  = Pr[Sim1 : res1]  * (Pr[ZK : q res2] - p) 
+
+=> N iterations and success and i-th:
+
+  Pr[Sim(n) : counter = i /\ res1 /\ q res2] = (Pr[Sim1 : !res1]^i  * Pr[Sim1 : res1]) * (Pr[ZK : q res2] + p) \/
+  Pr[Sim(n) : counter = i /\ res1 /\ q res2] = (Pr[Sim1 : !res1]^i  * Pr[Sim1 : res1]) * (Pr[ZK : q res2] - p)
+
+
+|Pr[ Sim(n) ] - C(n) * Pr[ZK]| = C(n) * p, where C(n) has limit at 1
+
+=> |Pr[ Sim(n) ] - C(n) * Pr[ZK]| <= C(n) * eps, where C(n) has limit at 1
+
+
+
+
+====== DERIV 1 ======
+
+Define module KE which rewinds the prover
+and challenges it with both bits then do the followig analysis
+
+Pr[ Run2 ] >= Pr[ Run1 ]^2
+<=>
+Pr[ Run2: c = c' ] + Pr[ Run2: c <> c' ] >= Pr[ Run1 ]^2
+<=>
+Pr[ Run2: c <> c' ] >= Pr[ Run1 ]^2 - Pr[ Run2: c = c' ]
+  {Pr[ Run2: c = c' ] <= 1/2}
+<=>
+Pr[ Run2: c <> c' ] >= Pr[ Run1 ]^2 - 1/2
+
+Hence,
+
+ Pr[ Run1 ] <= sqrt (Pr[ Run2: c <> c' ] + 1/2) (~ 0.7)
+
+Assuming that Pr[ Run2: c <> c' ] is negligible we can iterate Run1
+to get arbitrary low probability.
+
+
+===== DERIV 2 ==========
+
+
+P_1_2 + P_2_1 ≥ P_1 + P_2 - 1.
+<=>
+P_1_2 + P_2_1 ≥ P_$ * 2 - 1.
+<=>
+ExtractorSuccess * 4 ≥ P_$ * 2 - 1.
+<=>
+ExtractorSuccess >= (P_$ * 2 - 1)/
+<=>
+ExtractorSuccess >= P_$ * 1/2 - 1/4
+
+
+Generalizations:
+- more than two challenges possible (finite but possibly exponential number)
+- ExtractWit is "computational", meaning: poly-time A has negl probab to find counterex for ExtractAx
+- ExtractWit needs n transcripts (more complicated)
+
+===========================
+
+
+blums hamiltonian cycle
+
+
+=====
+
+M(Correct(P,V)) == repeated correctness game
+Correct(M(P),M(V)) == correctness game with repeated prover/verifier

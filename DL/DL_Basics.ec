@@ -15,6 +15,8 @@ op IsPrime : int -> bool.
 op VerifyZK : (dl_prob * dl_com * bool * dl_resp) -> bool.
 op VerifyWit : dl_prob -> dl_wit -> bool.
 op ExtractWit : dl_run -> dl_run -> dl_wit option.
+
+(* add r1.`2 = r2.`2  *)
 axiom ExLemma (r1 r2 : dl_run) : r1.`1 = r2.`1 => r1.`3 <> r2.`3 => VerifyZK r1 => VerifyZK r2
   => VerifyWit r1.`1 (oget (ExtractWit r1 r2)).
 
@@ -265,11 +267,13 @@ qed.
 
 
 lemma step7 &m : forall (i : dl_prob),
-  Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] > sqrt (1%r/2%r)
+
+    Pr[QQ(MyRewRun(P), MyInit(P)).main_run(i) @ &m : VerifyZK res.`2] > sqrt (1%r/2%r)
+
    => Pr[QQ(MyRewRun(P), MyInit(P)).main(i)
         @ &m : (VerifyZK res.`1.`2 /\ VerifyZK res.`2.`2)
-         /\ res.`1.`2.`3 <> res.`2.`2.`3
-         /\ res.`1.`2.`1 =  res.`2.`2.`1 
+         /\ res.`1.`2.`3 <> res.`2.`2.`3 (* ch *)
+         /\ res.`1.`2.`1 =  res.`2.`2.`1 (* wit?????!!!!! *)
          /\ VerifyWit res.`1.`2.`1 (oget (ExtractWit res.`1.`2 res.`2.`2)) ] > 0%r.
 proof. move => i.
 apply onreals.
@@ -293,26 +297,3 @@ on i-th iteration.
 
 
 
-
-(*
-
-Define module KE which rewinds the prover
-and challenges it with both bits then do the followig analysis
-
-Pr[ Run2 ] >= Pr[ Run1 ]^2
-<=>
-Pr[ Run2: c = c' ] + Pr[ Run2: c <> c' ] >= Pr[ Run1 ]^2
-<=>
-Pr[ Run2: c <> c' ] >= Pr[ Run1 ]^2 - Pr[ Run2: c = c' ]
-  {Pr[ Run2: c = c' ] <= 1/2}
-<=>
-Pr[ Run2: c <> c' ] >= Pr[ Run1 ]^2 - 1/2
-
-Hence,
-
- Pr[ Run1 ] <= sqrt (Pr[ Run2: c <> c' ] + 1/2) (~ 0.7)
-
-Assuming that Pr[ Run2: c <> c' ] is negligible we can iterate Run1
-to get arbitrary low probability.
-
-*)
