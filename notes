@@ -12,7 +12,7 @@ i.e.,
 
 |Pr[Sim1 : res1 /\ q res2] / Pr[Sim1 : res1] - Pr[ZK : q res2]| <= eps
 
-Final "basic proof":
+Final "basic proof" (assumption for the goal):
 
 |Pr[Sim1 : res1 /\ q res2] / Pr[Sim1 : res1] - Pr[ZK : q res2]| <= eps
 

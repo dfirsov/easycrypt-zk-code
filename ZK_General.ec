@@ -4,7 +4,7 @@ require import AllCore.
 
 
 *)
-type prob, wit, chal, com, resp, sbits.
+type prob, wit, chal, com, resp, sbits, event.
 
 (*  *)
 module type Prover = {
@@ -85,7 +85,7 @@ module type RewVerifier = {
 
 
 module type Simulator = {
-  proc simulate(Ny : prob) : sbits
+  proc main(Ny : prob) : event * sbits
 }.
 
 (* Correctness
@@ -146,30 +146,27 @@ clone import While_not_b_proc as IF with type iat <- (prob * wit),
                                          type rt <- bool.
 
 
-section.
+
+section. 
 declare module P : Prover{M}.
 declare module V : Verifier{M}.
 
-axiom V_verify_ll : islossless V.verify.
+axiom V_verify_ll    : islossless V.verify.
 axiom V_challenge_ll : islossless V.challenge.
-axiom P_commit_ll : islossless P.commit.
-axiom P_response_ll : islossless P.response.
+axiom P_commit_ll    : islossless P.commit.
+axiom P_response_ll  : islossless P.response.
 
-(* check if e+1 => e changes/simplifies the proof?
 
-Honest Prover never depends on the initial state.
-
-*)
 lemma iterated_correctness_ph (p : real) ia  :  
  (phoare[ Correct(P,V).run : arg = ia ==> res ] = p) 
-
    => forall e, 0 <= e =>
    phoare[ M(Correct(P,V)).whp 
          : arg = (ia,[!],1,e+1,true) 
           ==> res ] = (p ^ (e+1)).
-
 proof. move => H1 e ep .
-have fact1  : phoare[ M(Correct(P,V)).whp_if_end : arg = (ia,[!],1,e,true) ==> res ] = (p ^ (e+1)).
+have fact1 : phoare[ M(Correct(P,V)).whp_if_end 
+                     : arg = (ia,[!],1,e,true) 
+                         ==> res ] = (p ^ (e+1)).
 conseq (asdsad (Correct(P,V)) _  p  ia true [!] _ _ e ep ). 
 proc. 
 call V_verify_ll.
@@ -178,7 +175,8 @@ call V_challenge_ll.
 call P_commit_ll.
 skip. auto.
 simplify. conseq H1. auto.
-conseq (whp_split_if_end' (Correct(P,V)) _ [!] ia 1 e true (p^(e+1))  (fun x => x) _). 
+conseq (whp_split_if_end' (Correct(P,V)) _ [!] ia 1 e true (p^(e+1))  
+                             (fun x => x) _). 
 proc.
 call V_verify_ll.
 call P_response_ll.
@@ -188,13 +186,16 @@ skip. auto.
 apply fact1.
 qed.
 
-lemma iterated_correctness_le_ph (p : real) ia  :  
+
+lemma iterated_correctness_le_ph (p : real) ia :  
  (phoare[ Correct(P,V).run : arg = ia ==> res ] <= p) 
    => forall e, 0 <= e =>
-   phoare[ M(Correct(P,V)).whp : arg = (ia,[!],1,e+1,true) 
-       ==> res ] <= (p ^ (e+1)).
+   phoare[ M(Correct(P,V)).whp 
+           : arg = (ia,[!],1,e+1,true) 
+               ==> res ] <= (p ^ (e+1)).
 proof. move => H1 e ep .
-have fact1  : phoare[ M(Correct(P,V)).whp_if_end : arg = (ia,[!],1,e,true) ==> res ] <= (p ^ (e+1)).
+have fact1  : phoare[ M(Correct(P,V)).whp_if_end 
+                      : arg = (ia,[!],1,e,true) ==> res ] <= (p ^ (e+1)).
 conseq (asdsad_le (Correct(P,V)) _  p  ia true [!] _ _ e ep ). 
 proc. 
 call V_verify_ll.
@@ -203,7 +204,8 @@ call V_challenge_ll.
 call P_commit_ll.
 skip. auto.
 simplify. conseq H1. auto.
-conseq (whp_split_if_end_le (Correct(P,V)) _ [!] ia 1 e true (p^(e+1))  (fun x => x) _). 
+conseq (whp_split_if_end_le (Correct(P,V)) _ [!] ia 1 e true (p^(e+1)) 
+           (fun x => x) _). 
 proc.
 call V_verify_ll.
 call P_response_ll.
@@ -212,6 +214,75 @@ call P_commit_ll.
 skip. auto.
 apply fact1.
 qed.
+
+end section.
+
+
+
+
+
+require While_Props.
+clone import While_Props as MW with type irt <- (prob),
+                                    type rrt <- event * sbits.
+
+
+section.
+
+require import Aux.
+
+declare module Sim1 : Simulator.
+declare module P : Prover.
+declare module V : Verifier.
+
+
+
+
+lemma zk_step1 &m E Q p w eps:
+   `|Pr[ Sim1.main(p) @ &m : E res.`1 /\ Q res.`2]
+      / Pr[Sim1.main(p) @ &m : E res.`1] 
+        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+  => 0%r <= eps 
+  => 0%r < Pr[Sim1.main(p) @ &m : E res.`1]
+  => exists (eps' : real),  0%r <= eps' <= eps  
+  /\ `|Pr[ Sim1.main(p) @ &m : E res.`1 /\ Q res.`2] 
+         / Pr[Sim1.main(p) @ &m : E res.`1] 
+                - Pr[ZK(P,V).main(p,w) @ &m: Q res]| = eps'
+  /\ (Pr[ Sim1.main(p) @ &m : E res.`1 /\ Q res.`2] 
+      = Pr[Sim1.main(p) @ &m : E res.`1]  
+        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] - eps')
+      \/
+      Pr[ Sim1.main(p) @ &m : E res.`1 /\ Q res.`2] 
+      = Pr[Sim1.main(p) @ &m : E res.`1]  
+        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] + eps')).
+proof.
+progress.
+apply oip3;auto.
+qed.
+
+
+op fevent : event.
+
+require import AllCore Distr FSet StdRing StdOrder StdBigop List.
+(*---*) import RField RealOrder Bigreal BRA.
+
+lemma zk_step2 &m E Q p ea eps (p1 : real) p2 wa:
+     0%r <= eps 
+  => 0%r < Pr[Sim1.main(p) @ &m : E res.`1]
+  => p1 = Pr[Sim1.main(p) @ &m : E res.`1]  
+        * (Pr[ZK(P,V).main(p,wa) @ &m: Q res] + eps)
+  => p2 = (fun i => Pr[Sim1.main(p) @ &m : E res.`1] ^ i)
+
+  => true                       (* add assumptions *)
+  => Pr[ WW(Sim1).whp((fun x => E (fst x)),p,1,ea,(fevent,witness)) 
+           @ &m : E res.`1 /\ Q res.`2 ]  
+     = big predT
+        (fun i => p2 (i - 2) * p1)
+        (range 2 (ea + 2)). 
+(* whp_cap_fin_sum  *)
+
+
+
+
 
 
 end section.

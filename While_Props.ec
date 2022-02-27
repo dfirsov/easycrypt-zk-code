@@ -285,6 +285,54 @@ auto.
 qed.
 
 
+lemma whp_cap_fin_sum &m pa q ia (ea : int) r ja 
+  (p1 : real) 
+  (p2 : int -> real) :
+  2  <= ja     =>
+  ja <= ea + 1 =>
+  pa r = false =>
+
+  (* prob. of success *)
+  (phoare[ A.main : arg = ia /\ (glob A) = (glob A){m}  
+           ==> pa res /\ q res ] = p1) =>
+
+  (* prob. of failure  *)
+  (forall ea, 0 <= ea => phoare[ WW(A).whp : arg = (pa,ia, 1,ea,r) 
+                                 /\ (glob A) = (glob A){m}
+                                   ==> !pa res ] = (p2 ea)) =>
+  (* module is rewinded or stateless  *)
+  (hoare[ A.main :  (glob A) = (glob A){m} 
+           ==> (glob A) = (glob A){m} ]) => 
+   Pr[ WW(A).whp(pa,ia,1,ea,r) @ &m : pa res /\ q res ]  
+     = big predT
+        (fun i => p2 (i - 2) * p1)
+        (range 2 (ea + 2)). 
+proof. progress.
+have ->: Pr[ WW(A).whp(pa,ia,1,ea,r) @ &m : pa res /\ q res ]  
+ = Pr[ WW(A).whp(pa,ia,1,ea,r) @ &m : (1 < WW.c <= ea + 1) 
+        /\ pa res /\ q res ].
+rewrite Pr[mu_split (1 < WW.c && WW.c <= ea + 1)].
+  have ->: Pr[WW(A).whp(pa, ia, 1, ea, r) @ &m :
+   (pa res /\ q res) /\ ! (1 < WW.c && WW.c <= ea + 1)] = 0%r.
+   have : Pr[WW(A).whp(pa, ia, 1, ea, r) @ &m : ! (1 < WW.c && WW.c <= ea + 1)] = 0%r.
+    have f3 : Pr[WW(A).whp(pa, ia, 1, ea, r) @ &m : (1 < WW.c && WW.c <= ea + 1)] = 1%r. rewrite (whp_cap_fin_int &m);smt.
+    have f2 : 1%r = Pr[WW(A).whp(pa, ia, 1, ea, r) @ &m : ! (1 < WW.c && WW.c <= ea + 1)] + Pr[WW(A).whp(pa, ia, 1, ea, r) @ &m : (1 < WW.c && WW.c <= ea + 1)]. 
+    have  <- : Pr[WW(A).whp(pa, ia, 1, ea, r) @ &m : true ] = 1%r.
+    smt.
+   rewrite Pr[mu_split (1 < WW.c && WW.c <= ea + 1)]. simplify.
+   smt. smt. smt. simplify. smt.  
+rewrite big_int_cond.
+rewrite (whp_cap_fin_int_sum &m ia pa (fun x => pa x /\ q x) ea r).
+simplify.
+rewrite big_int_cond.
+apply eq_big. auto.
+progress.
+apply (whp_cap_fin &m).  auto. smt.
+auto.
+auto.
+auto.
+auto.
+qed.
 
 
 end section.
