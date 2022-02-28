@@ -66,23 +66,3 @@ qed.
 end section.
 
 
-
-lemma zk_base_def_1 (a r b c : real) : 
-  `| a/r - b | <= c => a/r >= b - c .
-smt.
-qed.
-
-
-
-
-lemma zk_base_def_2 (a r b c : real) : 
-  r > 0%r =>
-  `| a/r - b | <= c => a >= (b - c) * r .
-have fact : forall (a r b : real),    r > 0%r =>  a / r >= b => a >= b * r.
-smt.
-smt.  
-qed.
-
-
-
-

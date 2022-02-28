@@ -1,6 +1,6 @@
 Split Verifier/Prover to (A,H)Verifier/Prover
-==================
 
+==================
 
 Pr[Sim1 : q res2 | res1=true] ~= Pr[ZK : q res2]
 
@@ -39,8 +39,35 @@ exists p,  0 <= p <= eps  =>
 
 
 
+===============
 
-====== DERIV 1 ======
+use sum-binding
+
+P_1_2 + P_2_1 ≥ P_1 + P_2 - 1.
+<=>
+P_1_2 + P_2_1 ≥ P_$ * 2 - 1.
+<=>
+ExtractorSuccess * 4 ≥ P_$ * 2 - 1.
+<=>
+ExtractorSuccess >= (P_$ * 2 - 1)/
+<=>
+ExtractorSuccess >= P_$ * 1/2 - 1/4
+
+
+Generalizations:
+- more than two challenges possible (finite but possibly exponential number)
+- ExtractWit is "computational", meaning: poly-time A has negl probab to find counterex for ExtractAx
+- ExtractWit needs n transcripts (more complicated)
+
+
+
+===========================
+
+M(Correct(P,V)) == repeated correctness game
+Correct(M(P),M(V)) == correctness game with repeated prover/verifier
+
+
+====== DERIV _ inefficient ======
 
 Define module KE which rewinds the prover
 and challenges it with both bits then do the followig analysis
@@ -62,32 +89,6 @@ Assuming that Pr[ Run2: c <> c' ] is negligible we can iterate Run1
 to get arbitrary low probability.
 
 
-===== DERIV 2 ==========
+================
 
-
-P_1_2 + P_2_1 ≥ P_1 + P_2 - 1.
-<=>
-P_1_2 + P_2_1 ≥ P_$ * 2 - 1.
-<=>
-ExtractorSuccess * 4 ≥ P_$ * 2 - 1.
-<=>
-ExtractorSuccess >= (P_$ * 2 - 1)/
-<=>
-ExtractorSuccess >= P_$ * 1/2 - 1/4
-
-
-Generalizations:
-- more than two challenges possible (finite but possibly exponential number)
-- ExtractWit is "computational", meaning: poly-time A has negl probab to find counterex for ExtractAx
-- ExtractWit needs n transcripts (more complicated)
-
-===========================
-
-
-blums hamiltonian cycle
-
-
-=====
-
-M(Correct(P,V)) == repeated correctness game
-Correct(M(P),M(V)) == correctness game with repeated prover/verifier
+To look at:  blums hamiltonian cycle

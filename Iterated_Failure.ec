@@ -252,4 +252,16 @@ rewrite H. auto.
 qed.
 
 
+
+lemma final_zz_ph_m &m p MyPa i e r :  MyPa r = false => 0 <= e =>
+   phoare[ A.run : arg = i /\ (glob A){m} = (glob A) ==> !MyPa res ] = p =>
+   phoare [ W(A).whp_A : arg = (MyPa,i, 1,e,r) /\ (glob A){m} = (glob A) ==> !MyPa res ] = (p ^ (e)).
+move => sf ep ph1.
+bypr. progress. rewrite H. simplify.
+rewrite -  (final_zz &m0 p MyPa i e r sf ep). 
+byphoare (_: arg = i /\ (glob A) = (glob A){m0} ==> _). conseq ph1. auto. auto.
+auto. auto.
+qed.
+
+
 end section.

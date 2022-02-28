@@ -1,13 +1,33 @@
 require import AllCore Distr FSet StdRing StdOrder StdBigop List.
-(*---*) import RField RealOrder Bigreal BRA.
+(*---*) import RField RealOrder Bigreal BRA. 
+require import Int. 
 
 type rt, iat.
 
 
 
+
+lemma big_reindex f (c e : int) :  big predT f (range 0 e) 
+ = big predT (fun i => f (i - c)) (range c (e + c)) .
+rewrite (big_reindex predT f (fun x => x - c) (fun x => x + c) ).
+smt.
+have ->: (predT \o transpose Int.(+) (-c)) = predT.
+smt.
+have ->: (f \o transpose Int.(+) (-c)) = (fun (i : int) => f (i - c)).
+smt.
+have ->: (map (transpose Int.(+) c) (range 0 e)) = 
+  range c (e + c).
+print range_add.
+have ->: (transpose Int.(+) c) = (+) c. smt.
+rewrite - (range_add 0 e c). auto.
+auto.
+qed.
+
 module type RunMain = {
   proc run(i:iat) : rt
 }.
+
+
 
 section.
 
