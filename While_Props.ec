@@ -12,7 +12,8 @@ require Iterated_Failure_better.
 clone import Iterated_Failure_better as IFB with 
   type rrt <- rrt,
   type irt <- irt,
-  type iat <- (rrt -> bool) * irt * int * int * rrt .
+  type iat <- (rrt -> bool) * irt * int * int * rrt,
+  type sbits <- sbits.
 
 import IM.
 
