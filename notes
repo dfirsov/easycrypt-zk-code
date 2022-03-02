@@ -37,8 +37,6 @@ exists p,  0 <= p <= eps  =>
 
 => |Pr[ Sim(n) ] - C(n) * Pr[ZK]| <= C(n) * eps, where C(n) has limit at 1
 
-
-
 ===============
 
 use sum-binding

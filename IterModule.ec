@@ -19,6 +19,18 @@ module W(A : HasRun) = {
     return r;
   }
 
+(*   proc whp(p : rrt -> bool, i : irt, s : int, e : int, r : rrt) = { *)
+(* var done : bool = false; *)
+(*       c <- s; *)
+    
+(*     while(c <= e /\ !done){ *)
+(*      r <- A.run(i); *)
+(*       c <- c + 1; *)
+(*       done = p r; *)
+(*     } *)
+(*     return r; *)
+(*   } *)
+
   proc if_whp(p : rrt -> bool, i : irt, s : int, e : int, r : rrt) = {
     c <- s;
     if(c <= e /\ !p r){

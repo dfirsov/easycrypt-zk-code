@@ -356,17 +356,27 @@ module Iter(Sim1 : Simulator)  = {
 }.
 
 
+print (\o).
+
+  (* E res /\ Q res 
+
+add corollary:
+  1/ Pr[Sim1.run(p) @ &m : E res.`1]   >= p_0 > 0
+  2/ in proof: develop a formula_coeff(p_0,i) s.t. 1-coeff <= that formula
+  3/ conclusion: |Pr[Iter...] - Pr[ZK...]| <= eps + formula_coeff(p_0,i) 
+
+ *)
 lemma zk_final &m E Q p w eps ea coeff:
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2]
-      / Pr[Sim1.run(p) @ &m : E res.`1] 
+   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] / Pr[Sim1.run(p) @ &m : E res.`1] 
         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1]  
-  => 0%r <= eps 
+
+  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
+  => 0%r <= eps                 (* not needed *)
   => coeff = big predT
                (fun i => Pr[Sim1.run(p) @ &m : !E res.`1] ^ i 
                          * Pr[ Sim1.run(p) @ &m : E res.`1])
                (range 0 ea) 
-  => E fevent = false
+  => E fevent = false  
   =>
      `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
            @ &m : E res.`1 /\ Q res.`2 ]  
