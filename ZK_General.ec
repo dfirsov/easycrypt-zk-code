@@ -356,17 +356,15 @@ module Iter(Sim1 : Simulator)  = {
 }.
 
 
-print (\o).
-
-  (* E res /\ Q res 
+(* E res /\ Q res 
 
 add corollary:
   1/ Pr[Sim1.run(p) @ &m : E res.`1]   >= p_0 > 0
-  2/ in proof: develop a formula_coeff(p_0,i) s.t. 1-coeff <= that formula
-  3/ conclusion: |Pr[Iter...] - Pr[ZK...]| <= eps + formula_coeff(p_0,i) 
+  2/ in proof: develop a formula(p_0,i) s.t. 1-coeff <= formula(p_0,i)
+
 
  *)
-lemma zk_final &m E Q p w eps ea coeff:
+lemma zk_non_final &m E Q p w eps ea coeff:
    `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] / Pr[Sim1.run(p) @ &m : E res.`1] 
         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
 
@@ -422,5 +420,97 @@ smt.
 smt.
 qed.
 
+
+lemma zk_almost_final &m E Q p w eps ea coeff:
+   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] / Pr[Sim1.run(p) @ &m : E res.`1] 
+        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
+  => coeff = big predT
+               (fun i => Pr[Sim1.run(p) @ &m : !E res.`1] ^ i 
+                         * Pr[ Sim1.run(p) @ &m : E res.`1])
+               (range 0 ea) 
+  => E fevent = false  
+  => `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
+           @ &m : E res.`1 /\ Q res.`2 ]  
+         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps + (1%r - coeff).
+proof.
+move => H1 H2 H3 H4.
+have ie1 : `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
+           @ &m : E res.`1 /\ Q res.`2 ]  
+         - coeff * Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps.
+admit.
+apply ots. smt.
+admit.
+auto.
+qed.
+
+
+(* 
+1/ extended (with inf)  naturals then same lemma holds?
+2/ make while potentially infinite but with step indexing?
+
+
+  *)
+lemma zk_final &m E Q p w eps ea :
+   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
+        / Pr[Sim1.run(p) @ &m : E res.`1] 
+        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+
+  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
+  => E fevent = false  
+
+  => `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
+           @ &m : E res.`1 /\ Q res.`2 ]  
+         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| 
+           <= eps + Pr[Sim1.run(p) @ &m : !E res.`1] ^ ea.
+
+proof.
+have ->: Pr[Sim1.run(p) @ &m : !E res.`1] ^ ea
+ = 1%r - (1%r - Pr[Sim1.run(p) @ &m : !E res.`1] ^ ea).
+smt.
+rewrite - big_formula_p. smt. admit. progress.
+have ->: (1%r - Pr[Sim1.run(p) @ &m : ! E res.`1])
+ = Pr[Sim1.run(p) @ &m : E res.`1]. 
+have ->: 1%r = Pr[Sim1.run(p) @ &m :  true].
+byphoare. apply Sim1_ll. auto. auto.
+have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : ! E res.`1]
+ + Pr[Sim1.run(p) @ &m : E res.`1]. rewrite Pr[mu_split ! E res.`1]. 
+simplify. smt. smt.
+apply (zk_almost_final &m);auto.
+qed.
+
+
+lemma zk_final_le &m E Q p p0 w eps ea :
+   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
+        / Pr[Sim1.run(p) @ &m : E res.`1] 
+        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
+  => 0%r <= p0 <= 1%r           (* Dominique: not needed *)
+  => 0 <= ea
+  => E fevent = false  
+  => Pr[Sim1.run(p) @ &m : E res.`1]  >= p0
+  => `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
+           @ &m : E res.`1 /\ Q res.`2 ]  
+         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| 
+           <= eps + (1%r-p0) ^ ea.
+proof. progress.
+have f1 : `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
+           @ &m : E res.`1 /\ Q res.`2 ]  
+         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| 
+      <= eps + (1%r - Pr[Sim1.run(p) @ &m : E res.`1] )^ea.
+have ->: (1%r - Pr[Sim1.run(p) @ &m : E res.`1] ) = 
+  (Pr[Sim1.run(p) @ &m : !E res.`1] ). 
+have ->: 1%r = Pr[Sim1.run(p) @ &m :  true].
+byphoare. apply Sim1_ll. auto. auto.
+have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : ! E res.`1]
+ + Pr[Sim1.run(p) @ &m : E res.`1]. rewrite Pr[mu_split ! E res.`1]. 
+simplify. smt. smt.
+apply (zk_final &m).
+have f2 : 
+ 1%r - Pr[Sim1.run(p) @ &m : E res.`1] <= (1%r - p0).
+smt.
+have f3 : (1%r - Pr[Sim1.run(p) @ &m : E res.`1]) ^ ea <= (1%r - p0) ^ ea.
+apply multn2;auto. smt. auto. auto. auto.  smt.
+qed.
 
 end section.

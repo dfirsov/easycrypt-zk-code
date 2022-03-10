@@ -39,23 +39,71 @@ exists p,  0 <= p <= eps  =>
 
 ===============
 
-use sum-binding
+use sum-binding for 2 challenges:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-P_1_2 + P_2_1 ≥ P_1 + P_2 - 1.
-<=>
-P_1_2 + P_2_1 ≥ P_$ * 2 - 1.
-<=>
-ExtractorSuccess * 4 ≥ P_$ * 2 - 1.
-<=>
-ExtractorSuccess >= (P_$ * 2 - 1)/
-<=>
-ExtractorSuccess >= P_$ * 1/2 - 1/4
+2 * Extractor  ≥ P_1 + P_2 - 1. (already proved)
+=>
+2 * Extractor ≥ P_$ * 2 - 1.
+=>
+Extractor >= (P_$ * 2 - 1)/2
+=>
+Pr [ Extractor : succ ] >= P_$ - 1/2
 
 
-Generalizations:
-- more than two challenges possible (finite but possibly exponential number)
+more than two challenges:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pr[Extractor :  i <> j /\ succ ] = 1/c^2 *  Sum P_i_j for i<>j   [use averaging]
+                                >= P_$(P_$ - 1/c)                [use more general derivation of sum-binding]               
+
+
+
+
+
+
+
 - ExtractWit is "computational", meaning: poly-time A has negl probab to find counterex for ExtractAx
+  meaning that 
+    "s \notin R"
+
+    Pr[ r1 <- run1; r2 <- run2 : SuccessFullExtraction(r1,r2) ] = 1
+    changes to 
+    Pr[ r1 <- run1(false); r2 <- run2(true) : AcceptingRun r1 /\ AcceptingRn r2 /\ SuccessfulExtraction(r1,r2) ] = 1 - negl
+    
+1/ Analyze:     Pr[ r1 <- run1(false); r2 <- run2(true) : AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2] >= (some formula)
+2/ In non-computation case: AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2  ==>  SuccessfulExtraction ====> Done.
+3/ In computational case: Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2  /\  ~ SuccessfulExtraction] <= negl  (by comp SS assumption, using that r1,r2,c1,c2 come from efficient algorithm)cu
+4/ ==> Pr[ SuccessfulExtraction ] >= (some formula) - negl
+5/ ==> Pr[ Proving wrong ] <= cutoff point +- negl something ?  (More precisely: if wrong, no witness exists ==> Pr[SuccessfulExtraction] = 0 ==> 0 >= (some formula) - negl ==> nice stuff by arithmetic)
+
+
+
+
 - ExtractWit needs n transcripts (more complicated)
+
+run1(c1)
+run2(c2)
+Pr[success] = e^2
+
+Naive n-transcript:
+for i=1..n: run_i(c_i)
+Pr[success] = e^n
+
+Better n-transcript 1:
+for i=1..bound: ci<-$; run_i(c_i)
+success if n out of the bound iterations succeeded
+
+Better n-transcript 2:
+for i=1..n:
+  try bound times: ci<-$; run_i(c_i) till success
+Pr[success] = (Pr[inner success])^n
+
+
+Better n-transcript 3: (useful for expected poly case)
+run1(c1)
+the rest as in 2/3 (possibly without bound)
+
 
 
 ===========================

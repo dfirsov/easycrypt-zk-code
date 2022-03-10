@@ -81,6 +81,16 @@ simplify. progress. smt.
 smt.
 qed.
 
+
+lemma multn2 (p q : real)  :  0%r <= p <= q => forall n, 0 <= n => p^n <= q^n.
+move => cs.  apply ge0ind. smt.
+smt.
+simplify. progress. 
+have ->: p ^ (n + 1) = p * p^n. smt.
+have ->: q ^ (n + 1) = q * q^n. smt.
+smt.
+qed.
+
 lemma big_geq0 p  : 0%r <= p <= 1%r => forall n, 
  0%r <= bigi predT (fun (i : int) => (1%r-p) ^ i * p) 0 n.
 move => cs n.
@@ -112,6 +122,7 @@ lemma ots' (a c : real) :
   a * c  <= a.
 proof. smt.
 qed.
+
 
 lemma ots (a b c e : real) : 
   (0%r <= b <= 1%r) =>
