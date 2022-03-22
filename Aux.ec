@@ -91,6 +91,20 @@ have ->: q ^ (n + 1) = q * q^n. smt.
 smt.
 qed.
 
+
+lemma big_split_min ['a]:
+  forall (P0 : 'a -> bool) (F1 F2 : 'a -> real) (s : 'a list),
+    big P0 (fun (i : 'a) => F1 i - F2 i) s = big P0 F1 s - big P0 F2 s.
+proof.  progress.
+have ->:  - big P0 F2 s
+ =  (big P0 (fun x => - (F2 x) ) s).
+apply (big_ind2 (fun (x : real) y => (- x) = y) ) .
+smt. smt.
+progress.
+apply big_split.
+qed.
+
+
 lemma big_geq0 p  : 0%r <= p <= 1%r => forall n, 
  0%r <= bigi predT (fun (i : int) => (1%r-p) ^ i * p) 0 n.
 move => cs n.

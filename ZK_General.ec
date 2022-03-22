@@ -206,23 +206,23 @@ axiom Sim1_ll : islossless Sim1.run.
 axiom Sim1_run_rew x : hoare[ Sim1.run : (glob Sim1) = x ==> (glob Sim1) = x ].
 
 
-lemma zk_step1 &m E Q p w eps:
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2]
-      / Pr[Sim1.run(p) @ &m : E res.`1] 
-        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+lemma zk_step1 &m E Q p eps zkp:
+   `|Pr[ Sim1.run(p) @ &m : E res /\ Q res]
+      / Pr[Sim1.run(p) @ &m : E res] 
+        - zkp| <= eps
   => 0%r <= eps 
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1]
+  => 0%r < Pr[Sim1.run(p) @ &m : E res]
   => exists (eps' : real),  0%r <= eps' <= eps  
-  /\ `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-         / Pr[Sim1.run(p) @ &m : E res.`1] 
-                - Pr[ZK(P,V).main(p,w) @ &m: Q res]| = eps'
-  /\ (Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-      = Pr[Sim1.run(p) @ &m : E res.`1]  
-        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] - eps')
+  /\ `|Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+         / Pr[Sim1.run(p) @ &m : E res] 
+                - zkp| = eps'
+  /\ (Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+      = Pr[Sim1.run(p) @ &m : E res]  
+        * (zkp - eps')
       \/
-      Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-      = Pr[Sim1.run(p) @ &m : E res.`1]  
-        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] + eps')).
+      Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+      = Pr[Sim1.run(p) @ &m : E res]  
+        * (zkp + eps')).
 proof.
 progress.
 apply oip3;auto.
@@ -230,15 +230,15 @@ qed.
 
 
 lemma zk_step2 &m E Q p ea :
-  E fevent = false =>
-  Pr[ W(Sim1).whp((fun x => E (fst x)),p,1,ea,(fevent,witness)) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
+  E (fevent, witness) = false =>
+  Pr[ W(Sim1).whp(E,p,1,ea,(fevent,witness)) 
+           @ &m : E res /\ Q res ]  
      = big predT
-        (fun i => Pr[Sim1.run(p) @ &m : !E res.`1] ^ i 
-         * Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] )
+        (fun i => Pr[Sim1.run(p) @ &m : !E res] ^ i 
+         * Pr[ Sim1.run(p) @ &m : E res /\ Q res] )
         (range 0 ea). 
 move => sev.
-apply (whp_cap_fin_sum Sim1 _ &m (fun x => E (fst x)) (fun x => Q (snd x))).
+apply (whp_cap_fin_sum Sim1 _ &m E Q).
 apply Sim1_ll. simplify. assumption.
 apply Sim1_run_rew.
 qed.
@@ -257,66 +257,66 @@ apply big_split.
 qed.
 
 
-lemma zk_step3 &m E Q p w eps ea coeff:
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2]
-      / Pr[Sim1.run(p) @ &m : E res.`1] 
-        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1]  
+lemma zk_step3 &m E Q p eps ea coeff zkp:
+   `|Pr[ Sim1.run(p) @ &m : E res /\ Q res]
+      / Pr[Sim1.run(p) @ &m : E res] 
+        - zkp| <= eps
+  => 0%r < Pr[Sim1.run(p) @ &m : E res]  
   => 0%r <= eps 
   => coeff = big predT
-               (fun i => Pr[Sim1.run(p) @ &m : !E res.`1] ^ i 
-                         * Pr[ Sim1.run(p) @ &m : E res.`1])
+               (fun i => Pr[Sim1.run(p) @ &m : !E res] ^ i 
+                         * Pr[ Sim1.run(p) @ &m : E res])
                (range 0 ea) 
-  => E fevent = false
+  => E (fevent, witness) = false
   => exists (eps' : real), 
     0%r <= eps' <= eps   /\ 
-     `|Pr[ W(Sim1).whp(E \o fst,p,1,ea,(fevent,witness)) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - coeff * Pr[ZK(P,V).main(p,w) @ &m: Q res]| = coeff * eps'.
+     `|Pr[ W(Sim1).whp(E, p,1,ea,(fevent,witness)) 
+           @ &m : E res /\ Q res ]  
+         - coeff * zkp| = coeff * eps'.
 proof. move => H0 H1 H2 coeffeq sev.
 have :  exists (eps' : real),  0%r <= eps' <= eps  
-  /\ `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-         / Pr[Sim1.run(p) @ &m : E res.`1] 
-                - Pr[ZK(P,V).main(p,w) @ &m: Q res]| = eps'
-  /\ (Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-      = Pr[Sim1.run(p) @ &m : E res.`1]  
-        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] - eps')
+  /\ `|Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+         / Pr[Sim1.run(p) @ &m : E res] 
+                - zkp| = eps'
+  /\ (Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+      = Pr[Sim1.run(p) @ &m : E res]  
+        * (zkp - eps')
       \/
-      Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-      = Pr[Sim1.run(p) @ &m : E res.`1]  
-        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] + eps')).
+      Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+      = Pr[Sim1.run(p) @ &m : E res]  
+        * (zkp + eps')).
 apply (zk_step1 &m). assumption. assumption. assumption.
 elim. move => eps' [H3 [H41 H42 ]].
 exists eps'. 
 split. auto.
 apply oip4.
 rewrite coeffeq.
-have ->: Pr[Sim1.run(p) @ &m : ! E res.`1]
-  = 1%r - Pr[Sim1.run(p) @ &m :  E res.`1].
+have ->: Pr[Sim1.run(p) @ &m : ! E res]
+  = 1%r - Pr[Sim1.run(p) @ &m :  E res].
   have ->: 1%r = Pr[Sim1.run(p) @ &m :  true].
   byphoare. apply Sim1_ll. auto. auto.
-  have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : E res.`1]
-   + Pr[Sim1.run(p) @ &m : !E res.`1]. rewrite Pr[mu_split E res.`1]. 
+  have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : E res]
+   + Pr[Sim1.run(p) @ &m : !E res]. rewrite Pr[mu_split E res]. 
   simplify. smt. smt.
   have : 0%r <=
 bigi predT
   (fun (i : int) =>
-     (1%r - Pr[Sim1.run(p) @ &m : E res.`1]) ^ i *
-     Pr[Sim1.run(p) @ &m : E res.`1]) 0 ea.
-  apply (big_geq0  Pr[Sim1.run(p) @ &m : E res.`1] _ ea). smt.
+     (1%r - Pr[Sim1.run(p) @ &m : E res]) ^ i *
+     Pr[Sim1.run(p) @ &m : E res]) 0 ea.
+  apply (big_geq0  Pr[Sim1.run(p) @ &m : E res] _ ea). smt.
   smt. 
-case (Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-      = Pr[Sim1.run(p) @ &m : E res.`1]  
-        * (Pr[ZK(P,V).main(p,w) @ &m: Q res] + eps')).
+case (Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+      = Pr[Sim1.run(p) @ &m : E res]  
+        * (zkp + eps')).
 progress. rewrite /(\o).
 rewrite zk_step2. assumption.
 rewrite H. simplify.
 have : bigi predT
   (fun (i : int) =>
-     Pr[Sim1.run(p) @ &m : ! E res.`1] ^ i *
-     (Pr[Sim1.run(p) @ &m : E res.`1] *
-      (Pr[ZK(P, V).main(p, w) @ &m : Q res] + eps'))) 0 ea =
-coeff * Pr[ZK(P, V).main(p, w) @ &m : Q res] + coeff * eps'.
+     Pr[Sim1.run(p) @ &m : ! E res] ^ i *
+     (Pr[Sim1.run(p) @ &m : E res] *
+      (zkp + eps'))) 0 ea =
+coeff * zkp + coeff * eps'.
 rewrite coeffeq.
 rewrite mulr_suml.
 rewrite mulr_suml.
@@ -324,19 +324,19 @@ rewrite - big_split.
 simplify. smt.
 timeout 20. smt.
 move => H5.
-have : Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-        = Pr[Sim1.run(p) @ &m : E res.`1]  
-          * (Pr[ZK(P,V).main(p,w) @ &m: Q res] - eps').
+have : Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+        = Pr[Sim1.run(p) @ &m : E res]  
+          * (zkp - eps').
 smt.
 progress. rewrite /(\o).
 rewrite zk_step2. assumption.
 rewrite H. simplify.
 have : bigi predT
   (fun (i : int) =>
-     Pr[Sim1.run(p) @ &m : ! E res.`1] ^ i *
-     (Pr[Sim1.run(p) @ &m : E res.`1] *
-      (Pr[ZK(P, V).main(p, w) @ &m : Q res] - eps'))) 0 ea =
-coeff * Pr[ZK(P, V).main(p, w) @ &m : Q res] - coeff * eps'.
+     Pr[Sim1.run(p) @ &m : ! E res] ^ i *
+     (Pr[Sim1.run(p) @ &m : E res] *
+      (zkp - eps'))) 0 ea =
+coeff * zkp - coeff * eps'.
 rewrite coeffeq.
 rewrite mulr_suml.
 rewrite mulr_suml.
@@ -364,55 +364,55 @@ add corollary:
 
 
  *)
-lemma zk_non_final &m E Q p w eps ea coeff:
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] / Pr[Sim1.run(p) @ &m : E res.`1] 
-        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+lemma zk_non_final &m E Q p  eps ea coeff zkp:
+   `|Pr[ Sim1.run(p) @ &m : E res /\ Q res] / Pr[Sim1.run(p) @ &m : E res] 
+        - zkp| <= eps
 
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
+  => 0%r < Pr[Sim1.run(p) @ &m : E res] 
   => 0%r <= eps                 (* not needed *)
   => coeff = big predT
-               (fun i => Pr[Sim1.run(p) @ &m : !E res.`1] ^ i 
-                         * Pr[ Sim1.run(p) @ &m : E res.`1])
+               (fun i => Pr[Sim1.run(p) @ &m : !E res] ^ i 
+                         * Pr[ Sim1.run(p) @ &m : E res])
                (range 0 ea) 
-  => E fevent = false  
+  => E (fevent, witness) = false  
   =>
-     `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - coeff * Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps.
+     `|Pr[ Iter(Sim1).run(p,ea,E) 
+           @ &m : E res /\ Q res ]  
+         - coeff * zkp| <= eps.
 move => H1 H2 H3 H4 H5.
 have ->: 
-  Pr[Iter(Sim1).run(p, ea, E \o fun (p0 : event * sbits) => p0.`1) @ &m :
-     E res.`1 /\ Q res.`2]
-  = Pr[ W(Sim1).whp(E \o fst,p,1,ea,(fevent,witness)) 
-           @ &m : E res.`1 /\ Q res.`2 ] .  
+  Pr[Iter(Sim1).run(p, ea, E) @ &m :
+     E res /\ Q res]
+  = Pr[ W(Sim1).whp(E,p,1,ea,(fevent,witness)) 
+           @ &m : E res /\ Q res ] .  
  byequiv (_: _==> ={res}). proc*.
 inline Iter(Sim1).run. sp. wp. 
 call (_: ={glob Sim1}). simplify. sim. 
 skip. smt. auto. auto.
 have : coeff <= 1%r. 
 rewrite H4.
-have ->: Pr[Sim1.run(p) @ &m : ! E res.`1]
-  = 1%r - Pr[Sim1.run(p) @ &m :  E res.`1].
+have ->: Pr[Sim1.run(p) @ &m : ! E res]
+  = 1%r - Pr[Sim1.run(p) @ &m :  E res].
   have ->: 1%r = Pr[Sim1.run(p) @ &m :  true].
   byphoare. apply Sim1_ll. auto. auto.
-  have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : E res.`1]
-   + Pr[Sim1.run(p) @ &m : !E res.`1]. rewrite Pr[mu_split E res.`1]. 
+  have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : E res]
+   + Pr[Sim1.run(p) @ &m : !E res]. rewrite Pr[mu_split E res]. 
   simplify. smt. smt.
   have : 
 bigi predT
   (fun (i : int) =>
-     (1%r - Pr[Sim1.run(p) @ &m : E res.`1]) ^ i *
-     Pr[Sim1.run(p) @ &m : E res.`1]) 0 ea <= 1%r.
-  apply (big_leq1  Pr[Sim1.run(p) @ &m : E res.`1] _ ea). smt.
+     (1%r - Pr[Sim1.run(p) @ &m : E res]) ^ i *
+     Pr[Sim1.run(p) @ &m : E res]) 0 ea <= 1%r.
+  apply (big_leq1  Pr[Sim1.run(p) @ &m : E res] _ ea). smt.
   smt.
 move => H6.
-have : exists eps', 0%r <= eps' <= eps /\ `|Pr[W(Sim1).whp(E \o fun (p0 : event * sbits) => p0.`1, p, 1, ea,
+have : exists eps', 0%r <= eps' <= eps /\ `|Pr[W(Sim1).whp(E, p, 1, ea,
                  (fevent, witness)) @ &m :
-     E res.`1 /\ Q res.`2] -
-  coeff * Pr[ZK(P, V).main(p, w) @ &m : Q res]| 
+     E res /\ Q res] -
+  coeff * zkp| 
   = coeff * eps'.
-apply (zk_step3 &m E Q p w eps ea coeff H1 H2 H3).
-auto. assumption.
+apply (zk_step3 &m E Q p  eps ea coeff ).
+auto. assumption. auto. auto. auto.
 elim.
 move => eps' [eps'p1 epsp2].
 apply (ler_trans (coeff * eps')).
@@ -421,96 +421,95 @@ smt.
 qed.
 
 
-lemma zk_almost_final &m E Q p w eps ea coeff:
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] / Pr[Sim1.run(p) @ &m : E res.`1] 
-        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
+lemma zk_almost_final &m E Q p eps ea coeff zkp:
+   `|Pr[ Sim1.run(p) @ &m : E res /\ Q res] / Pr[Sim1.run(p) @ &m : E res] 
+        - zkp| <= eps
+  => 0%r < Pr[Sim1.run(p) @ &m : E res] 
   => coeff = big predT
-               (fun i => Pr[Sim1.run(p) @ &m : !E res.`1] ^ i 
-                         * Pr[ Sim1.run(p) @ &m : E res.`1])
+               (fun i => Pr[Sim1.run(p) @ &m : !E res] ^ i 
+                         * Pr[ Sim1.run(p) @ &m : E res])
                (range 0 ea) 
-  => E fevent = false  
-  => `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps + (1%r - coeff).
+  => E (fevent, witness) = false  
+  => `|Pr[ Iter(Sim1).run(p,ea,E) 
+           @ &m : E res /\ Q res ]  
+         - zkp| <= eps + (1%r - coeff).
 proof.
 move => H1 H2 H3 H4.
-have ie1 : `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - coeff * Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps.
+have ie1 : `|Pr[ Iter(Sim1).run(p,ea,E) 
+           @ &m : E res /\ Q res ]  
+         - coeff * zkp| <= eps.
 admit.
-apply ots. smt.
-admit.
+apply ots. admit.  admit.
 auto.
 qed.
 
 
 (* 
-1/ extended (with inf)  naturals then same lemma holds?
-2/ make while potentially infinite but with step indexing?
 
+- make while potentially infinite but with step indexing?
 
-  *)
-lemma zk_final &m E Q p w eps ea :
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-        / Pr[Sim1.run(p) @ &m : E res.`1] 
-        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
+*)
+lemma zk_final &m E Q p eps ea zkp:
+   `|Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+        / Pr[Sim1.run(p) @ &m : E res] 
+        - zkp| <= eps
 
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
-  => E fevent = false  
+  => 0%r < Pr[Sim1.run(p) @ &m : E res] 
+  => E (fevent, witness) = false  
 
-  => `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| 
-           <= eps + Pr[Sim1.run(p) @ &m : !E res.`1] ^ ea.
+  => `|Pr[ Iter(Sim1).run(p,ea,E) 
+           @ &m : E res /\ Q res ]  
+         - zkp| 
+           <= eps + Pr[Sim1.run(p) @ &m : !E res] ^ ea.
 
 proof.
-have ->: Pr[Sim1.run(p) @ &m : !E res.`1] ^ ea
- = 1%r - (1%r - Pr[Sim1.run(p) @ &m : !E res.`1] ^ ea).
+have ->: Pr[Sim1.run(p) @ &m : !E res] ^ ea
+ = 1%r - (1%r - Pr[Sim1.run(p) @ &m : !E res] ^ ea).
 smt.
 rewrite - big_formula_p. smt. admit. progress.
-have ->: (1%r - Pr[Sim1.run(p) @ &m : ! E res.`1])
- = Pr[Sim1.run(p) @ &m : E res.`1]. 
+have ->: (1%r - Pr[Sim1.run(p) @ &m : ! E res])
+ = Pr[Sim1.run(p) @ &m : E res]. 
 have ->: 1%r = Pr[Sim1.run(p) @ &m :  true].
 byphoare. apply Sim1_ll. auto. auto.
-have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : ! E res.`1]
- + Pr[Sim1.run(p) @ &m : E res.`1]. rewrite Pr[mu_split ! E res.`1]. 
+have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : ! E res]
+ + Pr[Sim1.run(p) @ &m : E res]. rewrite Pr[mu_split ! E res]. 
 simplify. smt. smt.
 apply (zk_almost_final &m);auto.
 qed.
 
 
-lemma zk_final_le &m E Q p p0 w eps ea :
-   `|Pr[ Sim1.run(p) @ &m : E res.`1 /\ Q res.`2] 
-        / Pr[Sim1.run(p) @ &m : E res.`1] 
-        - Pr[ZK(P,V).main(p,w) @ &m: Q res]| <= eps
-  => 0%r < Pr[Sim1.run(p) @ &m : E res.`1] 
-  => 0%r <= p0 <= 1%r           (* Dominique: not needed *)
+lemma zk_final_le &m E Q p p0 eps ea zkp:
+   `|Pr[ Sim1.run(p) @ &m : E res /\ Q res] 
+        / Pr[Sim1.run(p) @ &m : E res] 
+        - zkp| <= eps
+  => 0%r < Pr[Sim1.run(p) @ &m : E res] 
   => 0 <= ea
-  => E fevent = false  
-  => Pr[Sim1.run(p) @ &m : E res.`1]  >= p0
-  => `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| 
-           <= eps + (1%r-p0) ^ ea.
+  => E (fevent, witness) = false  
+  => Pr[Sim1.run(p) @ &m : E res] >= p0
+  => `|Pr[ Iter(Sim1).run(p,ea,E) 
+           @ &m : E res /\ Q res ] - zkp| 
+              <= eps + (1%r-p0) ^ ea.
 proof. progress.
-have f1 : `|Pr[ Iter(Sim1).run(p,ea,E \o fst) 
-           @ &m : E res.`1 /\ Q res.`2 ]  
-         - Pr[ZK(P,V).main(p,w) @ &m: Q res]| 
-      <= eps + (1%r - Pr[Sim1.run(p) @ &m : E res.`1] )^ea.
-have ->: (1%r - Pr[Sim1.run(p) @ &m : E res.`1] ) = 
-  (Pr[Sim1.run(p) @ &m : !E res.`1] ). 
+have fff : p0 <= 1%r. smt.
+have f1 : `|Pr[ Iter(Sim1).run(p,ea,E) 
+           @ &m : E res /\ Q res ]  
+         - zkp| 
+      <= eps + (1%r - Pr[Sim1.run(p) @ &m : E res] )^ea.
+have ->: (1%r - Pr[Sim1.run(p) @ &m : E res] ) = 
+  (Pr[Sim1.run(p) @ &m : !E res] ). 
 have ->: 1%r = Pr[Sim1.run(p) @ &m :  true].
 byphoare. apply Sim1_ll. auto. auto.
-have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : ! E res.`1]
- + Pr[Sim1.run(p) @ &m : E res.`1]. rewrite Pr[mu_split ! E res.`1]. 
+have ->: Pr[Sim1.run(p) @ &m : true] = Pr[Sim1.run(p) @ &m : ! E res]
+ + Pr[Sim1.run(p) @ &m : E res]. rewrite Pr[mu_split ! E res]. 
 simplify. smt. smt.
 apply (zk_final &m).
 have f2 : 
- 1%r - Pr[Sim1.run(p) @ &m : E res.`1] <= (1%r - p0).
+ 1%r - Pr[Sim1.run(p) @ &m : E res] <= (1%r - p0).
 smt.
-have f3 : (1%r - Pr[Sim1.run(p) @ &m : E res.`1]) ^ ea <= (1%r - p0) ^ ea.
+have f3 : (1%r - Pr[Sim1.run(p) @ &m : E res]) ^ ea <= (1%r - p0) ^ ea.
 apply multn2;auto. smt. auto. auto. auto.  smt.
 qed.
+
+
 
 end section.

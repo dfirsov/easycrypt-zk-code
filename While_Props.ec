@@ -106,7 +106,6 @@ seq 1 1 : (={glob A, glob W} /\ p{1} = pa /\ p0{2} = pa /\ r0{1} = r1{2} /\ p{1}
 inline*.  sp. wp.
 while (={glob A, glob W} /\ (e0,p0,r1,i0){1} = (e1,p1,r2,i1){2} /\ (!p0 r1 => W.c <= e0 + 1){1}). wp. call (_:true). skip. progress.
 smt. skip. progress. smt.
-
 inline*.  sp. 
 case (pa r0{1}).
 rcondf {2} 1. progress.  skip. progress. smt.

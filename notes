@@ -53,34 +53,44 @@ Pr [ Extractor : succ ] >= P_$ - 1/2
 
 more than two challenges:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+1/ Show:     
+  Pr[ init(); c1 <$ d; r1 <- run1(c1); 
+      c2 <$ d; r2 <- run2(c2) 
+  : AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2] >= P_$(P_$ - 1/c) (some formula)
 
-Pr[Extractor :  i <> j /\ succ ] = 1/c^2 *  Sum P_i_j for i<>j   [use averaging]
-                                >= P_$(P_$ - 1/c)                [use more general derivation of sum-binding]               
+2/ In computational case:
 
+Assume:
+  Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2  /\ ~ SuccessfulExtraction] <= negl  
+  (by comp SS assumption, using that r1,r2,c1,c2 come from efficient algorithm)
 
-
-
-
-
-
-- ExtractWit is "computational", meaning: poly-time A has negl probab to find counterex for ExtractAx
-  meaning that 
-    "s \notin R"
-
-    Pr[ r1 <- run1; r2 <- run2 : SuccessFullExtraction(r1,r2) ] = 1
-    changes to 
-    Pr[ r1 <- run1(false); r2 <- run2(true) : AcceptingRun r1 /\ AcceptingRn r2 /\ SuccessfulExtraction(r1,r2) ] = 1 - negl
-    
-1/ Analyze:     Pr[ r1 <- run1(false); r2 <- run2(true) : AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2] >= (some formula)
-2/ In non-computation case: AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2  ==>  SuccessfulExtraction ====> Done.
-3/ In computational case: Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2  /\  ~ SuccessfulExtraction] <= negl  (by comp SS assumption, using that r1,r2,c1,c2 come from efficient algorithm)cu
-4/ ==> Pr[ SuccessfulExtraction ] >= (some formula) - negl
-5/ ==> Pr[ Proving wrong ] <= cutoff point +- negl something ?  (More precisely: if wrong, no witness exists ==> Pr[SuccessfulExtraction] = 0 ==> 0 >= (some formula) - negl ==> nice stuff by arithmetic)
+2.1/ Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2 ]
+   = Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2 /\ SuccExtract ]
+    + Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2 /\ !SuccExtract ]
+   ≤ Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2 /\ SuccExtract ]
+     + negl
+ ⇒ (some formula) ≤ 
+      Pr [ AcceptingRun r1 /\ AcceptingRn r2 /\ c1!=c2 /\ SuccExtract ] + negl
+ ⇒ Pr[ SuccessfulExtraction ] >= (some formula) - negl
 
 
+2.2/ Assume no witness exists 
+  ⇒ Pr[SuccessfulExtraction] = 0 
+  ⇒ 0 ≥ (some formula) - negl 
+  ⇒ negl ≥ (some formula)
+  ⇒ negl ≥ (P_$^2 - P_$/c)
+  ⇒ negl + P_$/c ≥ P_$^2
+  ⇒ sqrt (negl + P_$/c) ≥ P_$
+  ⇒ sqrt (negl + 1/c) ≥ P_$
+   
+3/ In non-computation case: 
 
+ Pr[ SuccessfulExtraction ] >= (some formula) (from 2.1 where negl = 0)
 
-- ExtractWit needs n transcripts (more complicated)
+==================================
+
+ExtractWit needs n transcripts (more complicated)
 
 run1(c1)
 run2(c2)
@@ -99,17 +109,13 @@ for i=1..n:
   try bound times: ci<-$; run_i(c_i) till success
 Pr[success] = (Pr[inner success])^n
 
-
 Better n-transcript 3: (useful for expected poly case)
 run1(c1)
 the rest as in 2/3 (possibly without bound)
 
-
-
 ===========================
 
 rename: prob type to stmnt
-
 
 ===========================
 
@@ -142,3 +148,10 @@ to get arbitrary low probability.
 ================
 
 To look at:  blums hamiltonian cycle
+
+================
+
+
+1/ EagerWhileROM <-> LazyROM [*exists in stdlib AND ises "eager tactics" *]
+2/ Can use "kol" to sow EagerWhileROM <-> EagerPickFunctionROM
+
