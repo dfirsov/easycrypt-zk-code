@@ -101,13 +101,49 @@ for i=1..n: run_i(c_i)
 Pr[success] = e^n
 
 Better n-transcript 1:
-for i=1..bound: ci<-$; run_i(c_i)
+for i=1..bound: ci<-$;  run_i(c_i)
 success if n out of the bound iterations succeeded
+ 
+
 
 Better n-transcript 2:
 for i=1..n:
   try bound times: ci<-$; run_i(c_i) till success
 Pr[success] = (Pr[inner success])^n
+
+
+Better n-transcript 4: (Special case: n out of n, hence n not too big)
+for i=1..n:
+  ci<-n; bound times: run_i(c_i)
+
+(Proof for this: Assume (for fixed com): Pr[PV] >= (n-1)/n + delta.
+avg_{i<n} Pr[PV with i] >= (n-1)/n + delta.
+==> Pr[PV with i] >= delta. (for all i)
+bound := Omega(1/delta).
+Pr[bound time: run(ci:=i)] >= 1-eps. (for small eps)
+Then: overall success >= 1-n*eps ~= 1.)
+
+
+
+Better n-transcript 5: (Possibly equal to one of the ones above)
+for i=1..n:
+  bound times: ci<-$; run_i(c_i)  (VARIANT: c<-{fresh ones})
+
+{PV := ci<-$; run_i(c_i)}
+
+(Proof for this:
+
+Pr[PV, c notin M] >= Pr[PV] - M/C.
+
+Pr[c<-$, run_i(c_i) succeed and fresh] >= Pr[PV] - |M|/C. (if in M-th outer round)
+This is >= delta if Pr[PV] >= (n-1)/C + delta.
+Pr[M-th outer round succeeds] >= 1-eps (if bound is Omega(1/delta))
+Pr[all rounds succeed] >= 1-n*eps.)
+
+
+
+
+
 
 Better n-transcript 3: (useful for expected poly case)
 run1(c1)

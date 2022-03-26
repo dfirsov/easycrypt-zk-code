@@ -1,5 +1,25 @@
 require import AllCore.
 
+
+type  ('a, 'b) sum = [Left of 'a | Right of 'b].
+
+op is_right (s: ('a, 'b) sum) :  bool =
+    with s = Left _ => false
+    with s = Right _ => true.
+
+op is_left (s: ('a, 'b) sum) :  bool =
+    with s = Left _ => true
+    with s = Right _ => false.
+
+op proj_left (s: ('a, 'b) sum) : 'a =
+    with s = Left x => x
+    with s = Right _ => witness.
+
+op proj_right (s: ('a, 'b) sum) : 'b =
+    with s = Left _ => witness
+    with s = Right x => x.
+
+
 lemma andI (a b : bool) : a => b => a /\ b.
 auto.
 qed.

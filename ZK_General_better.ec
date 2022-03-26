@@ -321,12 +321,17 @@ local lemma zk_final_le &m p p0 eps ea zkp:
    `|Pr[ W0.run(p) @ &m : E res.`2 /\ res.`1] 
         / Pr[W0.run(p) @ &m : E res.`2] 
         - zkp| <= eps
-  => 0%r < Pr[W0.run(p) @ &m : E res.`2] 
+
+  => 0%r < Pr[W0.run(p) @ &m : E res.`2] (* remove by case distinguish in the beginning  *)
+
   => 0 <= ea
+
   => Pr[W0.run(p) @ &m : E res.`2] >= p0
+
   => `|Pr[ Iter(Sim1).run(p,ea,E) 
            @ &m : E res.`2 /\ res.`1 ] - zkp| 
               <= eps + (1%r-p0) ^ ea.
+
 proof. progress.
 have fff : p0 <= 1%r. smt.
 have f1 : `|Pr[ Iter(Sim1).run(p,ea,E) 

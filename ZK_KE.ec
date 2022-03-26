@@ -274,12 +274,15 @@ lemma final_eq_step1 &m AccRun SuccExtr p negl :
    Pr[ InitRun2(A).run(p) @ &m 
           : res.`1.`1 <> res.`2.`1 /\ AccRun res.`1 /\ AccRun res.`2
    /\ !SuccExtr res.`1 res.`2 ] <= negl
+
   => 
    Pr[ InitRun2(A).run(p) @ &m : res.`1.`1 <> res.`2.`1 
-                                 /\ AccRun res.`1 /\ AccRun res.`2 /\ SuccExtr res.`1 res.`2 ] 
+            /\ AccRun res.`1 /\ AccRun res.`2 /\ SuccExtr res.`1 res.`2 ] 
+
     >= (Pr[ InitRun1(A).run(p) @ &m  :  AccRun res ]^2
          - (1%r/(size allcs)%r) * Pr[ InitRun1(A).run(p) @ &m  :  AccRun res ])
-    - negl.
+
+        - negl.
 progress.
 have : Pr[InitRun1(A).run(p) @ &m : AccRun res] ^ 2 -
   Pr[InitRun1(A).run(p) @ &m : AccRun res] / (size allcs)%r <=
@@ -321,10 +324,14 @@ lemma final_eq_step2 &m AccRun SuccExtr p negl :
    Pr[ InitRun2(A).run(p) @ &m 
           : res.`1.`1 <> res.`2.`1 /\ AccRun res.`1 /\ AccRun res.`2
    /\ !SuccExtr res.`1 res.`2 ] <= negl
+
  => Pr[ InitRun2(A).run(p) @ &m 
           :  SuccExtr res.`1 res.`2 ] = 0%r   
+
  => Pr[ InitRun1(A).run(p) @ &m  :  AccRun res ]
    <=  sqrt (negl + 1%r/(size allcs)%r).
+
+
 proof.  progress.
 have f2 :     Pr[InitRun2(A).run(p) @ &m :
        res.`1.`1 <> res.`2.`1 /\
