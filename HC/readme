@@ -1,0 +1,136 @@
+Pick pi on G
+
+Check:
+
+ graph type nXn: bool list list 
+ cycle: nat list of length n-1
+ Com(G): nXn bit-commitments
+ open all: nXn openings
+ open(pi(w)): cycle * opening list (length n)
+ pi: uniq list of length n
+
+
+    Com(pi(G))                     (?)
+---------------------------->
+
+     0/1
+<-----------------------------
+
+if 0:
+
+  open all
+--------------------------->
+
+
+if 1:
+
+open pi(w) in pi(G)
+---------------------------->
+
+############################
+
+Sim1_Game1:
+
+guess bit
+
+if 0: do honestly
+
+if 1: pick w* := cycle
+      commit to w*
+      commit to complete graph
+      open w* in complete graph
+
+
+Sim1_Game2:
+
+guess bit
+
+if 0: do honestly
+
+if 1: pick pi
+      w* := pi(w)
+      commit to w*
+      commit to complete graph
+      open w*
+     
+
+################################
+
+Sim1_Game3:
+
+guess bit
+
+if 0: do honestly
+
+if 1: pick pi
+      commit to pi(w)
+      commit to pi(G)           (* CRUCIAL CHANGE *)
+      open graph at position pi(w)
+
+
+in other words:
+
+    b <- V.challenge( commit to pi(complete graph) );
+    transcript <- V.summitup( decommit );
+    
+
+    b <- V.challenge( commit to pi(G) );
+    transcript <- V.summitup( decommit );
+
+
+
+so, we can guarantee that b is the same modulo negligible probability
+however, we cannot know if (glob V){1} = (glob V){2}
+
+
+
+
+-------
+
+module nHidingGame(A) = {
+  main(b, n): bool = {
+    params <$ distr;
+    m0,m1 <- A.get_m()
+    out <- A.guess(commit(m_b));
+    return out;
+  }
+}
+
+
+----
+
+Sim1_Game2 is equivalent (perfectly) to:
+
+commit to w* = pi(w)
+G'com[i,j],_ := Com(1)  for all (i,j) \notin pi(w)   ( := 0 or bot otherwise )
+Gwcom[k],Gwopen[k] := Com(1)  for all k with (i,j) := pi(w)[k]
+Gcom[i,j] := G'com[i,j] (if defined) or Gwcom[k] (for the uniuque k with (i,j) := pi(w)[k])
+send Gcom
+send w*, Gwopen
+
+(*GameX)
+
+
+----
+
+Sim1_Game3 is equivalent (perfectly) to:
+
+commit to w* = pi(w)
+
+G'com[i,j],_ := Com(pi(G)[i,j])  for all (i,j) \notin pi(w)   ( := 0 or bot otherwise )
+Gwcom[k],Gwopen := Com(pi(G)[i,j])  for all k with (i,j) := pi(w)[k]
+Gcom[i,j] := G'com[i,j] (if defined) or Gwcom[k] (for the uniuque k with (i,j) := pi(w)[k])
+send Gcom
+send w*, Gwopen
+
+is perfectly equivalent to:  (using that G[i,j] = 1 for (i,j) \in w)
+
+G'com[i,j],_ := Com(pi(G)[i,j])  for all (i,j) \notin pi(w)   ( := 0 or bot otherwise )
+Gwcom[k],Gwopen := Com(1)  for all k with (i,j) := pi(w)[k]
+Gcom[i,j] := G'com[i,j] (if defined) or Gwcom[k] (for the uniuque k with (i,j) := pi(w)[k])
+send Gcom
+send w*, Gwopen
+
+is computational equivalent to:
+
+GameX (we use nHidingGame to create G'com)
