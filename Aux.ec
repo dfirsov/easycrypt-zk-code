@@ -1,4 +1,62 @@
-require import AllCore.
+require import AllCore List.
+
+lemma sub_all ['a]:
+   forall (p1 p2 : 'a -> bool) (s : 'a list),
+     (forall (x : 'a), p1 x => p2 x) => all p1 s => all p2 s.
+move => p1 p2.  elim. smt.
+smt.
+qed.
+
+
+lemma take_zip ['a 'b] : 
+   forall  (n :  int) (l1 : 'a list)(l2 : 'b list),
+   zip (take n l1) (take n l2) 
+  = take n (zip l1 l2).
+apply ge0ind. smt.
+smt.
+progress.
+case (l1 = []).
+smt.
+progress.
+have f1 : exists a1 l1', l1 = (a1 :: l1').
+clear H0 H.  
+exists (head witness l1) (behead l1).
+smt.
+elim f1.
+progress. 
+have -> : (n + 1 <= 0) = false.
+smt. simplify.
+case (l2 = []).
+smt.
+progress. 
+have f2 : exists a2 l2', l2 = (a2 :: l2').
+exists (head witness l2) (behead l2).
+smt.
+elim f2.
+progress. 
+have -> : (n + 1 <= 0) = false.
+smt. simplify. smt.
+qed.
+
+
+lemma take_const ['a 'b] (c : 'b) f : forall (l : 'a list) ,
+ all (fun x => f (c, x)) l =
+   all f  (zip (nseq (size l) c) l).
+proof. 
+elim. smt.
+progress. 
+have ->: 1 + size l = size l + 1. smt.
+rewrite nseqS. smt.
+simplify. smt.
+qed.
+
+lemma take_nseq ['a ] (c : 'a) : forall n ,
+  (take n (nseq n c)) = nseq n c.
+apply ge0ind. smt.
+smt.
+smt.
+qed.
+
 
 
 type  ('a, 'b) sum = [Left of 'a | Right of 'b].

@@ -1,30 +1,24 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Int IntDiv Aux FSet DJoin.
+require import AllCore DBool Bool List Distr Int Aux DJoin.
 
 require import Permutation.
 
+type sbits.
 type commitment, opening.
-type edge = int * int * bool.
-
 
 op Com  : bool -> (commitment * opening) distr.
-op Open : commitment * opening -> edge option.
+op Ver : bool * (commitment * opening)  -> bool.
 
-type graph .
+axiom Com_sound : forall (x : bool * (commitment * opening)), 
+  x.`2 \in Com x.`1 => Ver x.
 
 
-op compl_graph     : int -> graph.
-op compl_graph_cyc : int -> (int * int) list.
-
+type graph = bool list list.
 
 type hc_prob = (int * graph).
-type hc_wit  = (int * int) list.
+type hc_wit  = int list.
 type hc_com  = commitment list.
-type hc_resp = ((opening list) ,
-                     (hc_wit * (opening list))) sum.
-                   
-
-type sbits.
+type hc_resp = (permutation * (opening list) , hc_wit * (opening list)) sum.
 
 module type Dist = {
    proc run(s : sbits) : bool
@@ -39,7 +33,7 @@ clone import ZK_General as ZK_defs with type prob  = hc_prob,
                                         type sbits = sbits.
 
 
-module ZKP(P : Prover, V : Verifier, D : Dist) = {
+module ZKP(P : Prover, V : Verifier) = {
   proc run(Ny : hc_prob, w : hc_wit, b : bool) = {
     var c,r;
     c <- P.commit(Ny,w);
@@ -49,302 +43,40 @@ module ZKP(P : Prover, V : Verifier, D : Dist) = {
 }.
 
 
+module ZKD(P : Prover, V : Verifier, D : Dist) = {
+  proc main(Ny : prob, w : wit) = {
+    var c,b,r,result,rb;
+    c <- P.commit(Ny,w);
+    b <- V.challenge(Ny,c);
+    r <- P.response(b);
+    result <- V.summitup(c,r);
+    rb <- D.run(result);
+    return rb;
+  }
+}.
 
-require DjoinMap.
-clone import DjoinMap as DJMM with type a <- bool, 
-                           type b <- (commitment * opening),
-                           op d <- Com.
+require Djoinmap.
+clone import Djoinmap as DJMM with type a <- bool, 
+                                   type b <- (commitment * opening),
+                                   op   d <- Com.
                                         
 
-op IsHC : hc_prob ->  hc_wit -> bool. 
-op HasHC (Ny : hc_prob) = exists w, IsHC Ny w.
 
-op perm_d : int -> (int -> int) distr.
-
-op is_hc : int -> ((int * int)) list -> bool.
-
-op mk_graph : int -> (int * int) list.
-op graph_to_list : graph ->  bool list.
-op flatten_and_permute : (int -> int) -> graph-> bool list.
-op split_edge_list ['a] : 'a list -> hc_wit 
-            -> 'a list * 'a list.
+op compl_graph     : int -> graph.
+op compl_graph_cyc : int -> int list = range 0.
 
 
-op compl_graph_edges : int -> (int * int) list.
+op IsHC : hc_prob * hc_wit -> bool. 
+op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 
-module HP  = {
-
-  var n : int
-  var g : graph
-  var prm : int -> int
-  var w : hc_wit
-  var fal : bool list           (* flattened adj. graph *)
-
-  var zpd_g, zpd_w : bool list
-  var pi_gco, pi_wco : (commitment * opening) list
-  var pi_gwco : (commitment * opening) list
-  var pi_w : (int * int) list
-  
-  proc commit(p_a : hc_prob, w_a : hc_wit)  = {
-    (n,g) <- p_a;
-    w <- w_a;
-    prm <$ perm_d n;
-    fal <- flatten_and_permute prm g;
-
-    pi_gwco <@ DJM.main5(fal);
-    return map fst pi_gwco;
-  }
-
-  
-  proc response(b : bool) : hc_resp = {
-    pi_w <- (map (fun (x : int * int) => (prm x.`1, prm x.`2)) w);
-    (zpd_g, zpd_w) <- split_edge_list fal pi_w;
-         
-    return if b then Left (map snd pi_gwco) 
-                else Right (pi_w, map snd (drop n (ip (mk_perm (zpd_g ++ zpd_w) fal) pi_gwco)));
- } 
-}.
+axiom ishc_prop1 a : IsHC a =>
+ (fst (fst a)) = size (snd a) 
+    /\ size (flatten (snd (fst a))) 
+         = (fst (fst a)) * (fst (fst a)).
 
 
-module HP'  = {
+axiom ishc_prop2 a : IsHC a =>
+  0 < (fst (fst a)).
 
-  var n : int
-  var g : graph
-  var prm : int -> int
-  var w : hc_wit
-  var fal : bool list           (* flattened adj. graph *)
-
-  var zpd_g, zpd_w : bool list
-  var pi_gco, pi_wco : (commitment * opening) list
-  var pi_gwco : (commitment * opening) list
-  var pi_w : (int * int) list
-  
-  proc commit(p_a : hc_prob, w_a : hc_wit) : hc_com = {   
-    (n,g) <- p_a;
-    w <- w_a;
-    prm <$ perm_d n; 
-    fal <- flatten_and_permute prm g;
-    pi_w <- (map (fun (x : int * int) => (prm x.`1, prm x.`2)) w);
-    (zpd_g, zpd_w) <- split_edge_list fal pi_w;
-    
-    (pi_gco, pi_wco) <@ DJM.main1(zpd_g, zpd_w);
-    pi_gwco <-(pi (mk_perm (zpd_g ++ zpd_w) fal)) (pi_gco ++ pi_wco);
-
-    return (map fst pi_gwco);    
-  }
-  
-  
-  proc response(b : bool) : hc_resp = {
-    return if b then Left (map snd pi_gwco) 
-          else Right (pi_w, map snd pi_wco);
- } 
-}.
-
-
-
-section.
-declare module V : Verifier {HP,HP'}.
-lemma zk_hp_hp': 
-  equiv [ ZK(HP, V).main ~ ZK(HP', V).main : ={arg, glob V} ==> ={res} ].
-proof. proc.
-seq 1 1 : (={Ny, c, glob V} 
-    /\ HP.pi_gwco{1} = HP'.pi_gwco{2}
-    /\ HP'.pi_w{2} = (map (fun (x : int * int) => (HP'.prm{2} x.`1, HP'.prm{2} x.`2)) HP'.w{2})
-  /\ HP'.fal{2} = flatten_and_permute HP'.prm{2} HP'.g{2}
-  /\  (HP'.zpd_g){2} = (split_edge_list HP'.fal{2} HP'.pi_w{2}).`1
-  /\  (HP'.zpd_w){2} = (split_edge_list HP'.fal{2} HP'.pi_w{2}).`2
-    /\   (pi (mk_perm (HP'.zpd_g ++ HP'.zpd_w) HP'.fal) 
-            (HP'.pi_gco ++ HP'.pi_wco)){2} = HP.pi_gwco{1}
-  /\ HP.w{1} = HP'.w{2}
-  /\ HP.prm{1} = HP'.prm{2}
-  /\ HP.g{1} = HP'.g{2}  
-  /\ HP.n{1} = HP'.n{2}  
-  /\ HP.fal{1} = HP'.fal{2}
-).
-inline HP.commit HP'.commit. wp.
-seq 6 6 : (={Ny, glob V} 
-  /\ HP.fal{1} = HP'.fal{2}  
-  /\ HP.g{1} = HP'.g{2}
-  /\ HP.w{1} = HP'.w{2}
-  /\ HP.prm{1} = HP'.prm{2}
-  /\ HP.n{1} = HP'.n{2}
-  /\ ={w_a, p_a}
-  /\ HP'.fal{2} = flatten_and_permute HP'.prm{2} HP'.g{2}).
-wp. rnd. wp. skip. progress.  sp.
-exists* HP'.zpd_g{2}, HP'.zpd_w{2}, HP.fal{1}.
-elim*. progress.
-simplify.
-call (djm_main511 (mk_perm (zpd_g_R ++ zpd_w_R) fal_L)).
-skip. progress. rewrite mk_perm_ip.  admit. auto. 
-smt. smt.
-seq 2 2 : (={glob V, r ,c}).
-inline*.
-wp.  simplify. call (_:true).
-skip. progress.
-case (result_R = true).
-move => h. rewrite h.
-simplify. auto.
-move => h.
-have : result_R = false.
-smt. clear h. move => h. rewrite h. simplify.
-progress.
-rewrite   ippi. admit.
-call (_:true). skip. progress.
-qed.
-end section.
-
-section.
-declare module V : Verifier {HP,HP'}.
-declare module D : Dist {V,HP,HP'}.
-lemma zkp_hp_hp': 
-  equiv [ ZKP(HP, V,D).run ~ ZKP(HP',V,D).run : ={arg, glob V} ==> ={res} ].
-admitted.
-
-
-
-(* one-time simulator  *)
-local module Sim1(V : Verifier) = {
-  module ZKP_HP = ZKP(HP,V,D)
-  module ZKP_HP' = ZKP(HP',V,D)
-  proc sinit(p_a : hc_prob) : bool * (hc_com * hc_resp) = {
-    var n, g,bb,r;
-    (n,g) <- (p_a.`1, p_a.`2);
-
-    bb <$ {0,1};
-
-    if (bb) {
-       r <- ZKP_HP.run(p_a, witness, bb);
-    }else{
-       r <- ZKP_HP'.run((n, compl_graph n), (compl_graph_cyc n), bb);
-    }
-    return (bb, r);
-  }
-
-  proc simulate(pa : hc_prob) : bool * sbits  = {
-    var b',b,zryb,result;
-    (b',zryb) <- sinit(pa);
-    b <- V.challenge(pa, fst zryb);
-    result <- V.summitup(zryb);
-    return (b = b', result);
-  }
-
-}.
-
-
-local module Sim1'(V : Verifier) = {
-  module ZKP_HP = ZKP(HP,V,D)
-  module ZKP_HP' = ZKP(HP',V,D)
-  proc sinit(p_a : hc_prob, w_a : hc_wit) = {
-    var n, g,bb,r;
-    (n,g) <- (p_a.`1, p_a.`2);
-
-    bb <$ {0,1};
-
-    if (bb) {
-       r <- ZKP_HP.run(p_a, w_a, bb);
-    }else{
-       r <- ZKP_HP'.run((n, compl_graph n), w_a, bb);
-    }
-    return (bb, r);
-  }
-
-  proc simulate(pa : hc_prob, wa : hc_wit) : bool * sbits  = {
-    var b',b,zryb,result;
-    (b',zryb) <- sinit(pa,wa);
-    b <- V.challenge(pa, fst zryb);
-    result <- V.summitup(zryb);
-    return (b = b', result);
-  }
-
-}.
-
-
-
-
-local lemma zkp_sim1_sim1': 
-  equiv [ Sim1(V).simulate ~ Sim1'(V).simulate : arg{1} = arg{2}.`1 /\ ={glob V} ==> ={res} ].
-proof. proc.
-inline Sim1(V).sinit.
-inline Sim1'(V).sinit.
-sp.
-seq 1 1 : (p_a{2} = pa{2} /\
-  w_a{2} = wa{2} /\
-  g{2} = p_a{2}.`2 /\
-  n{2} = p_a{2}.`1 /\
-  p_a{1} = pa{1} /\
-  g{1} = p_a{1}.`2 /\
-  n{1} = p_a{1}.`1 /\ 
-  pa{1} = pa{2} /\ ={glob V} /\ bb{1} = bb{2}).
-rnd. skip. progress. 
-if. auto. 
-call (_:true).
-call (_:true).
-wp. inline*. wp. 
-rnd.  wp.  rnd.  wp. skip. progress.
-rewrite H. simplify. auto.
-seq 1 1 : (={r,bb, glob V,pa} /\ !bb{1}).
-inline*. 
-seq  10 10 : (HP'.pi_w{1} = HP'.pi_w{2} /\ HP'.fal{1} = HP'.fal{2}
-  /\ !b0{1} /\ b0{1} = b0{2} /\ ={bb, glob V, pa} /\ !bb{1} ).
-sp. wp.
-rnd (fun (f : int -> int) => f \o (pn (mk_perm w{2} w{1}))) (fun (f : int -> int) => f \o (np (mk_perm w{2} w{1}))) .
-skip. progress. admit. admit. admit. admit. admit. admit.
-wp.  rnd. rnd.  wp.  skip. progress.
-call (_:true).
-call (_:true).
-wp. skip. progress.
-qed.
-
-
-
-local module Sim1''(V : Verifier) = {
-  module ZKP_HP = ZKP(HP,V,D)
-  module ZKP_HP' = ZKP(HP',V,D)
-  proc sinit(p_a : hc_prob, w_a : hc_wit) = {
-    var n, g,bb,r;
-    (n,g) <- (p_a.`1, p_a.`2);
-
-    bb <$ {0,1};
-
-    if (bb) {
-       r <- ZKP_HP.run(p_a, w_a, bb);
-    }else{
-       r <- ZKP_HP'.run(p_a, w_a, bb);
-    }
-    return (bb, r);
-  }
-
-  proc simulate(pa : hc_prob, wa : hc_wit) : bool * sbits  = {
-    var b',b,zryb,result;
-    (b',zryb) <- sinit(pa,wa);
-    b <- V.challenge(pa, fst zryb);
-    result <- V.summitup(zryb);
-    return (b = b', result);
-  }
-
-}.
-
-
-local module Sim1'''(V : Verifier) = {
-  module ZKP_HP = ZKP(HP,V,D)
-  module ZKP_HP' = ZKP(HP',V,D)
-  proc sinit(p_a : hc_prob, w_a : hc_wit) = {
-    var n, g,bb,r;
-    (n,g) <- (p_a.`1, p_a.`2);
-
-    bb <$ {0,1};
-    r <- ZKP_HP'.run(p_a, w_a, bb);
-
-    return (bb, r);
-  }
-
-  proc simulate(pa : hc_prob, wa : hc_wit) : bool * sbits  = {
-    var b',b,zryb,result;
-    (b',zryb) <- sinit(pa,wa);
-    b <- V.challenge(pa, fst zryb);
-    result <- V.summitup(zryb);
-    return (b = b', result);
-  }
-
-}.
-
+axiom ishc_prop4 a : IsHC a =>
+  uniq a.`2 /\ (  forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).

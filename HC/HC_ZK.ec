@@ -1,128 +1,8 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 
-require import Permutation.
-
-type sbits.
-type commitment, opening.
-
-op Com  : bool -> (commitment * opening) distr.
-op Open : bool -> commitment * opening -> bool.
-
-type graph = bool list list.
-
-type hc_prob = (int * graph).
-type hc_wit  = int list.
-type hc_com  = commitment list.
-type hc_resp = (opening list , hc_wit * (opening list)) sum.
-
-module type Dist = {
-   proc run(s : sbits) : bool
-}.
-
-require ZK_General.
-clone import ZK_General as ZK_defs with type prob  = hc_prob,
-                                        type wit   = hc_wit,
-                                        type chal  = bool,
-                                        type com   = hc_com,
-                                        type resp  = hc_resp,
-                                        type sbits = sbits.
-
-
-module ZKP(P : Prover, V : Verifier) = {
-  proc run(Ny : hc_prob, w : hc_wit, b : bool) = {
-    var c,r;
-    c <- P.commit(Ny,w);
-    r <- P.response(b);
-    return (c,r);
-  }
-}.
-
-
-module ZKD(P : Prover, V : Verifier, D : Dist) = {
-  proc main(Ny : prob, w : wit) = {
-    var c,b,r,result,rb;
-    c <- P.commit(Ny,w);
-    b <- V.challenge(Ny,c);
-    r <- P.response(b);
-    result <- V.summitup(c,r);
-    rb <- D.run(result);
-    return rb;
-  }
-}.
-
-require DjoinMap.
-clone import DjoinMap as DJMM with type a <- bool, 
-                                   type b <- (commitment * opening),
-                                   op   d <- Com.
-                                        
-
-
-op compl_graph     : int -> graph.
-op compl_graph_cyc : int -> int list = range 0.
-
-
-op IsHC : hc_prob * hc_wit -> bool. 
-op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
-
-axiom ishc_prop1 a : IsHC a =>
- (fst (fst a)) = size (snd a) 
-    /\ size (flatten (snd (fst a))) 
-         = (fst (fst a)) * (fst (fst a)).
-
-
-
-(* flatten and permute  *)
-op fap (p : permutation) (g : graph) : bool list
- = flatten (pi p (map (pi p) g)).
-
-axiom fap_prop1 p n  : 
- fap p (compl_graph n) = flatten (compl_graph n).
-
-axiom fap_prop2 p g  : 
- size (fap p g) = size (flatten g).
-
-
-op permute_wit : permutation -> hc_wit -> hc_wit = map.
-
-(* projects the witness up-fron
-   prj (1,2,3) [x11 x12 x13 x21 x22 x23 x31 x32 x33]
-
-    project out the positions of the cycle (1,2)(2,3)(3,1)
-           [x12 x23 x31] ++ [x11 x13 x21 x22 x32 x33]
-*)
-op prj  : hc_wit -> permutation.
-
-
-module HP  = {
-  var n : int                   (* size of the graph *)
-  var g : graph                 (* n*n adj. matrix *)
-  var prm : permutation         (* uniformly sampled permutation *)
-  var w : hc_wit                (* hamiltonian cycle *)
-  var fal : bool list           (* flattened and permuted g *)
-
-  var pi_gwco : (commitment * opening) list
-  var pi_w : hc_wit
-  
-  proc commit(p_a : hc_prob, w_a : hc_wit)  = {
-    (n,g) <- p_a;
-    w     <- w_a;
-    prm   <$ perm_d n;
-    fal   <- fap prm g;
-
-    pi_gwco <@ DJM.main5(fal);
-    return map fst pi_gwco;
-  }
-  
-  proc response(b : bool) : hc_resp = {
-    pi_w <- permute_wit prm w;
-
-    return if b then Left (map snd pi_gwco) 
-                else Right (pi_w, 
-                        map snd (take n (ip (prj pi_w) pi_gwco)));
- } 
-}.
-
+require import Permutation HC_Basics.
+import ZK_defs DJMM.
 
 module HP'  = {
   var n : int 
@@ -151,7 +31,7 @@ module HP'  = {
   }
     
   proc response(b : bool) : hc_resp = {
-    return if b then Left (map snd pi_gwco) 
+    return if b then Left (prm, map snd pi_gwco) 
           else Right (pi_w, map snd pi_wco);
  } 
 }.
@@ -289,8 +169,7 @@ have : b{2} = false.
 smt. clear h. move => h. rewrite h. simplify.
 progress.
 rewrite   ippi. 
-smt.
- skip. progress.
+smt. skip. progress.
 qed.
 
     
@@ -395,6 +274,7 @@ rewrite -  invop.
 rewrite map_comp. auto. 
 smt (fap_prop1).
 wp.  rnd. rnd.  wp.  skip. progress.
+rewrite H. simplify. auto.
 call (_:true).
 call (_:true).
 call (_:true).
