@@ -9,6 +9,8 @@ type commitment, opening.
 op Com  : bool -> (commitment * opening) distr.
 op Ver : bool * (commitment * opening)  -> bool.
 
+axiom Com_sound : forall (x : bool * (commitment * opening)), x.`2 \in Com x.`1 => Ver x.
+
 type graph = bool list list.
 
 type hc_prob = (int * graph).
@@ -74,6 +76,9 @@ axiom ishc_prop1 a : IsHC a =>
 axiom ishc_prop2 a : IsHC a =>
   0 < (fst (fst a)).
 
+axiom ishc_prop4 a : IsHC a =>
+  uniq a.`2 /\ (  forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
+
 
 
 (* flatten and permute  *)
@@ -87,6 +92,8 @@ axiom fap_prop2 p g  :
  size (fap p g) = size (flatten g).
 
 
+
+
 op permute_wit : permutation -> hc_wit -> hc_wit = map.
 
 (* projects the witness up-fron
@@ -96,6 +103,15 @@ op permute_wit : permutation -> hc_wit -> hc_wit = map.
            [x12 x23 x31] ++ [x11 x13 x21 x22 x32 x33]
 *)
 op prj  : hc_wit -> permutation.
+
+axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) : 
+  take (size w) (ip (prj w) (flatten g)) = take (size w) (ip (prj (permute_wit perm w)) (fap perm g)).
+
+
+
+axiom ishc_prop3 a n g w : IsHC a => a = ((n,g),w) =>
+  take n (ip (prj w) (flatten g)) = nseq n true.
+
 
 
 module HP  = {
@@ -131,11 +147,13 @@ module HP  = {
 op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
  with r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
                         /\ size c = p.`1 * p.`1
- with r = (Right x) => ! b /\ uniq x.`1 /\ size x.`1 = p.`1
+
+ with r = (Right x) => ! b /\ uniq x.`1 
+                        /\ size x.`1 = p.`1
                         /\ size c = p.`1 * p.`1
                         /\ size x.`2 = p.`1
                         /\ all (fun x => Ver (true, x)) 
-                          (zip (take p.`1 (ip (prj x.`1) c)) x.`2).
+                             (zip (take p.`1 (ip (prj x.`1) c)) x.`2).
 
 
 module HV  = {
@@ -217,9 +235,12 @@ smt.
 smt.
 qed.
 
-search nseq.
 
-search zip.
+axiom kjk prm n w : prm \in perm_d n =>
+ uniq w => (forall i, i \in w => 0 <= i < n) =>
+  size w = n => uniq (permute_wit prm w).
+
+
 lemma hc_complete pa wa  :  IsHC (pa,wa) =>
  hoare[ Correct(HP,HV).run : arg = (pa,wa) ==> res ] .
 move => ishc. proc. inline*. wp. rnd. 
@@ -240,7 +261,7 @@ elim f3. move => f31 f32.
 auto.
 move => q.
 apply (sub_all (fun (xy : bool * (commitment * opening)) => xy.`2 \in Com xy.`1) Ver) .
-simplify. admit. auto.
+simplify. apply Com_sound.  auto.
 have f1 : size x0 = size (fap prm Ny{hr}.`2).
 smt.
 have f2 : size x0 = size (unzip1 x0).
@@ -250,38 +271,41 @@ rewrite f1.
 rewrite fap_prop2.
 smt.
 move => p.
-
 have ->: b1 = false. smt.
 simplify. clear p. progress.
-admit.
-admit.
-admit.
-admit.
-
+apply (kjk prm Ny{hr}.`1). auto. smt (ishc_prop4). smt (ishc_prop4).
+smt. 
+smt.
+have ->: size (unzip1 x0) = size x0. smt.
+have -> : size x0 = size (fap prm Ny{hr}.`2). smt(supp_djoinmap).
+have -> : size (fap prm Ny{hr}.`2) = size (flatten Ny{hr}.`2). smt. smt.
+have ->: size (unzip2 (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)))
+ = size (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)). smt.
+have : Ny{hr}.`1 <= size (ip (prj (permute_wit prm w{hr})) x0).
+have ->: size (ip (prj (permute_wit prm w{hr})) x0) = size x0.
+smt.
+have -> : size x0 = size (fap prm Ny{hr}.`2). smt(supp_djoinmap).
+have -> : size (fap prm Ny{hr}.`2) = size (flatten Ny{hr}.`2). smt. smt.
+progress. smt.
 have ->: 
   (unzip2 (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)))
   = ((take Ny{hr}.`1 (unzip2 (ip (prj (permute_wit prm w{hr})) x0)))).
 smt.
-
 have ->: 
   (zip (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) (unzip1 x0)))
      (take Ny{hr}.`1 (unzip2 (ip (prj (permute_wit prm w{hr})) x0))))
   = take Ny{hr}.`1  
-
      (zip ((ip (prj (permute_wit prm w{hr})) (unzip1 x0)))
           ((unzip2 (ip (prj (permute_wit prm w{hr})) x0)))).
 apply take_zip.
-
 have ->: ((ip (prj (permute_wit prm w{hr})) (unzip1 x0)))
   = (unzip1 (ip (prj (permute_wit prm w{hr})) (x0))).
 rewrite map_ip. auto.
-
 have ->: 
  (zip (unzip1 (ip (prj (permute_wit prm w{hr})) x0))
         (unzip2 (ip (prj (permute_wit prm w{hr})) x0)))
  = (ip (prj (permute_wit prm w{hr})) x0).
 apply zip_unzip.
-
 pose pi_w := (permute_wit prm w{hr}).
 pose n := Ny{hr}.`1.
 pose fapg := (fap prm Ny{hr}.`2). 
@@ -290,10 +314,18 @@ have ->:
  = all (fun x => Ver x)
   (take n (zip (nseq n true) (ip (prj pi_w) x0))).
 rewrite  take_const.
-have ->: (size (take n (ip (prj pi_w) x0))) = n. admit.
+have ->: (size (take n (ip (prj pi_w) x0))) = n. 
+  have : size (ip (prj pi_w) x0) =  size x0.
+  apply size_ip. progress.
+  have :   size (fap prm Ny{hr}.`2) = size x0 /\ all (fun xy => snd xy \in Com xy.`1) (zip fapg x0).
+  apply (supp_djoinmap Com fapg x0 ). apply H0.  
+elim. progress.
+  have : size (ip (prj pi_w) x0) = n * n. rewrite H2. rewrite - H3.
+  have : size (fap prm Ny{hr}.`2) = size (flatten Ny{hr}.`2). smt.
+  smt. progress.
+  smt.
 rewrite - take_zip.
 rewrite take_nseq. auto.
-
 have ->: (take n (zip (nseq n true) (ip (prj pi_w) x0))) =
   (take n (zip (ip (prj pi_w) fapg) (ip (prj pi_w) x0))).
   have ->: take n (zip (nseq n true) (ip (prj pi_w) x0)) =
@@ -306,13 +338,39 @@ rewrite size_nseq.
    = (zip (take n (ip (prj pi_w) fapg)) (take n (ip (prj pi_w) x0))).
    rewrite - take_zip. auto.
   have ->: (take n (ip (prj pi_w) fapg)) = nseq n true.
-  admit.
-admit.
-
-have f1 : all Ver (zip fapg x0). admit.
-
+  print  ishc_prop3.
+  rewrite - (ishc_prop3 (Ny{hr}, w{hr}) Ny{hr}.`1 Ny{hr}.`2 w{hr}). auto. smt. rewrite /n.
+  have ->: Ny{hr}.`1 = size (w{hr}). smt. rewrite -  prj_lemma. auto.   
+rewrite - take_nseq.
+rewrite take_zip.
+rewrite take_nseq.
+rewrite take_oversize.
+rewrite size_zip.
+rewrite size_nseq. 
+  have ->: (max 0 n) = n.  smt(ishc_prop2). smt.
+auto.   
+have f1 : all Ver (zip fapg x0). 
+search djoin.
+  have :   size (fap prm Ny{hr}.`2) = size x0 /\ all (fun xy => snd xy \in Com xy.`1) (zip fapg x0).
+   apply (supp_djoinmap Com fapg x0 ). apply H0.
+   elim. progress.
+  have : forall x, x \in (zip fapg x0) => x.`2 \in Com x.`1.
+apply allP. apply H3.
+progress.
+apply allP. progress. 
+  have : x1.`2 \in Com x1.`1. apply H4. auto.
+  apply Com_sound.
 have f2 : all Ver (zip (ip (prj pi_w) fapg)  (ip (prj pi_w) x0)).
-admit.
+rewrite - zip_ip.
+have : forall x, x \in (zip fapg x0) => Ver x.
+apply allP. apply f1.
+progress.
+have : forall x, x \in (ip (prj pi_w) (zip fapg x0)) => Ver x.
+progress. apply H2.
+  have ff : perm_eq (zip fapg x0) (ip (prj pi_w) (zip fapg x0)).
+   smt.
+  smt.
+apply allP.
 smt.
 qed.
 
@@ -328,5 +386,3 @@ qed.
 
 *)
 
-
-qed.

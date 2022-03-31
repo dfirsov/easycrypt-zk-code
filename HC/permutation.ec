@@ -39,7 +39,7 @@ axiom zip_pi ['a 'b] p (l1: 'a list) (l2 : 'b list)
    :  pi p (zip l1 l2) = zip (pi p l1) (pi p l2).
 
 axiom zip_ip ['a 'b] p (l1: 'a list) (l2 : 'b list)
-   : is_good p => ip p (zip l1 l2) = zip (ip p l1) (ip p l2).
+   : ip p (zip l1 l2) = zip (ip p l1) (ip p l2).
 
 axiom size_pi ['a] p (l : 'a list) :  size (pi p l) = size l.
 axiom size_ip ['a] p (l: 'a list) : size (ip p l) = size l.
