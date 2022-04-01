@@ -216,11 +216,35 @@ local module Sim1_1(V : Verifier) = {
     if (bb) {
        r <- ZKP_HP.run(p_a, w_a, bb);
     }else{
-       r <- ZKP_HP'.run((n, compl_graph n), w_a, bb);
+        r <- ZKP_HP'.run((n, compl_graph n), w_a, bb);
+        (* 
+Alternative:
+
+r <- aux1(n, w_a);
+ *)
     }
     return (bb, r);
   }
 
+(* 
+
+(Here or in diff. module)
+proc aux1(n, w_a) = {
+g <- compl_graph n;
+    w <- w_a;
+    prm <$ perm_d n; 
+    fal <- fap prm g;
+    pi_w <- permute_wit prm w;
+    (zpd_g, zpd_w) <- (drop n (ip (prj pi_w) fal), 
+                            take n (ip (prj pi_w) fal));
+    (pi_wco, pi_gco) <@ DJM.main1(zpd_w, zpd_g);
+    pi_gwco <-(pi (prj pi_w)) (pi_wco ++ pi_gco);
+
+    return (map fst pi_gwco, Right (pi_w, map snd pi_wco));
+}
+ *)
+
+  
   proc simulate(pa : hc_prob, wa : hc_wit) : bool * bool  = {
     var b',b,zryb,result, rb;
     (b',zryb) <- sinit(pa,wa);
@@ -232,7 +256,15 @@ local module Sim1_1(V : Verifier) = {
 
 }.
 
+(*
 
+
+
+ZKDB ~ Sim1  
+(ZKDB is like ZKD, but outputs additionally a random bit, and if this random bit is "fail", outputs a fixed value)
+(I assume Sim1, when outputting failure, outputs a fixed value)
+
+*)
 
 local lemma sim_0_1 a:  (fst (fst a)) = size (snd a) =>
   equiv [ Sim1(V).simulate ~ Sim1_1(V).simulate : 
@@ -322,9 +354,33 @@ local lemma sim_1_2 &m pa wa:
    <= negl.
 admitted.
 
+(**
+
+Currently: AND(res) is indist. etbween Sim11, Sim12.
+
+Instead: (success, D-output) is indist. between them
+
+local lemma sim_1_2 &m pa wa pred: 
+   `|Pr[ Sim1_1(V).simulate(pa,wa) @ &m : pred res ]
+      - Pr[ Sim1_2(V).simulate(pa,wa) @ &m : pred res ]| 
+   <= negl.
+admitted.
+
+Instead: (success, result) is indist. between them (* Here: maybe not easiest *)
+
+
+*)
+
+
     
 local lemma  sim1ass &m pa :
   `|Pr[Sim1(V).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2.
+  (* 
+Using sim_1_2, but for Sim1, Sim1_9 (but discard rb if fails)
+Instantiate with pred := fst
+Gives: |Pr[Sim1(V).simulate(pa) @ &m : res.`1] - Pr[Sim1_9 @ &m : res.`1] | <= negl2.
+The second probability is =1/2 by simple phoare analysis.
+ *)
 admitted.
 
 
@@ -617,8 +673,11 @@ import BRM.
 
 local lemma sim1_main &m pa wa:  IsHC (pa,wa) =>
    `|Pr[ Sim1(V).simulate(pa) @ &m : res.`1 /\ res.`2 ]
+
       / Pr[ Sim1(V).simulate(pa) @ &m : res.`1 ]
+
          - Pr[ ZKD(HP,V,D).main(pa,wa) @ &m : res ]| 
+
   <= 2%r * negl + 20%r * negl2.
 proof. move => ishc.
 have ->: 

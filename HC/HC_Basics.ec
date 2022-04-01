@@ -11,7 +11,7 @@ op Ver : bool * (commitment * opening)  -> bool.
 
 axiom Com_sound : forall (x : bool * (commitment * opening)), x.`2 \in Com x.`1 => Ver x.
 
-type graph = bool list list.
+type graph = bool list.         (* n * n list representin n x n matrix *)
 
 type hc_prob = (int * graph).
 type hc_wit  = int list.
@@ -78,7 +78,7 @@ op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 
 axiom ishc_prop1 a : IsHC a =>
  (fst (fst a)) = size (snd a) 
-    /\ size (flatten (snd (fst a))) 
+    /\ size ((snd (fst a))) 
          = (fst (fst a)) * (fst (fst a)).
 
 
@@ -86,7 +86,7 @@ axiom ishc_prop2 a : IsHC a =>
   0 < (fst (fst a)).
 
 axiom ishc_prop3 a n g w : IsHC a => a = ((n,g),w) =>
-  take n (ip (prj w) (flatten g)) = nseq n true.
+  take n (ip (prj w) g) = nseq n true.
 
 axiom ishc_prop4 a : IsHC a =>
   uniq a.`2 /\ (  forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
@@ -94,14 +94,13 @@ axiom ishc_prop4 a : IsHC a =>
 
 
 (* flatten and permute  *)
-op fap (p : permutation) (g : graph) : bool list
- = flatten (pi p (map (pi p) g)).
+op fap (p : permutation) (g : graph) : bool list.
 
 axiom fap_prop1 p n  : 
- fap p (compl_graph n) = flatten (compl_graph n).
+ fap p (compl_graph n) = (compl_graph n).
 
 axiom fap_prop2 p g  : 
- size (fap p g) = size (flatten g).
+ size (fap p g) = size (g).
 
 
 
@@ -128,7 +127,7 @@ module HP  = {
     prm   <$ perm_d n;
     fal   <- fap prm g;
 
-    pi_gwco <@ DJM.main5(fal);
+    pi_gwco <@ DJM.main5(fal);  (* map Com fal *)
     return map fst pi_gwco;
   }
   
@@ -142,17 +141,28 @@ module HP  = {
 }.
 
 
-op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
- with r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
-                        /\ size c = p.`1 * p.`1
 
- with r = (Right x) => ! b /\ uniq x.`1 
+
+op hc_align ['a] (w : hc_wit) (l : 'a list) : 'a list
+ = (ip (prj w) l).
+
+
+op hc_verify0 (p : hc_prob) (c : hc_com) (r : hc_resp) : bool =
+ with r = Left x => all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
+                         /\ size c = p.`1 * p.`1
+ with r = Right x => false.
+
+ 
+op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
+ with  r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
+                         /\ size c = p.`1 * p.`1
+
+ with r = (Right x) => ! b /\ uniq x.`1
                         /\ size x.`1 = p.`1
                         /\ size c = p.`1 * p.`1
                         /\ size x.`2 = p.`1
                         /\ all (fun x => Ver (true, x)) 
-                             (zip (take p.`1 (ip (prj x.`1) c)) x.`2).
-
+                             (zip (take p.`1 (hc_align x.`1 c)) x.`2).
 
 module HV  = {
   var b : bool

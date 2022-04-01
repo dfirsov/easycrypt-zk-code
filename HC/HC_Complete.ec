@@ -10,7 +10,7 @@ axiom kjk prm n w : prm \in perm_d n =>
   size w = n => uniq (permute_wit prm w).
 
 axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) : 
-  take (size w) (ip (prj w) (flatten g)) 
+  take (size w) (ip (prj w) g) 
   = take (size w) (ip (prj (permute_wit perm w)) (fap perm g)).
 
 
@@ -52,14 +52,14 @@ smt.
 smt.
 have ->: size (unzip1 x0) = size x0. smt.
 have -> : size x0 = size (fap prm Ny{hr}.`2). smt(supp_djoinmap).
-have -> : size (fap prm Ny{hr}.`2) = size (flatten Ny{hr}.`2). smt. smt.
+have -> : size (fap prm Ny{hr}.`2) = size (Ny{hr}.`2). smt. smt.
 have ->: size (unzip2 (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)))
  = size (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)). smt.
 have : Ny{hr}.`1 <= size (ip (prj (permute_wit prm w{hr})) x0).
 have ->: size (ip (prj (permute_wit prm w{hr})) x0) = size x0.
 smt.
 have -> : size x0 = size (fap prm Ny{hr}.`2). smt(supp_djoinmap).
-have -> : size (fap prm Ny{hr}.`2) = size (flatten Ny{hr}.`2). smt. smt.
+have -> : size (fap prm Ny{hr}.`2) = size ( Ny{hr}.`2). smt. smt.
 progress. smt.
 have ->: 
   (unzip2 (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)))
@@ -95,7 +95,7 @@ have ->: (size (take n (ip (prj pi_w) x0))) = n.
   apply (supp_djoinmap Com fapg x0 ). apply H0.  
 elim. progress.
   have : size (ip (prj pi_w) x0) = n * n. rewrite H2. rewrite - H3.
-  have : size (fap prm Ny{hr}.`2) = size (flatten Ny{hr}.`2). smt.
+  have : size (fap prm Ny{hr}.`2) = size ( Ny{hr}.`2). smt.
   smt. progress.
   smt.
 rewrite - take_zip.
