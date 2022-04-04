@@ -64,8 +64,7 @@ op perm_d : int -> permutation distr.
 axiom perm_d_uni n : is_uniform (perm_d n).
 axiom perm_d_in1 p n w : p \in perm_d n => p \o ((mk_perm_list_fun w)) \in perm_d n.
 axiom perm_d_in2 p n w : p \in perm_d n => p \o (inv (mk_perm_list_fun w)) \in perm_d n.
+axiom perm_d_in3 n p : p \in perm_d n => perm_eq (map p  (range 0 n)) (range 0 n).
 
 
-
-axiom invop p : map (mk_perm_list_fun p) p 
-                       = range 0 (size p).
+axiom invop p : map (mk_perm_list_fun p) p = range 0 (size p).

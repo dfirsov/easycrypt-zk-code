@@ -73,7 +73,20 @@ op compl_graph_cyc : int -> int list = range 0.
 
 op prj  : hc_wit -> permutation.
 
-op IsHC : hc_prob * hc_wit -> bool. 
+
+op hc_align ['a] (w : hc_wit) (l : 'a list) : 'a list
+ = (ip (prj w) l).
+
+op IsHC (x : hc_prob * hc_wit) : bool 
+  = let n = x.`1.`1 in
+    let g = x.`1.`2 in
+    let w = x.`2 in
+     n = size w /\ 
+     n * n = size g /\ 
+     perm_eq w (range 0 n) /\ 
+     nseq n true = take n (hc_align w g).
+
+
 op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 
 axiom ishc_prop1 a : IsHC a =>
@@ -102,6 +115,8 @@ axiom fap_prop1 p n  :
 axiom fap_prop2 p g  : 
  size (fap p g) = size (g).
 
+axiom fap_prop3 n g perm : 
+ HasHC (n,g) = HasHC (n, fap perm g).
 
 
 
@@ -143,26 +158,28 @@ module HP  = {
 
 
 
-op hc_align ['a] (w : hc_wit) (l : 'a list) : 'a list
- = (ip (prj w) l).
-
 
 op hc_verify0 (p : hc_prob) (c : hc_com) (r : hc_resp) : bool =
  with r = Left x => all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
                          /\ size c = p.`1 * p.`1
  with r = Right x => false.
 
+
+ 
  
 op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
  with  r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
                          /\ size c = p.`1 * p.`1
+                        /\ size p.`2 = p.`1 * p.`1
 
  with r = (Right x) => ! b /\ uniq x.`1
                         /\ size x.`1 = p.`1
                         /\ size c = p.`1 * p.`1
                         /\ size x.`2 = p.`1
-                        /\ all (fun x => Ver (true, x)) 
-                             (zip (take p.`1 (hc_align x.`1 c)) x.`2).
+                        /\ all Ver 
+                             (zip (nseq p.`1 true) (zip (take p.`1 (hc_align x.`1 c)) x.`2))
+                        /\ perm_eq x.`1 (range 0 (p.`1))
+                        /\ size p.`2 = p.`1 * p.`1.
 
 module HV  = {
   var b : bool

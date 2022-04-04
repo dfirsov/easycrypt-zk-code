@@ -14,7 +14,6 @@ axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
   = take (size w) (ip (prj (permute_wit perm w)) (fap perm g)).
 
 
-
 lemma hc_complete pa wa :  IsHC (pa,wa) =>
    hoare[ Correct(HP,HV).run : arg = (pa,wa) ==> res ] .
 move => ishc. proc. inline*. wp. rnd. 
@@ -59,7 +58,7 @@ have : Ny{hr}.`1 <= size (ip (prj (permute_wit prm w{hr})) x0).
 have ->: size (ip (prj (permute_wit prm w{hr})) x0) = size x0.
 smt.
 have -> : size x0 = size (fap prm Ny{hr}.`2). smt(supp_djoinmap).
-have -> : size (fap prm Ny{hr}.`2) = size ( Ny{hr}.`2). smt. smt.
+have -> : size (fap prm Ny{hr}.`2) = size ( Ny{hr}.`2). smt. timeout 20. smt.
 progress. smt.
 have ->: 
   (unzip2 (take Ny{hr}.`1 (ip (prj (permute_wit prm w{hr})) x0)))
@@ -84,20 +83,9 @@ pose pi_w := (permute_wit prm w{hr}).
 pose n := Ny{hr}.`1.
 pose fapg := (fap prm Ny{hr}.`2). 
 have ->: 
- all (fun x => Ver (true, x)) (take n (ip (prj pi_w) x0))
+ all Ver (zip (nseq n true) (take n (ip (prj pi_w) x0)))
  = all (fun x => Ver x)
   (take n (zip (nseq n true) (ip (prj pi_w) x0))).
-rewrite  take_const.
-have ->: (size (take n (ip (prj pi_w) x0))) = n. 
-  have : size (ip (prj pi_w) x0) =  size x0.
-  apply size_ip. progress.
-  have :   size (fap prm Ny{hr}.`2) = size x0 /\ all (fun xy => snd xy \in Com xy.`1) (zip fapg x0).
-  apply (supp_djoinmap Com fapg x0 ). apply H0.  
-elim. progress.
-  have : size (ip (prj pi_w) x0) = n * n. rewrite H2. rewrite - H3.
-  have : size (fap prm Ny{hr}.`2) = size ( Ny{hr}.`2). smt.
-  smt. progress.
-  smt.
 rewrite - take_zip.
 rewrite take_nseq. auto.
 have ->: (take n (zip (nseq n true) (ip (prj pi_w) x0))) =
@@ -112,7 +100,6 @@ rewrite size_nseq.
    = (zip (take n (ip (prj pi_w) fapg)) (take n (ip (prj pi_w) x0))).
    rewrite - take_zip. auto.
   have ->: (take n (ip (prj pi_w) fapg)) = nseq n true.
-  print  ishc_prop3.
   rewrite - (ishc_prop3 (Ny{hr}, w{hr}) Ny{hr}.`1 Ny{hr}.`2 w{hr}). auto. smt. rewrite /n.
   have ->: Ny{hr}.`1 = size (w{hr}). smt. rewrite -  prj_lemma. auto.   
 rewrite - take_nseq.
@@ -145,6 +132,17 @@ progress. apply H2.
    smt.
   smt.
 apply allP.
+timeout 20. smt.
+rewrite /permute_wit.
+elim ishc. progress.
+
+have : perm_eq (map prm w{hr}) (map prm (range 0 Ny{hr}.`1)).
+smt.
+progress.
+
+have : perm_eq (map prm (range 0 Ny{hr}.`1)) (range 0 Ny{hr}.`1).
+smt.
+smt.
 smt.
 qed.
 
@@ -158,6 +156,5 @@ qed.
   [(1...1) = take n (ip w) (flatten g) = take n (ip (prj w)) fap ) ]
 6/ all Ver ((zip (1...1) (take (ip pi_w x0)))) 
 7/ all (Ver (1,x)) (take (ip pi_w x0))
-
 *)
 
