@@ -55,7 +55,7 @@ module ZKD(P : Prover, V : Verifier, D : Dist) = {
 
 require Djoinmap.
 clone import Djoinmap as DJMM with type a <- bool, 
-                                   type b <- (commitment * opening),
+                                   type b <- commitment * opening,
                                    op   d <- Com.
                                         
 
@@ -75,7 +75,7 @@ op prj  : hc_wit -> permutation.
 
 
 op hc_align ['a] (w : hc_wit) (l : 'a list) : 'a list
- = (ip (prj w) l).
+ = ip (prj w) l.
 
 op IsHC (x : hc_prob * hc_wit) : bool 
   = let n = x.`1.`1 in
@@ -102,7 +102,7 @@ axiom ishc_prop3 a n g w : IsHC a => a = ((n,g),w) =>
   take n (ip (prj w) g) = nseq n true.
 
 axiom ishc_prop4 a : IsHC a =>
-  uniq a.`2 /\ (  forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
+  uniq a.`2 /\ (forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
 
 
 
@@ -117,7 +117,6 @@ axiom fap_prop2 p g  :
 
 axiom fap_prop3 n g perm : 
  HasHC (n,g) = HasHC (n, fap perm g).
-
 
 
 op permute_wit : permutation -> hc_wit -> hc_wit = map.
@@ -156,17 +155,6 @@ module HP  = {
 }.
 
 
-
-
-
-op hc_verify0 (p : hc_prob) (c : hc_com) (r : hc_resp) : bool =
- with r = Left x => all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
-                         /\ size c = p.`1 * p.`1
- with r = Right x => false.
-
-
- 
- 
 op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
  with  r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
                          /\ size c = p.`1 * p.`1

@@ -135,11 +135,9 @@ apply allP.
 timeout 20. smt.
 rewrite /permute_wit.
 elim ishc. progress.
-
 have : perm_eq (map prm w{hr}) (map prm (range 0 Ny{hr}.`1)).
 smt.
 progress.
-
 have : perm_eq (map prm (range 0 Ny{hr}.`1)) (range 0 Ny{hr}.`1).
 smt.
 smt.
