@@ -1,0 +1,65 @@
+Defs:
++ ZK (stat./ comp.)
++ Completeness (stat.)
++ Special soundness (stat. / comp.)
++ Soundness (stat. / comp.)
++ PoK / extractability (stat. / comp.)
+
+
+Results generic (via thy inheritance):
+- statistical_zk2 => statistical_zk1 => computational_zk
+- (analogous for other perfect/statistical/computational pairs)
+
+- Special soundness => extractability (stat/comp)
+  (Generic_KE.ec)
+
+
+- 1-time sim => ZK (stat/comp)
+  (for small "challenge_set")
+  (Generic_ZK.ec)
+
+
+- PoK => soundness (stat/comp)
+  (Axiom: soundness_error such that: x > soundness_error => extraction_success_function x > 0.
+  Take SoundnessAdv.
+  For statement s not in language:
+  - Let v(s) := success of SoundnessAdv
+  - By extractability: Extractor(SoundnessAdv,s) -> witness with prob >= "extraction_success_function v(s)"
+  - witness does not exist => Extractor(SoundnessAdv,s) -> witness with prob = 0
+  - ==> extraction_success_function v(s) <= 0
+  - ==> v(s) <= soundness_error)
+
+
+
+Results concrete:
+- QR:
+  - Completeness
+  - Special soundness (perfect)
+  + stat. soundness by theory inheritence (nothing to do)
+  + stat. extractability by theory inheritence (nothing to do)
+  - ZK (stat2)
+  
+- Dlog:
+  - Completeness
+  - Special soundness (perfect)
+  + NOT ZK (because size(challenge_set) big)
+  + NOT soundness (because pointless)
+  + stat. extractability by thy inheritance
+
+- HC (comp hiding / perf binding):  (* Maybe not. *)
+  - Completeness
+  - Special soundness (perfect)
+  - ZK (comp) by Sim1 stuff
+  + stat soundness by thy inheritance
+  + stat extractability by thy inheritance
+
+- HC (stat hiding / comp binding):
+  - Completeness
+  - Special soundness (comp)
+  - ZK (stat2) by Sim1 stuff
+  + comp soundness by thy inheritance
+  + comp extractability by thy inheritance
+
+
+
+

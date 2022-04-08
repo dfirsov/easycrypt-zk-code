@@ -454,9 +454,20 @@ rewrite - pi_lemma_inv. smt.
 apply nthzip'. smt. smt.
 qed.
 
+
 lemma zip_ip ['a 'b] p (l1: 'a list) (l2 : 'b list)
    : is_good p (size l1) => size l1 = size l2 =>
    ip p (zip l1 l2) = zip (ip p l1) (ip p l2).
 smt.
 qed.
-    
+
+
+(* syntatic representation of a permutation (for witness)  *)
+
+type perm_syn = int list.
+
+pred is_good_syn (p : perm_syn) = perm_eq p (range 0 (size p)).
+op lf : perm_syn -> perm.
+
+
+
