@@ -22,8 +22,8 @@ module type Dist = {
    proc run(s : sbits) : bool
 }.
 
-require ZK_General.
-clone import ZK_General as ZK_defs with type prob  = hc_prob,
+require Generic_ZK_old.
+clone import Generic_ZK_old as ZK_defs with type prob  = hc_prob,
                                         type wit   = hc_wit,
                                         type chal  = bool,
                                         type com   = hc_com,

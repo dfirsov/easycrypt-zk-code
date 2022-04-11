@@ -368,7 +368,6 @@ admitted.
 
 Instead: (success, result) is indist. between them (* Here: maybe not easiest *)
 
-
 *)
 
 

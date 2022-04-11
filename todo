@@ -1,0 +1,72 @@
+
+1/ Give general definitions:
+
+ZK:
+
+module ZK(P,Vadv,S,D) = {
+  proc real(p,w,z) : bit = {
+    run P(p,w), Vadv(p,z), return D(z,what we get)
+  }
+  proc ideal(p,z) : bit = {
+    run D(z,S(p,z))
+  }
+}
+
+To note:
+  cannot formally say exists S, otherwise
+  equivalent to "unlimited simulator ZK".
+  This is equiv to "witness indist"
+  (if w,w' both witnesses of p, then ZK.real(w) and ZK.real(w') indistinguishable)
+
+lemma : forall p w z, (p,w) \in R ==> Pr[ZK(P,Vadv,S).real(p,w,z)] - Pr[same with ideal]
+(for arbitrary P,Vadv, and constructed S)
+
+
+Blackbox ZK: Same, only S is defined independently of Vadv, but we call S(Vadv). (S is parametric module)
+
+
+
+
+module Soundness(Padv,V) = {
+  proc main(p,z) = { run Padv(p,z), V(p), return if V accepts }
+}
+
+lemma : forall p (s.t. not exists w wrt R), z, Pr[Soundness(Padv,V)] <= something_concrete
+
+(We cannot write it this way in the computational case: in that case, "something_concrete" depends on the success of a constructed Binding-Adv(Padv) or similar)
+
+
+module Completeness: obvious
+
+
+module PoK(Padv,V,E) = {
+  proc real(p,z) : bool = { run Padv(p,z), V(p), return V success }
+  proc extract(p,z) : witness = { return E(p,z) }
+}
+
+lemma extractability: forall p, Pr[(p,res)\in R : res <- PoK.extract(p,z)] >= concrete_function(Pr[PoK.real])
+
+(For explicitly constructed E)
+
+(concrete_function may be a reduction thingy in the computational case)
+
+
+// forall p SOMETIMES IS: forall p s.t. w exists
+// but I don't prefer this
+
+
+BlackboxExtractability: Same, only E does not depend on Padv, but we use E(Padv)
+
+Importance: In first case E contains Padv and if Padv
+contains sk then E contains sec key.
+
+
+
+2/ Special soundness ==> proof knowledge  (using the final defs)
+
+3/ proof knowledge ==> soundness (using the final defs)
+
+
+Maybe:
+
+4/ HV ZK variant ==> ZK  (assuming small challenge space)

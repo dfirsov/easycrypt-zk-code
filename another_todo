@@ -7,8 +7,7 @@ Defs:
 
 
 Results generic (via thy inheritance):
-- statistical_zk2 => statistical_zk1 => computational_zk
-- (analogous for other perfect/statistical/computational pairs)
+- (perfect => statistical => computational for all pairs)
 
 - Special soundness => extractability (stat/comp)
   (Generic_KE.ec)
@@ -32,6 +31,15 @@ Results generic (via thy inheritance):
 
 
 Results concrete:
+
+
+- HC (stat hiding / comp binding):
+  + Completeness
+  - Special soundness (comp)
+  - ZK (stat2) by Sim1 stuff
+  + comp soundness by thy inheritance
+  + comp extractability by thy inheritance
+
 - QR:
   - Completeness
   - Special soundness (perfect)
@@ -46,19 +54,13 @@ Results concrete:
   + NOT soundness (because pointless)
   + stat. extractability by thy inheritance
 
+
 - HC (comp hiding / perf binding):  (* Maybe not. *)
-  - Completeness
+  + Completeness
   - Special soundness (perfect)
   - ZK (comp) by Sim1 stuff
   + stat soundness by thy inheritance
   + stat extractability by thy inheritance
-
-- HC (stat hiding / comp binding):
-  - Completeness
-  - Special soundness (comp)
-  - ZK (stat2) by Sim1 stuff
-  + comp soundness by thy inheritance
-  + comp extractability by thy inheritance
 
 
 

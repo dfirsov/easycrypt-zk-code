@@ -1,5 +1,8 @@
 require import AllCore List.
 
+
+
+
 lemma sub_all ['a]:
    forall (p1 p2 : 'a -> bool) (s : 'a list),
      (forall (x : 'a), p1 x => p2 x) => all p1 s => all p2 s.
@@ -245,4 +248,27 @@ have f2: c * b - a + (1%r - c)*b <= e + (1%r - c)*b. smt.
 have f3: b - a  <= e + (1%r - c)*b. smt.
 have f4: b - a  <= e + (1%r - c). smt(ots').
 smt.
+qed.
+
+
+
+
+lemma phase1_2 ['a] p (l : 'a list) n : 
+ all p l
+  =>  all p (take n l) .
+smt.
+qed.
+
+lemma aux_lem : forall l n,  
+  size l = n =>
+  nseq n true <> l  =>
+  false \in l.
+elim. smt. smt.
+qed.
+
+
+
+lemma phase1_3 ['a 'b] (l1 : 'a list) (l2 : 'b list) n : 
+ take n (zip l1 l2) = zip (take n l1) (take n l2).
+rewrite take_zip. auto.
 qed.
