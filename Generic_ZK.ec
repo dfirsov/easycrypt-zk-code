@@ -6,9 +6,10 @@ require import Aux.
 
 type prob, wit, chal, com, resp, sbits, event, auxiliary_input.
 
-require While_not_b_proc.
-clone import While_not_b_proc as IF with type iat <- prob * wit,
-                                         type rt  <- bool.
+(* require Iterated_Failure_better. *)
+(* clone import Iterated_Failure_better as IFB with type irt   <- prob, *)
+(*                                     type rrt   <- event * sbits, *)
+(*                                     type sbits <- sbits. *)
 
 require While_Props.
 clone import While_Props as MW with type irt   <- prob,
@@ -22,8 +23,6 @@ import MW.IFB.IM.
 module type Simulator = {
   proc run(Ny : prob) : event * sbits
 }.
-
-(* (statement: statement, witness: witness, aux: auxiliary_input, summary: adv_summary) *)
 
 module type Dist = {
   proc run(_:prob * wit * auxiliary_input * event * sbits) : bool
@@ -202,7 +201,6 @@ qed.
 local lemma zk_non_final &m p  eps ea coeff zkp w aux:
    `|Pr[ W0(Sim1,D).run(p,w,aux) @ &m : E res.`2 /\  res.`1] / Pr[W0(Sim1,D).run(p,w,aux) @ &m : E res.`2] 
         - zkp| <= eps
-
   => 0%r < Pr[W0(Sim1,D).run(p,w,aux) @ &m : E res.`2] 
   => 0%r <= eps                 (* not needed *)
   => coeff = big predT
@@ -341,5 +339,60 @@ have f2 :
 have f3 : (1%r - Pr[W0(Sim1,D).run(p,w,aux) @ &m : E res.`2]) ^ ea <= (1%r - p0) ^ ea.
 apply multn2;auto. smt. auto. auto. auto. smt.
 qed.
+
+
+
+lemma zk_final_clean &m p w p0 eps ea zkp aux:
+   `|Pr[ W0(Sim1,D).run(p,w,aux) @ &m : E res.`2 /\ res.`1] 
+        / Pr[W0(Sim1,D).run(p,w,aux) @ &m : E res.`2] - zkp| <= eps
+  => 0 <= ea
+  => Pr[W0(Sim1,D).run(p,w,aux) @ &m : E res.`2] >= p0
+  => `|Pr[ Iter(Sim1, D).run(fevent,p,w,aux,ea,E) 
+           @ &m : res.`1 ] - zkp| 
+              <= eps + 2%r * (1%r-p0) ^ ea.
+proof.  progress.
+have bf :  `|Pr[ Iter(Sim1, D).run(fevent,p,w,aux,ea,E) 
+           @ &m : res.`1 ] - zkp| 
+              <= (eps + (1%r-p0) ^ ea ) +
+(Pr[ Iter(Sim1, D).run(fevent,p,w,aux,ea,E) 
+           @ &m : !E res.`2]).
+have f1 : `|Pr[ Iter(Sim1, D).run(fevent,p,w,aux,ea,E) 
+           @ &m : E res.`2 /\ res.`1 ] - zkp| 
+              <= eps + (1%r-p0) ^ ea.
+apply (zk_final_le &m p w p0 eps ea zkp aux);auto.
+apply (kkk Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : res.`1]
+Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m :
+         E res.`2 /\ res.`1]). smt.
+rewrite Pr[mu_split E res.`2] .
+have ->: Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : res.`1 /\ E res.`2]
+ = Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : E res.`2 /\ res.`1 ].
+smt.
+smt.
+auto.  
+clear H.
+have bf2 : Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : ! E res.`2]
+  <= (1%r - p0) ^ ea.
+  have bf3: Pr[W0(Sim1, D).run(p, w, aux) @ &m : !E res.`2] <= 1%r - p0.
+    have -> : 1%r = Pr[W0(Sim1, D).run(p, w, aux) @ &m : true]. byphoare.
+    proc. call D_ll. call Sim1_ll. auto. auto. auto.
+       have : 
+                Pr[W0(Sim1, D).run(p, w, aux) @ &m : true] - Pr[W0(Sim1, D).run(p, w, aux) @ &m : !E res.`2] = Pr[W0(Sim1, D).run(p, w, aux) @ &m : E res.`2]. 
+    rewrite Pr[mu_split E res.`2]. simplify. smt.
+smt.
+  have ->: Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : ! E res.`2] 
+     = Pr[ W(Sim1).whp(E,p,1,ea,(fevent,witness)) @ &m : ! E res ].
+   byequiv. proc*.  inline Iter(Sim1, D).run. sp. wp. inline Iter(Sim1, D).WI.run.
+ sp. wp. call {1} D_ll. 
+  conseq (_: _==> r1{1} = r0{2}). smt.
+call (_: ={glob Sim1}).  sim. skip. progress. auto. auto.
+apply (final_zz_le Sim1 Sim1_ll &m). smt. auto. 
+have ->: Pr[Sim1.run(p) @ &m : ! E res] 
+  = Pr[W0(Sim1, D).run(p, w, aux) @ &m : ! E res.`2].
+byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_:true).
+skip. progress. auto. auto. auto.
+smt.
+qed.
+
+
 end section.
-print zk_final_le.
+

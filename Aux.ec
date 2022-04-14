@@ -1,7 +1,12 @@
 require import AllCore List.
 
-
-
+lemma kkk (a a' d zkp eps : real) :
+   0%r <= a' <= a =>
+   a - a' <= d =>
+    `| a' - zkp | <= eps
+    => `|a - zkp| <= eps + d.
+smt.
+qed.
 
 lemma sub_all ['a]:
    forall (p1 p2 : 'a -> bool) (s : 'a list),
