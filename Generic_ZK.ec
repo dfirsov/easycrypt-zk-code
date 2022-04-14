@@ -6,11 +6,6 @@ require import Aux.
 
 type prob, wit, chal, com, resp, sbits, event, auxiliary_input.
 
-(* require Iterated_Failure_better. *)
-(* clone import Iterated_Failure_better as IFB with type irt   <- prob, *)
-(*                                     type rrt   <- event * sbits, *)
-(*                                     type sbits <- sbits. *)
-
 require While_Props.
 clone import While_Props as MW with type irt   <- prob,
                                     type rrt   <- event * sbits,
@@ -375,8 +370,9 @@ have bf2 : Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : ! E res.`2]
   have bf3: Pr[W0(Sim1, D).run(p, w, aux) @ &m : !E res.`2] <= 1%r - p0.
     have -> : 1%r = Pr[W0(Sim1, D).run(p, w, aux) @ &m : true]. byphoare.
     proc. call D_ll. call Sim1_ll. auto. auto. auto.
-       have : 
-                Pr[W0(Sim1, D).run(p, w, aux) @ &m : true] - Pr[W0(Sim1, D).run(p, w, aux) @ &m : !E res.`2] = Pr[W0(Sim1, D).run(p, w, aux) @ &m : E res.`2]. 
+       have : Pr[W0(Sim1, D).run(p, w, aux) @ &m : true] 
+                - Pr[W0(Sim1, D).run(p, w, aux) @ &m : !E res.`2] 
+                 = Pr[W0(Sim1, D).run(p, w, aux) @ &m : E res.`2]. 
     rewrite Pr[mu_split E res.`2]. simplify. smt.
 smt.
   have ->: Pr[Iter(Sim1, D).run(fevent, p, w, aux, ea, E) @ &m : ! E res.`2] 
