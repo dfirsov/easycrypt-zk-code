@@ -2,13 +2,10 @@ require import AllCore DBool Bool List Distr Int Aux DJoin Permutation.
 require import Generic_Defs_thy.
 
 type sbits.
-type commitment, opening.
 
-op Com  : bool -> (commitment * opening) distr.
-op Ver : bool * (commitment * opening) -> bool.
+require CommitmentSpecial.
+clone include CommitmentSpecial with type message <- bool.
 
-axiom Com_sound : forall (x : bool * (commitment * opening)), x.`2 \in Com x.`1 => Ver x.
-axiom Com_lossless : forall b, is_lossless (Com b).
 
 type graph = bool list.         (* n * n list representin n x n matrix *)
 
@@ -38,6 +35,7 @@ op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
  with r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
                          /\ size c = p.`1 * p.`1
                          /\ size p.`2 = p.`1 * p.`1
+                         /\ size x.`2 = p.`1 * p.`1
 
  with r = (Right x) => ! b /\ uniq x.`1
                         /\ size x.`1 = p.`1
@@ -86,8 +84,14 @@ clone import Djoinmap as DJMM with type a <- bool,
 *)
 op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 
-axiom fap_prop3 n g perm : 
- HasHC (n,g) = HasHC (n, fap perm g).
+
+op permute_wit : permutation -> hc_wit -> hc_wit = map.
+
+axiom fap_prop3 n g perm w : 
+ IsHC ((n,g), w) = IsHC ((n, fap perm g), permute_wit perm w).
+
+axiom fap_prop4  (g : graph) (p : permutation) : 
+ fap (inv p) (fap p g) = g.
 
 axiom ishc_prop1 a : IsHC a =>
  (fst (fst a)) = size (snd a) 
@@ -102,7 +106,7 @@ axiom ishc_prop3 a n g w : IsHC a => a = ((n,g),w) =>
 axiom ishc_prop4 a : IsHC a =>
   uniq a.`2 /\ (forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
 
-op permute_wit : permutation -> hc_wit -> hc_wit = map.
+
 
 module HonestProver : HonestProver  = {
   var n : int                   (* size of the graph *)

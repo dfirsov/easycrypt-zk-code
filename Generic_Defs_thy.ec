@@ -123,6 +123,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     }.
 
 
+    abstract theory ExampleStatement.
     axiom computational_special_soundness:
           exists (SpecialSoundnessAdvReduction <: SpecialSoundnessAdvReduction),
           forall statement aux &m,
@@ -132,6 +133,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
           /\ ! soundness_relation statement (special_soundness_extract statement res.`1 res.`2)] in
         let red_prob = Pr[SpecialSoundnessAdvReduction(SpecialSoundnessAdversary).run(statement, aux) @ &m : res] in
         attack_prob <= special_soundness_red_function statement red_prob.
+    end ExampleStatement.
 
     end ComputationalSpecialSoundnessStatement.
 
@@ -202,6 +204,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     module type ExtractionReduction(P: MaliciousProver) = {
       proc run(statement: statement, aux: auxiliary_input) : bool
     }.
+    op computationally_extractable_function : statement -> real -> real.
 
     axiom computationally_extractable:
         exists (Extractor <: Extractor),
@@ -211,7 +214,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         let verify_prob = Pr[Soundness(MaliciousProver, HonestVerifier).run(statement, aux) @ &m : res] in
         let extract_prob = Pr[Extractor(MaliciousProver).extract(statement, aux) @ &m : soundness_relation statement res] in
         let red_prob = Pr[ExtractionReduction(MaliciousProver).run(statement, aux) @ &m : res] in
-        true.  (* Actually should be something relating extract_prob, verify_prob, red_prob *)
+        extract_prob >= computationally_extractable_function statement verify_prob - red_prob.  (* Actually should be something relating extract_prob, verify_prob, red_prob *)
 
 
     end ComputationalPoK.
@@ -241,13 +244,13 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
   }.
 
   module type Simulator(V: MaliciousVerifier) = {
-    proc * simulate(statement: statement, aux: auxiliary_input) : adv_summary
+    proc * simulate(statement: statement, n : int, aux: auxiliary_input) : adv_summary
   }.
 
   module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: Distinguisher) = {
-    proc run(statement: statement, witness: witness, aux: auxiliary_input) = {
+    proc run(statement: statement, witness: witness, n : int, aux: auxiliary_input) = {
       var summary, guess;
-      summary <@ S(V).simulate(statement, aux);
+      summary <@ S(V).simulate(statement, n, aux);
       guess <@ D.guess(statement, witness, aux, summary);
       return guess;
     }
@@ -266,13 +269,13 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         exists (HonestProver <: HonestProver),
         exists (Simulator <: Simulator),
         exists (ZKReduction <: ZKReduction),
-        forall statement witness aux &m,
+        forall statement witness aux n &m,
         forall (MaliciousVerifier <: MaliciousVerifier),
         forall (Distinguisher <: Distinguisher),
         zk_relation statement witness
         =>
         let real_prob = Pr[ZKReal(HonestProver, MaliciousVerifier, Distinguisher).run(statement, witness, aux) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator, MaliciousVerifier, Distinguisher).run(statement, witness, aux) @ &m : res] in
+        let ideal_prob = Pr[ZKIdeal(Simulator, MaliciousVerifier, Distinguisher).run(statement, witness, n, aux) @ &m : res] in
         let red_prob = Pr[ZKReduction(MaliciousVerifier, Distinguisher).run(statement, witness, aux) @ &m : res] in
           `|real_prob - ideal_prob| <= zk_red_function statement red_prob.
 
@@ -280,17 +283,17 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
 
     abstract theory StatisticalZK.
-    op zk_error : statement -> real.
+    op zk_error : statement -> int -> real.
 
     axiom statistical_zk:
         exists (HonestProver <: HonestProver),
         exists (Simulator <: Simulator),
         forall (V <: MaliciousVerifier) (D <: Distinguisher),
-        forall statement witness aux &m,
+        forall statement witness aux n &m,
         zk_relation statement witness => 
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(statement, witness, aux) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator, V, D).run(statement, witness, aux) @ &m : res] in
-          `|real_prob - ideal_prob| <= zk_error statement.
+        let ideal_prob = Pr[ZKIdeal(Simulator, V, D).run(statement, witness, n, aux) @ &m : res] in
+          `|real_prob - ideal_prob| <= zk_error statement n.
 
 
 

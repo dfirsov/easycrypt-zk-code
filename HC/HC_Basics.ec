@@ -159,6 +159,7 @@ op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
  with  r = (Left x) => b /\ all Ver (zip (fap x.`1 p.`2) (zip c x.`2))
                          /\ size c = p.`1 * p.`1
                         /\ size p.`2 = p.`1 * p.`1
+                         /\ size x.`2 = p.`1 * p.`1
 
  with r = (Right x) => ! b /\ uniq x.`1
                         /\ size x.`1 = p.`1

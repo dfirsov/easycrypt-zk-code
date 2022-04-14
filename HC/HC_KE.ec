@@ -86,22 +86,24 @@ smt (phase2).
 qed.
 
 
-lemma quasi_fin ['a] (l' : bool list) n (l : 'a list) ver : 
+lemma quasi_fin ['a] (l' : bool list) n (l X : 'a list) ver : 
      false \in l'
-  => all ver (zip (nseq n true) l)
+  => all ver (zip (nseq n true) X)
   => all ver (zip l' l)
   => size l' = n
   => size l  = n
-  => ver (true,  nth witness l (index false l')) /\
+  => size X  = n
+  => ver (true,  nth witness X (index false l')) /\
      ver (false, nth witness l (index false l')).
 progress.
-have f : (forall (i : int), 0 <= i && i < size (zip (nseq (size l') true) l) => 
-            ver (nth witness (zip (nseq (size l') true) l) i)).
-smt (all_nthP). 
-have : ver (nth witness (zip (nseq (size l') true) l) (index false l')). apply f. smt.
-have ->:  (nth witness (zip (nseq (size l') true) l) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness l (index false l'))). smt.
+have f : (forall (i : int), 0 <= i && i < size (zip (nseq (size l') true) X) =>
+            ver (nth witness (zip (nseq (size l') true) X) i)).
+smt (all_nthP).
+
+have : ver (nth witness (zip (nseq (size l') true) X) (index false l')). apply f. smt.
+have ->:  (nth witness (zip (nseq (size l') true) X) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness X (index false l'))). timeout 20. smt.
 smt.
-have f : (forall (i : int), 0 <= i && i < size (zip l' l) => 
+have f : (forall (i : int), 0 <= i && i < size (zip l' l) =>
             ver (nth witness (zip l' l) i)).
 smt (all_nthP).
 have : ver (nth witness (zip l' l) (index false l')).
@@ -114,35 +116,38 @@ trivial.
 qed.
 
 
-lemma fin_bind   (w : hc_wit) (g : graph) (n : int) c o1 p: 
-   size g = n * n =>
+
+lemma fin_bind_real   (w : hc_wit) (g : graph) (n : int) c o1 p X: 
    !HasHC (n,g) =>  
    hc_verify (n,g) c true  (Left (p,o1)) =>
-   hc_verify (n,g) c false (Right (w,take n (hc_align w o1))) 
+   hc_verify (n,g) c false (Right (w,X)) 
   => Ver (true,  nth witness (take n (zip (hc_align w c)
-                             (hc_align w o1))) (index false (take n (hc_align w (fap p g))))) /\
+                             X)) (index false (take n (hc_align w (fap p g))))) /\
      Ver (false, nth witness (take n (zip (hc_align w c)
                              (hc_align w o1))) (index false (take n (hc_align w (fap p g))))).
-proof.
-move => p0 p1 p2 p3.
+proof. 
+move => p0 p1 p2 .
 apply (quasi_fin ((take n (hc_align w (fap p g)))) n) .
-smt.
-smt (phase3).
-smt (phase3).
-have : n <= size (hc_align w (fap p g)).
-  have ->: size (hc_align w (fap p g)) = size ((fap p g)) .
+apply is_hc_perm_2.   split.
+smt. split. elim p2. smt.
+split.  elim p1. smt. elim p1 p2. smt.
+elim p1 p2. progress. smt.
+elim p1 p2. progress. rewrite /hc_align. rewrite - zip_ip. apply phase1. auto.
+
+elim p1 p2. progress.
+  have : size (hc_align w (fap p g)) = (size w * size w). smt.
   smt.
-  have ->: size ((fap p g)) = size g .
+elim p1 p2. progress.
+  have : size (hc_align w c) = (size w) * (size w). 
+  smt.
+  have : size (hc_align w o1) = (size w) * (size w). 
   smt.
 smt.
-smt.
-have : n <= size (zip (hc_align w c) (hc_align w o1)).
-  have f1 : n <= size (hc_align w c). 
-    have ->: size (hc_align w c) = size c. smt.
-    have ->: size c = n * n. 
-      elim p2. smt. smt.
-  have f2 : n <= size (hc_align w o1). 
-   elim p3. simplify. smt.
-smt.
+elim p2.
+progress.
+  have : size (hc_align w c) = (size w) * (size w). 
+  smt.
 smt.
 qed.
+
+
