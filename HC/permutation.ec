@@ -70,5 +70,5 @@ axiom perm_d_in2 p n w : p \in perm_d n => p \o (inv (mk_perm_list_fun w)) \in p
 axiom perm_d_in3 n p : p \in perm_d n => perm_eq (map p  (range 0 n)) (range 0 n).
 axiom invop p : map (mk_perm_list_fun p) p = range 0 (size p).
 
-axiom perm_d_lossless : forall x, 0 < x => is_lossless (perm_d x).
+axiom perm_d_lossless : forall x, is_lossless (perm_d x).
 

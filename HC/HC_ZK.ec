@@ -39,73 +39,6 @@ module HP'  = {
 
 section.
 declare module V : Verifier {HP,HP'}.
-
-lemma zk_hp_hp' a: IsHC a =>
-  equiv [ ZK(HP, V).main ~ ZK(HP', V).main : a = arg{2} 
-                                /\ ={arg, glob V} ==> ={res} ].
-proof. move => ishc. proc.
-seq 1 1 : (={Ny, c, glob V} 
-    /\ HP.pi_gwco{1} = HP'.pi_gwco{2}
-    /\ a = ((HP'.n, HP'.g), HP'.w){2}
-    /\ HP'.pi_w{2} = permute_wit HP'.prm{2} HP'.w{2}
-  /\ HP'.fal{2} = fap HP'.prm{2} HP'.g{2}
-  /\  (HP'.zpd_g){2} = drop HP'.n{2} (ip (prj HP'.pi_w) HP'.fal){2}
-  /\  (HP'.zpd_w){2} = take HP'.n{2} (ip (prj HP'.pi_w) HP'.fal){2}
-    /\   (pi ((prj HP'.pi_w{2})) 
-            (HP'.pi_wco ++ HP'.pi_gco)){2} = HP.pi_gwco{1}
-  /\ HP.w{1} = HP'.w{2}
-  /\ HP.prm{1} = HP'.prm{2}
-  /\ HP.g{1} = HP'.g{2}  
-  /\ HP.n{1} = HP'.n{2}  
-  /\ HP.fal{1} = HP'.fal{2}
-  /\ size HP'.pi_wco{2} = size HP'.w{2}
-).
-inline HP.commit HP'.commit. wp.
-seq 6 6 : (={Ny, glob V} 
-  /\ HP.fal{1} = HP'.fal{2}  
-    /\ a = ((HP'.n, HP'.g), HP'.w){2}
-  /\ HP.g{1} = HP'.g{2}
-  /\ HP.w{1} = HP'.w{2}
-  /\ HP.prm{1} = HP'.prm{2}
-  /\ HP.n{1} = HP'.n{2}
-  /\ ={w_a, p_a}
-  /\ HP'.fal{2} = fap HP'.prm{2} HP'.g{2}).
-wp. rnd. wp. skip. progress.  smt. sp.
-exists* HP'.pi_w{2}.
-elim*. progress.
-simplify.
-exists* HP'.zpd_w{2}, HP'.zpd_g{2}.
-elim*. progress.
-call (djm_main511 (prj pi_w_R ) (zpd_w_R, zpd_g_R) ).
-skip. progress. smt.
-have : size result_R.`1 = HP'.n{2}.
-  have : HP'.n{2} <= size (ip (prj (permute_wit HP'.prm{2} HP'.w{2}))
-            (fap HP'.prm{2} HP'.g{2})).
-rewrite /permute_wit.  
-rewrite size_ip. rewrite fap_prop2. 
-smt.
-smt. 
-smt. auto.
-seq 2 2 : (={glob V, r ,c} ).
-inline*.
-wp.  simplify. call (_:true).
-skip. progress. 
-case (result_R = true).
-move => h.  rewrite h.
-simplify. auto.
-move => h.
-have : result_R = false.
-smt. clear h. move => h. rewrite h. simplify.
-progress.
-rewrite   ippi. 
-smt.
-call (_:true). skip. progress.
-qed.
-end section.
-
-
-section.
-declare module V : Verifier {HP,HP'}.
 declare module D : Dist {V,HP,HP'}.
 
 axiom D_run_ll : islossless D.run.
@@ -175,7 +108,10 @@ qed.
     
     
 (* one-time simulator  *)
-local module Sim1(V : Verifier) = {
+
+
+
+local module Sim1_0(V : Verifier) = {
   module ZKP_HP = ZKP(HP,V)
   module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_prob) : bool * (hc_com * hc_resp) = {
@@ -267,10 +203,10 @@ ZKDB ~ Sim1
 *)
 
 local lemma sim_0_1 a:  (fst (fst a)) = size (snd a) =>
-  equiv [ Sim1(V).simulate ~ Sim1_1(V).simulate : 
+  equiv [ Sim1_0(V).simulate ~ Sim1_1(V).simulate : 
                a = arg{2} /\ arg{1} = arg{2}.`1 /\ ={glob V, glob D} ==> ={res} ].
 proof. move => sas. proc.
-inline Sim1(V).sinit.
+inline Sim1_0(V).sinit.
 inline Sim1_1(V).sinit.
 sp.
 seq 1 1 : (p_a{2} = pa{2} /\ a = (pa,wa){2} /\
@@ -373,7 +309,7 @@ Instead: (success, result) is indist. between them (* Here: maybe not easiest *)
 
     
 local lemma  sim1ass &m pa :
-  `|Pr[Sim1(V).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2.
+  `|Pr[Sim1_0(V).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2.
   (* 
 Using sim_1_2, but for Sim1, Sim1_9 (but discard rb if fails)
 Instantiate with pred := fst
@@ -671,9 +607,9 @@ import BRM.
 
 
 local lemma sim1_main &m pa wa:  IsHC (pa,wa) =>
-   `|Pr[ Sim1(V).simulate(pa) @ &m : res.`1 /\ res.`2 ]
+   `|Pr[ Sim1_0(V).simulate(pa) @ &m : res.`1 /\ res.`2 ]
 
-      / Pr[ Sim1(V).simulate(pa) @ &m : res.`1 ]
+      / Pr[ Sim1_0(V).simulate(pa) @ &m : res.`1 ]
 
          - Pr[ ZKD(HP,V,D).main(pa,wa) @ &m : res ]| 
 
@@ -685,12 +621,12 @@ have ->:
  byequiv (_: arg{1} = arg{2} /\ ={glob V, glob D, glob HP}  ==> _). 
  symmetry. conseq sim_9_10. progress;auto. auto. auto. auto.
 have ->: 
-   Pr[Sim1(V).simulate(pa) @ &m : res.`1 /\ res.`2]
+   Pr[Sim1_0(V).simulate(pa) @ &m : res.`1 /\ res.`2]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ].
    byequiv. 
 conseq (sim_0_1 (pa,wa) _ ). smt.  simplify. smt. auto. auto.
 have h: 
-   Pr[Sim1(V).simulate(pa) @ &m : res.`1]
+   Pr[Sim1_0(V).simulate(pa) @ &m : res.`1]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1].
    byequiv. conseq (sim_0_1 (pa,wa) _). smt. auto. auto. auto.
 smt. auto. auto.

@@ -1,4 +1,14 @@
-require import AllCore List.
+require import AllCore List DJoin Distr.
+
+
+
+lemma djoinmap_weight (d : 'a -> 'b distr) :  forall l,
+  (forall x, is_lossless (d x)) =>
+    weight (djoinmap d l) = 1%r.
+elim. smt (weight_djoin_nil).
+smt (weight_djoin_cons).
+qed.
+
 
 lemma kkk (a a' d zkp eps : real) :
    0%r <= a' <= a =>

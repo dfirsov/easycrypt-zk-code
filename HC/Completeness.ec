@@ -146,13 +146,6 @@ smt.
 smt.
 qed.
 
-local lemma djoinmap_weight (d : 'a -> 'b distr) :  forall l,
-  (forall x, is_lossless (d x)) =>
-    weight (djoinmap d l) = 1%r.
-elim. smt (weight_djoin_nil).
-smt (weight_djoin_cons).
-qed.
-
 local lemma hc_complete statement witness &m : IsHC (statement,witness) =>
   Pr[Completeness(HonestProver, HonestVerifier).run(statement, witness) @ &m : true] = 1%r.
 move => inlang. byphoare (_: arg = (statement, witness) ==> _);auto. proc. inline*. wp. rnd.  simplify. wp. 

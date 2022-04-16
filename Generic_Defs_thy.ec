@@ -29,7 +29,7 @@ module type HonestProver = {
 
 
 module type HonestVerifier = {
-  proc challenge(_:statement) : challenge
+  proc challenge(_:statement*commitment) : challenge
   proc verify(_:statement * transcript) : bool
 }.
 
@@ -39,19 +39,20 @@ module type MaliciousProver = {
 }.
 
 module type MaliciousVerifier = {
-  proc challenge(statement: statement, aux: auxiliary_input) : challenge
+  proc challenge(_:statement * commitment * auxiliary_input) : challenge
   proc summitup(statement: statement, response: response) : adv_summary
 }.
 
 module HonestVerifier : HonestVerifier = {
-  proc challenge(statement: statement) : challenge = {
+  var c : commitment
+  proc challenge(statement: statement, commitment: commitment) : challenge = {
     var challenge : challenge;
     challenge <$ duniform (challenge_set statement);
     return challenge;
   }
 
  proc verify(statement: statement, transcript: transcript) : bool = {
-      return verify_transcript statement transcript;
+      return verify_transcript statement transcript /\ HonestVerifier.c = transcript.`1;
   }
 }.
 
@@ -59,7 +60,7 @@ module Completeness(P: HonestProver, V: HonestVerifier) = {
   proc run(statement:statement, witness:witness) = {
     var commit, challenge, response, accept;
     commit <@ P.commitment(statement,witness);
-    challenge <@ V.challenge(statement);
+    challenge <@ V.challenge(statement,commit);
     response <@ P.response(challenge);
     accept <@ V.verify(statement, (commit, challenge, response));
     return accept;
@@ -71,7 +72,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
   proc run(statement: statement, aux: auxiliary_input) : bool = {
     var commit, challenge, response, accept;
     commit <@ P.commitment(statement, aux);
-    challenge <@ V.challenge(statement);
+    challenge <@ V.challenge(statement,commit);
     response <@ P.response(challenge);
     accept <@ V.verify(statement, (commit, challenge, response));
     return accept;
@@ -226,16 +227,16 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
   abstract theory ZK.
 
-  module type Distinguisher = {
+  module type ZKDistinguisher = {
     proc guess(statement: statement, witness: witness, aux: auxiliary_input, summary: adv_summary) : bool
   }.
 
 
-  module ZKReal(P: HonestProver, V: MaliciousVerifier, D: Distinguisher) = {
+  module ZKReal(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness, aux: auxiliary_input) = {
       var commit, challenge, response, summary, guess;
       commit <@ P.commitment(statement, witness);
-      challenge <@ V.challenge(statement, aux);
+      challenge <@ V.challenge(statement, commit, aux);
       response <@ P.response(challenge);
       summary <@ V.summitup(statement, response);
       guess <@ D.guess(statement, witness, aux, summary);
@@ -247,7 +248,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     proc * simulate(statement: statement, n : int, aux: auxiliary_input) : adv_summary
   }.
 
-  module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: Distinguisher) = {
+  module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness, n : int, aux: auxiliary_input) = {
       var summary, guess;
       summary <@ S(V).simulate(statement, n, aux);
@@ -261,7 +262,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
     op zk_red_function : statement -> real -> real.
 
-    module type ZKReduction(V: MaliciousVerifier, D: Distinguisher) = {
+    module type ZKReduction(V: MaliciousVerifier, D: ZKDistinguisher) = {
       proc run(statement: statement, witness: witness, aux: auxiliary_input) : bool
     }.
 
@@ -271,7 +272,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         exists (ZKReduction <: ZKReduction),
         forall statement witness aux n &m,
         forall (MaliciousVerifier <: MaliciousVerifier),
-        forall (Distinguisher <: Distinguisher),
+        forall (Distinguisher <: ZKDistinguisher),
         zk_relation statement witness
         =>
         let real_prob = Pr[ZKReal(HonestProver, MaliciousVerifier, Distinguisher).run(statement, witness, aux) @ &m : res] in
@@ -288,7 +289,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     axiom statistical_zk:
         exists (HonestProver <: HonestProver),
         exists (Simulator <: Simulator),
-        forall (V <: MaliciousVerifier) (D <: Distinguisher),
+        forall (V <: MaliciousVerifier) (D <: ZKDistinguisher),
         forall statement witness aux n &m,
         zk_relation statement witness => 
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(statement, witness, aux) @ &m : res] in
