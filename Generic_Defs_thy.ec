@@ -223,8 +223,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
 
 (* ZK *)
-
-
   abstract theory ZK.
 
   module type ZKDistinguisher = {

@@ -156,7 +156,7 @@ clone include ComputationalSpecialSoundnessStatement with
 op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitment * opening)) * (bool * (commitment * opening))  =
  with r1 = Left  x, r2 = Right z => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
-                            ((true,  nth witness (take n (zip (hc_align w c)
+   ((true,  nth witness (take n (zip (hc_align w c)
                              X)) (index false (take n (hc_align w (fap p g))))), 
 
                                  (false, nth witness (take n (zip (hc_align w c)
@@ -169,8 +169,8 @@ op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitme
                                  (false, nth witness (take n (zip (hc_align w c)
                              (hc_align w o1))) (index false (take n (hc_align w (fap p g))))))
 
- with r1 = Left  x, r2 = Left  z => witness
- with r1 = Right x, r2 = Right z => witness.
+ with r1 = Left  x, r2 = Left  z => ((witness, witness), (witness, witness))
+ with r1 = Right x, r2 = Right z => ((witness, witness), (witness, witness)).
 
  
 module (SpecialSoundnessAdvReduction : SpecialSoundnessAdvReduction) (A : SpecialSoundnessAdversary)  = {
@@ -179,9 +179,10 @@ module (SpecialSoundnessAdvReduction : SpecialSoundnessAdvReduction) (A : Specia
       (r1, r2) <@ A.attack(statement, aux);
       (n,g)    <- statement;
       (p1, p2) <- hc_verify1 (n,g) r1.`1  r1.`3 r2.`3 ;
-      return (Ver p1 /\ Ver p2) /\ p1.`1 <> p2.`1;
+      return (Ver p1 /\ Ver p2) /\ p1.`1 <> p2.`1 /\ p1.`2.`1 = p2.`2.`1;
   }
 }.
+
 
 
 
@@ -215,11 +216,20 @@ case (result_R.`1.`2).
 rewrite /special_soundness_extract.
 elim result_R.`1.`3.
 elim result_R.`2.`3. progress. 
-smt. smt. smt.
+smt. smt. smt. smt.
 move => x p1 p2 p3 p4.
 simplify. move => p5.
 rewrite fin_bind_real.  auto. 
-smt. smt. simplify. smt.
+smt. smt. simplify. 
+
+ 
+have : s.`1 <= size (hc_align x.`1 p1.`2). 
+elim p4. move => _. elim.
+progress. 
+have ->: size (hc_align x.`1 p1.`2) = s.`1 * s.`1. smt. smt.
+have : s.`1 <=  size x.`2.  smt.
+smt. smt.
+
 
 move => q.
 have z : result_R.`1.`2 = false. smt.
@@ -229,11 +239,70 @@ elim result_R.`1.`3.
 elim result_R.`2.`3. progress. 
 move => x p1 p2 p3 p4. simplify.
 rewrite fin_bind_real.   auto.
-smt. smt.
+smt. smt. simplify. smt. 
 elim result_R.`2.`3. 
 move => x p1 p2 p3.
-simplify. move => p4.
-apply fin_bind_real. auto. smt. smt.
-progress. smt. smt. smt.
+simplify. move => p4. progress. smt. smt. 
+
+
+have : size p1.`2 <= size (hc_align p1.`1 x.`2). 
+elim p3. move => _. elim.
+progress. 
+have ->: size (hc_align p1.`1 x.`2) = s.`1 * s.`1. smt. smt.
+have : s.`1 <=  size p1.`2.  smt.
+smt. smt.
+
+ (* fin_bind_real *)
 qed.
 
+
+theory SSB.
+section.
+declare module S : SpecialSoundnessAdversary.
+
+op ss : hc_prob.
+op auxx : auxiliary_input.
+
+module SpecialSoundnessBinder(A : SpecialSoundnessAdversary) : Binder = {
+  proc bind() = {
+      var r1,r2,n,g,p1,p2;
+      (r1, r2) <@ A.attack(ss, auxx);
+      (n,g)    <- ss;
+      (p1, p2) <- hc_verify1 (n,g) r1.`1  r1.`3 r2.`3 ;
+      return (p1.`2.`1, p1.`1, p1.`2.`2, p2.`1, p2.`2.`2);
+  }
+}.
+
+
+local lemma qq &m : 
+ Pr[SpecialSoundnessAdvReduction(S).run
+             (ss, auxx) @ &m : res] <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res]  .
+byequiv;auto. 
+proc. inline*. wp.  call (_:true). skip. progress. 
+smt.
+smt.
+qed.
+
+
+
+lemma computational_special_soundness_binding &m :
+          Pr[S.attack(ss, auxx) @ &m :
+             valid_transcript_pair ss res.`1 res.`2 /\
+             ! IsHC
+                 (ss,
+                  special_soundness_extract ss res.`1 res.`2)] 
+  <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res].
+have f :           Pr[S.attack(ss, auxx) @ &m :
+             valid_transcript_pair ss res.`1 res.`2 /\
+             ! IsHC
+                 (ss,
+                  special_soundness_extract ss res.`1 res.`2)] 
+ <= Pr[SpecialSoundnessAdvReduction(S).run
+             (ss, auxx) @ &m : res].
+apply (computational_special_soundness ss auxx &m S).
+smt (qq).
+qed.
+
+end section.
+
+end SSB.

@@ -1,4 +1,7 @@
-Defs:
+
+Generic definitions
+====================
+
 + ZK (stat/comp)
 + Completeness (stat)
 + Special soundness (stat/comp)
@@ -6,16 +9,16 @@ Defs:
 + PoK / extractability (stat/comp)
 
 
-Results generic (via thy inheritance):
-- (perfect => statistical => computational for all pairs)
-
-- Special soundness => extractability (stat/comp)
-  (Generic_KE.ec)
+Generic Results
+================
 
 
 - 1-time sim => ZK (stat/comp)
   (for small "challenge_set")
   (Generic_ZK.ec)
+
+- Special soundness => extractability (stat/comp)
+  (Generic_KE.ec)
 
 - extractability => soundness (stat/comp)
   (Axiom: soundness_error such that: x > soundness_error => extraction_success_function x > 0.
@@ -28,23 +31,28 @@ Results generic (via thy inheritance):
   - ==> v(s) <= soundness_error)
 
 
+- perfect => statistical => computational (Maybe not)
 
-Results concrete:
 
+Concrete Results
+================
 
 - HC (stat hiding / comp binding):
   + Completeness
   + Special soundness (comp)
-  - ZK (stat2) by Sim1 stuff
-  - comp extractability by thy inheritance
-  - comp soundness by thy inheritance
+  + Sim1 stuff
+  + auto-derived ZK (stat2)
+  - auto-derived extractability (comp)
+  - auto-derived soundness (comp)
+
 
 - QR:
   - Completeness
   - Special soundness (perfect)
-  + stat. soundness by theory inheritence (nothing to do)
-  + stat. extractability by theory inheritence (nothing to do)
-  - ZK (stat2)
+  - Sim1 stuff
+  - auto-derived ZK
+  - auto-derived stat. soundness by theory inheritence
+  - auto-derived stat. extractability by theory inheritence 
   
 - Dlog:
   - Completeness

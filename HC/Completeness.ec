@@ -14,6 +14,7 @@ axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
 
 section.
 
+print Completeness.
 local lemma hc_complete_hoare pa wa : IsHC (pa,wa) =>
    hoare[ Completeness(HonestProver, HonestVerifier).run : arg = (pa,wa) ==> res ].
 move => ishc. proc. inline*. wp. rnd. 
