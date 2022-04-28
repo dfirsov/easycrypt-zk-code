@@ -48,6 +48,7 @@ module HonestVerifier : HonestVerifier = {
   proc challenge(statement: statement, commitment: commitment) : challenge = {
     var challenge : challenge;
     challenge <$ duniform (challenge_set statement);
+    c <- commitment;
     return challenge;
   }
 
