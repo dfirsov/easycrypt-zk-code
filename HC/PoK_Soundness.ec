@@ -173,10 +173,38 @@ qed.
 
 
 require import RealExp.
+
+
+lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
+smt. qed.
+
+
+lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
+smt. qed.
+
+
 lemma hc_computational_soundness &m :
     ! in_language (fun x y => IsHC (x,y)) ss =>
      Pr[Soundness(P, HonestVerifier).run(ss, auxx) @ &m : res]
      <= sqrt (Pr[BindingExperiment(SpecialSoundnessBinder(HC_SpecialSoundnessAdversary(P))).main() @ &m : res] + 1%r/2%r).
+proof. progress.
+have f1 : Pr[Extractor(P).extract(ss, auxx) @ &m : IsHC (ss, res)] = 0%r.
+  have <-: Pr[Extractor(P).extract(ss, auxx) @ &m : false ] = 0%r.
+  rewrite Pr[mu_false]. auto.
+rewrite Pr[mu_eq]. smt. auto.
+have  :   0%r >=
+   (Pr[Soundness(P, HonestVerifier).run(ss, auxx) @ &m : res]^2
+   - (1%r/2%r) * Pr[Soundness(P, HonestVerifier).run(ss, auxx) @ &m : res])
+     - Pr[BindingExperiment(SpecialSoundnessBinder(HC_SpecialSoundnessAdversary(P))).main() @ &m : res].
+ rewrite - f1.
+apply hc_pok.
+pose a := Pr[Soundness(P, HonestVerifier).run(ss, auxx) @ &m : res].
+pose b := Pr[BindingExperiment(SpecialSoundnessBinder(HC_SpecialSoundnessAdversary(P))).main
+   () @ &m : res].
+have f2 : 0%r <= a <= 1%r. smt.
+smt (qqq1 qqq2).
+qed.
+
 
 
 end section.
