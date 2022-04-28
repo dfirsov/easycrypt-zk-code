@@ -27,6 +27,17 @@ module type HonestProver = {
 }.
 
 
+    module type SpecialSoundnessExtractor = {
+      proc extract(transcript1: transcript, transcript2: transcript) : witness
+    }.
+
+    module type SpecialSoundnessAdversary = { (* computational *)
+      proc attack(statement:statement, aux:auxiliary_input) : transcript * transcript
+    }.
+
+    module type SpecialSoundnessAdvReduction(A: SpecialSoundnessAdversary) = { (* computational *)
+      proc run(statement: statement, aux: auxiliary_input) : bool
+    }.
 
 module type HonestVerifier = {
   proc challenge(_:statement*commitment) : challenge
@@ -112,17 +123,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
     op special_soundness_red_function : statement -> real -> real.
 
-    module type SpecialSoundnessExtractor = {
-      proc extract(transcript1: transcript, transcript2: transcript) : witness
-    }.
 
-    module type SpecialSoundnessAdversary = { (* computational *)
-      proc attack(statement:statement, aux:auxiliary_input) : transcript * transcript
-    }.
-
-    module type SpecialSoundnessAdvReduction(A: SpecialSoundnessAdversary) = { (* computational *)
-      proc run(statement: statement, aux: auxiliary_input) : bool
-    }.
 
 
     abstract theory ExampleStatement.
@@ -179,12 +180,165 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
 
 
-    (* Proof of knowledge *)
+  (* Proof of knowledge *)
   abstract theory PoK.
 
   module type Extractor(P: MaliciousProver) = {
     proc extract(statement: statement, aux: auxiliary_input) : witness
   }.
+
+    abstract theory ComputationalPoK.
+
+    clone import SpecialSoundnessStatements.
+    
+
+    module type ExtractionReduction(P: MaliciousProver) = {
+      proc run(statement: statement, aux: auxiliary_input) : bool
+    }.
+
+    module SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdversary = {
+      proc attack(statement : statement, aux : auxiliary_input) : transcript * transcript = {
+        var i,c1,c2,r1,r2;
+        i <@ P.commitment(statement, aux);
+
+        c1 <$ duniform (challenge_set witness);
+        r1 <@ P.response(c1);
+
+        c2 <$ duniform (challenge_set witness);
+        r2 <@ P.response(c2);
+        return ((i,c1,r1), (i,c2,r2));
+      }
+    }.
+
+    module (Extractor : Extractor)(P : MaliciousProver) = {  
+      module SA = SpecialSoundnessAdversary(P)
+      proc extract(p : statement, aux : auxiliary_input) : witness = {
+        var t1,t2;
+        (t1,t2) <@ SA.attack(p, aux);
+        return special_soundness_extract p t1 t2;
+     }
+    }.
+
+    require Generic_KE.
+    clone import Generic_KE as GKE with type pt <- statement,
+                                        type auxt <- auxiliary_input,
+                                        type irt <- commitment,
+                                        type ct <- challenge,
+                                        type rt <- response,
+                                        op d <- duniform (challenge_set witness),
+                                        op allcs <- (challenge_set witness).
+
+    section.
+
+    declare module P : MaliciousProver {HonestVerifier}.
+    declare module ExtractionReduction : ExtractionReduction.
+    
+    local module A(P : MaliciousProver) : Adv = {
+      proc init (p : statement, aux : auxiliary_input) : commitment = {
+        var i : commitment;
+        i <@ P.commitment(p,aux);
+        return i;
+     }
+
+     proc run(hcm : commitment, hcc: challenge) : response = {
+       var r;
+       r <@ P.response(hcc);
+       return r;
+     }
+    }.
+
+
+   op hc_verify = fun s cm ch rs => verify_transcript s (cm , ch, rs). (* TODO: remove later *)
+
+   local lemma ex_a_eq_f &m p aux f : 
+    Pr[ InitRun2(A(P)).run(p,aux) @ &m 
+             : res.`1.`1 <> res.`2.`1  /\
+               hc_verify p res.`1.`2.`2 res.`1.`1 res.`1.`2.`1  /\
+               hc_verify p res.`2.`2.`2 res.`2.`1 res.`2.`2.`1  /\
+     f (soundness_relation  p (special_soundness_extract p (res.`1.`2.`2, res.`1.`1, res.`1.`2.`1) 
+                                            (res.`2.`2.`2, res.`2.`1, res.`2.`2.`1))) ] 
+     = Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                valid_transcript_pair p res.`1 res.`2 /\
+                 f  (soundness_relation  p (special_soundness_extract p res.`1 res.`2))].
+   proof. byequiv;auto.
+   proc. simplify. inline*. wp.  call (_:true).  wp. rnd. wp. call (_:true). wp. rnd. 
+   wp.  call (_:true). wp. skip. progress;smt.
+   qed.
+   
+
+    local lemma hc_pok' &m p aux : 
+       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                 valid_transcript_pair p res.`1 res.`2 /\
+                 ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
+          Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
+
+      Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                 valid_transcript_pair p res.`1 res.`2 /\
+                  soundness_relation p (special_soundness_extract p res.`1 res.`2)]
+        >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
+             - (1%r/ (size (challenge_set witness) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
+              - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+    proof. rewrite - ex_a_eq_f.
+    move => f. simplify.
+     rewrite -  (ex_a_eq_f &m p aux (fun x => x) ).
+    apply (final_eq_step1 (A(P)) _ &m (fun pq (r : challenge * (response * commitment)) => hc_verify (fst pq) r.`2.`2 r.`1 r.`2.`1) (fun (pq :statement * auxiliary_input) (r1 r2 : challenge * (response * commitment)) => soundness_relation (fst pq) (special_soundness_extract (fst pq) (r1.`2.`2, r1.`1, r1.`2.`1) (r2.`2.`2, r2.`1, r2.`2.`1)))
+      (p, aux)
+     Pr[ExtractionReduction(P).run(p, aux) @ &m : res]  
+    _
+    ). admit.   auto.
+    qed.
+
+
+    local lemma qqq &m p aux : 
+      Pr[SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+           valid_transcript_pair p res.`1 res.`2 /\
+           soundness_relation p (special_soundness_extract p res.`1 res.`2)]
+     <=  Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res].
+    byequiv. proc. inline*. wp. call (_:true).
+    rnd.  simplify. call (_:true). rnd.  call (_:true).
+    wp. simplify. skip. progress. smt. smt. 
+    qed.
+
+
+    local lemma www &m p aux: 
+      Pr[ InitRun1(A(P)).run(p,aux) @ &m 
+          : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
+     = Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
+    byequiv. proc. inline*. wp. call (_:true).
+    wp. rnd.  wp. call (_:true). wp. 
+    skip. simplify. progress. admit. admit. smt. auto. auto. auto.
+    qed.
+
+
+    lemma computational_PoK &m p aux: 
+          Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                    valid_transcript_pair p res.`1 res.`2 /\
+                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
+             Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
+      Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
+       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
+       - (1%r/ (size (challenge_set witness))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+         - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+    smt (www hc_pok' qqq).
+    qed.
+    end section.
+
+
+    abstract theory Example.
+    op computationally_extractable_function : statement -> real -> real.
+    axiom computationally_extractable:
+        exists (Extractor <: Extractor),
+        exists (ExtractionReduction <: ExtractionReduction),
+        forall statement aux &m,
+        forall (MaliciousProver <: MaliciousProver),
+        let verify_prob = Pr[Soundness(MaliciousProver, HonestVerifier).run(statement, aux) @ &m : res] in
+        let extract_prob = Pr[Extractor(MaliciousProver).extract(statement, aux) @ &m 
+                 : soundness_relation statement res] in
+        let red_prob = Pr[ExtractionReduction(MaliciousProver).run(statement, aux) @ &m : res] in
+        extract_prob >= computationally_extractable_function statement verify_prob - red_prob. 
+    end Example.
+
+    end ComputationalPoK.
 
 
     abstract theory StatisticalPoK.
@@ -201,25 +355,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
     end StatisticalPoK.
 
-    abstract theory ComputationalPoK.
-
-    module type ExtractionReduction(P: MaliciousProver) = {
-      proc run(statement: statement, aux: auxiliary_input) : bool
-    }.
-    op computationally_extractable_function : statement -> real -> real.
-
-    axiom computationally_extractable:
-        exists (Extractor <: Extractor),
-        exists (ExtractionReduction <: ExtractionReduction),
-        forall statement aux &m,
-        forall (MaliciousProver <: MaliciousProver),
-        let verify_prob = Pr[Soundness(MaliciousProver, HonestVerifier).run(statement, aux) @ &m : res] in
-        let extract_prob = Pr[Extractor(MaliciousProver).extract(statement, aux) @ &m : soundness_relation statement res] in
-        let red_prob = Pr[ExtractionReduction(MaliciousProver).run(statement, aux) @ &m : res] in
-        extract_prob >= computationally_extractable_function statement verify_prob - red_prob.  (* Actually should be something relating extract_prob, verify_prob, red_prob *)
-
-
-    end ComputationalPoK.
   end PoK.
 
 

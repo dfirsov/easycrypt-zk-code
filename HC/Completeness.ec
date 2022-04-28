@@ -14,7 +14,6 @@ axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
 
 section.
 
-print Completeness.
 local lemma hc_complete_hoare pa wa : IsHC (pa,wa) =>
    hoare[ Completeness(HonestProver, HonestVerifier).run : arg = (pa,wa) ==> res ].
 move => ishc. proc. inline*. wp. rnd. 
@@ -153,7 +152,7 @@ move => inlang. byphoare (_: arg = (statement, witness) ==> _);auto. proc. inlin
 rnd.  wp. 
 conseq (_: _ ==> true). progress. smt (@Distr @DBool). 
 apply djoinmap_weight. apply Com_lossless.
-rnd. wp.  skip. progress. apply perm_d_lossless. smt (ishc_prop2). 
+rnd. wp.  skip. progress. apply perm_d_lossless. (* smt (ishc_prop2).  *)
 qed.
 
 

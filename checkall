@@ -4,7 +4,7 @@ timeout=35
 
 check() {
   echo checking $1;
-  if easycrypt -I . -I ./QR -I ./rewinding -timeout $timeout $1 2>/dev/null;
+  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./HC -timeout $timeout $1 2>/dev/null;
   then echo passed: $1;
        echo "";
   else echo failed: $1;
@@ -15,12 +15,13 @@ check() {
 }
 
 # list of files to check
-check Iterated_Failure.ec
-check while_not_b.ec
-check while_not_b_proc.ec
-check While_Props.ec
-check QR/QR_Basics.ec
-check QR/QR_Iterated_Soundness_Completeness.ec
-check QR/QR_Iterated_ZK.ec
+
+## Hamilton-Blum protocol
+check HC/Basics.ec
+check HC/Completeness.ec
+check HC/SpecialSoundness.ec
+check HC/PoK_Soundness.ec
+check HC/ZK.ec 
+
 
 echo "DONE";

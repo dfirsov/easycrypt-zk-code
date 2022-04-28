@@ -17,8 +17,8 @@ clone import Generic_KE as GKE with type pt <- hc_prob,
                                     op d <- {0,1},
                                     op allcs <- [false; true].
 
-
 require import SpecialSoundness.
+
 
 (* move to Generic_Defs?  *)
 module HC_SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdversary = {
@@ -34,6 +34,7 @@ module HC_SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdver
     return ((i,c1,r1), (i,c2,r2));
   }
 }.
+
 
 module (Extractor : Extractor)(P : MaliciousProver) = {  
   module SA = HC_SpecialSoundnessAdversary(P)
@@ -51,7 +52,6 @@ module (Extractor : Extractor)(P : MaliciousProver) = {
 
 section.
 declare module P : MaliciousProver {HonestVerifier}.
-
 
 op ss : hc_prob.
 op auxx : auxiliary_input.

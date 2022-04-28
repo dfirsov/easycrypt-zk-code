@@ -780,9 +780,7 @@ progress.
 have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]
   = Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ].
 byequiv. proc. sim. auto. auto.
-print one_to_many_zk.
 apply (one_to_many_zk (Sim1(V)) D _ _ _ &m stat wit (1%r/2%r - negl2) (2%r * negl + 20%r * negl2) N
- 
 Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _
 ) .
 proc. call H. call H0. call (_:true).  sp.  
