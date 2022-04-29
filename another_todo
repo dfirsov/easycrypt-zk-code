@@ -37,11 +37,12 @@ Generic Results
 Concrete Results
 ================
 
+
 - HC (stat hiding / comp binding):
   + Completeness
   + Special soundness (comp)
   + Sim1 stuff
-  + auto-derived ZK (stat2)
+  +? auto-derived ZK (stat2)
   + auto-derived extractability (comp)
   + auto-derived soundness (comp)
 
@@ -50,16 +51,17 @@ Concrete Results
   - Completeness
   - Special soundness (perfect)
   - Sim1 stuff
-  - auto-derived ZK
-  - auto-derived stat. soundness by theory inheritence
-  - auto-derived stat. extractability by theory inheritence 
-  
+  - auto-derived ZK (?)
+  - auto-derived soundness (stat)
+  - auto-derived extractability (stat)
+
+
 - Dlog:
   - Completeness
   - Special soundness (perfect)
   + NOT ZK (because size(challenge_set) big)
   + NOT soundness (because pointless)
-  + stat. extractability by thy inheritance
+  - auto-derived extractability (stat)
 
 
 

@@ -7,7 +7,8 @@ type relation = statement -> witness -> bool.
 type transcript = commitment * challenge * response.
 
 op in_language (R:relation) statement : bool = exists witness, R statement witness.
-op challenge_set : statement -> challenge list. (* axiomitize that! *)
+op challenge_set : challenge list. (* axiomitize that! *)
+axiom challenge_set_size : 0 < size challenge_set.
 op verify_transcript : statement -> transcript -> bool.
 
 op completeness_relation : relation.
@@ -58,7 +59,7 @@ module HonestVerifier : HonestVerifier = {
   var c : commitment
   proc challenge(statement: statement, commitment: commitment) : challenge = {
     var challenge : challenge;
-    challenge <$ duniform (challenge_set statement);
+    challenge <$ duniform (challenge_set );
     c <- commitment;
     return challenge;
   }
@@ -189,7 +190,9 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
     abstract theory ComputationalPoK.
 
-    clone import SpecialSoundnessStatements.
+    op special_soundness_extract : statement -> transcript -> transcript -> witness.
+
+    clone import SpecialSoundnessStatements with op special_soundness_extract <- special_soundness_extract.
     
 
     module type ExtractionReduction(P: MaliciousProver) = {
@@ -201,10 +204,10 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         var i,c1,c2,r1,r2;
         i <@ P.commitment(statement, aux);
 
-        c1 <$ duniform (challenge_set witness);
+        c1 <$ duniform (challenge_set );
         r1 <@ P.response(c1);
 
-        c2 <$ duniform (challenge_set witness);
+        c2 <$ duniform (challenge_set );
         r2 <@ P.response(c2);
         return ((i,c1,r1), (i,c2,r2));
       }
@@ -225,8 +228,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
                                         type irt <- commitment,
                                         type ct <- challenge,
                                         type rt <- response,
-                                        op d <- duniform (challenge_set witness),
-                                        op allcs <- (challenge_set witness).
+                                        op d <- duniform (challenge_set ),
+                                        op allcs <- (challenge_set ).
 
     section.
 
@@ -276,7 +279,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
                  valid_transcript_pair p res.`1 res.`2 /\
                   soundness_relation p (special_soundness_extract p res.`1 res.`2)]
         >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
-             - (1%r/ (size (challenge_set witness) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
+             - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
               - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
     proof. rewrite - ex_a_eq_f.
     move => f. simplify.
@@ -306,7 +309,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
      = Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
     byequiv. proc. inline*. wp. call (_:true).
     wp. rnd.  wp. call (_:true). wp. 
-    skip. simplify. progress. admit. admit. smt. auto. auto. auto.
+    skip. simplify. progress. auto. auto. 
     qed.
 
 
@@ -317,10 +320,44 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
              Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
       Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
        (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
-       - (1%r/ (size (challenge_set witness))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
          - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
     smt (www hc_pok' qqq).
     qed.
+
+    require import Real RealExp.
+    lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
+    smt. qed.
+    lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
+    smt. qed.
+
+      
+    lemma computational_soundness &m p aux :
+        ! in_language soundness_relation p =>
+       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                    valid_transcript_pair p res.`1 res.`2 /\
+                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
+             Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
+         Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+         <= sqrt (Pr[ExtractionReduction(P).run(p, aux) @ &m : res] + (1%r/ (size (challenge_set))%r)).
+    proof. progress.
+    have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
+      have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
+      rewrite Pr[mu_false]. auto.
+    rewrite Pr[mu_eq]. smt. auto.
+    have  :   0%r >=
+       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+         - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+     rewrite - f1.
+    apply (computational_PoK &m p aux). auto. 
+    pose a := Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
+    pose b := Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+    have f2 : 0%r <= a <= 1%r. smt.
+    smt (challenge_set_size qqq1 qqq2).
+    qed.
+
+    
     end section.
 
 

@@ -64,7 +64,7 @@ clone include ZKProtocol with
   type witness         <- int list,
   type response        <- hc_resp,
   type challenge       <- bool,
-  op challenge_set     <- fun _ => (false :: true :: []),
+  op challenge_set     <-  (false :: true :: []),
   op verify_transcript <- fun p (x : transcript) => hc_verify p x.`1 x.`2 x.`3,
   op soundness_relation    <- fun x y => IsHC (x, y),
   op completeness_relation <- fun x y => IsHC (x, y),
