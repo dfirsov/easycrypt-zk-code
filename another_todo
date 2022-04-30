@@ -41,7 +41,7 @@ Concrete Results
 - HC (stat hiding / comp binding):
   + Completeness
   + Special soundness (comp)
-  + Sim1 stuff
+  + Sim1 
   +? auto-derived ZK (stat2)
   + auto-derived extractability (comp)
   + auto-derived soundness (comp)

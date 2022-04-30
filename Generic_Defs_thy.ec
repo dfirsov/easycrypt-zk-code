@@ -402,6 +402,15 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     proc guess(statement: statement, witness: witness, aux: auxiliary_input, summary: adv_summary) : bool
   }.
 
+  module type Simulator(V: MaliciousVerifier) = {
+    proc * simulate(statement: statement, n : int, aux: auxiliary_input) : adv_summary
+  }.
+
+  module type Simulator1(V: MaliciousVerifier) = {
+    proc run(statement: statement, aux: auxiliary_input) : bool * adv_summary
+  }.
+
+
 
   module ZKReal(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness, aux: auxiliary_input) = {
@@ -415,10 +424,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     }
   }.
 
-  module type Simulator(V: MaliciousVerifier) = {
-    proc * simulate(statement: statement, n : int, aux: auxiliary_input) : adv_summary
-  }.
-
   module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness, n : int, aux: auxiliary_input) = {
       var summary, guess;
@@ -427,8 +432,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
       return guess;
     }
   }.
-
-
+        
     abstract theory ComputationalZK. (* Computational ZK *)
 
     op zk_red_function : statement -> real -> real.
@@ -457,19 +461,105 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     abstract theory StatisticalZK.
     op zk_error : statement -> int -> real.
 
-    axiom statistical_zk:
-        exists (HonestProver <: HonestProver),
-        exists (Simulator <: Simulator),
-        forall (V <: MaliciousVerifier) (D <: ZKDistinguisher),
-        forall statement witness aux n &m,
-        zk_relation statement witness => 
-        let real_prob = Pr[ZKReal(HonestProver, V, D).run(statement, witness, aux) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator, V, D).run(statement, witness, n, aux) @ &m : res] in
-          `|real_prob - ideal_prob| <= zk_error statement n.
+
+    require OneToManyZK.
+    clone import OneToManyZK as OMZK with type prob <- statement, 
+                                          type wit <- witness, 
+                                          type sbits <- adv_summary, 
+                                          type event <- bool, 
+                                          type auxiliary_input <- auxiliary_input,
+                                          op E <- (fun x => fst x),
+                                          op fevent <- false
+   rename "Simulator1" as "Simulator1NP".
+
+
+    module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = {
+      proc main(Ny : statement, aux: auxiliary_input, w : witness) = {
+        var c,b,r,result,rb;
+        c <- P.commitment(Ny,w);
+        b <- V.challenge(Ny,c,aux);
+        r <- P.response(b);
+        result <- V.summitup(Ny,r);
+        rb <- D.guess(Ny,w,aux,result);
+        return rb;
+      }
+    }.
 
 
 
-    end StatisticalZK.
+    theory StatisticalZKDeriv.
+
+    section.
+    op negl : real.
+
+    declare module HonestProver : HonestProver.
+    declare module Sim1 : Simulator1 {MW.IFB.IM.W, MW.IFB.DW}.
+ 
+    axiom sim1_run_ll : forall (V <: MaliciousVerifier),  islossless Sim1(V).run.
+
+    axiom qqq &m (p : statement) (w : witness) 
+     (aux : auxiliary_input) (D <: ZKDistinguisher{HonestProver, Sim1}) 
+         (V <: MaliciousVerifier{D, HonestProver}): 
+       islossless D.guess =>
+       islossless V.summitup =>
+       zk_relation p w =>  
+        `|Pr[W0(Sim1(V), D).run(p, w, aux) @ &m : fst res.`2 /\ res.`1] /
+             Pr[Sim1(V).run(p,aux) @ &m : fst res] 
+                  - Pr[ ZKD(HonestProver,V,D).main(p,aux,w) @ &m : res ]| <= negl.
+
+
+   
+     module  Simulator(S : Simulator1)(V : MaliciousVerifier)  = {
+       module M = MW.IFB.IM.W(S(V))
+       proc simulate(statement : statement, n : int, aux : auxiliary_input) :
+         adv_summary = {
+            var r;
+            r <@ M.whp(fst, (statement,aux),1,n,(false,witness));
+            return r.`2;
+       }
+     }.
+
+    
+     lemma statistical_zk:
+        forall (V <: MaliciousVerifier {Sim1, MW.IFB.IM.W, HonestProver, MW.IFB.DW}) 
+               (D <: ZKDistinguisher{Sim1, MW.IFB.IM.W, V, HonestProver}),
+          islossless V.summitup =>
+          islossless D.guess =>
+        forall stat wit ax N p0 &m,
+        zk_relation stat wit => 0 <= N =>
+        p0 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1] =>
+        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
+        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
+          `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
+    proof.
+    progress.
+    have ->: 
+     `|Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] -
+      Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]|
+     = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] - Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]|. smt.
+    have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
+     = Pr[Iter(Sim1(V), D).run(false,stat,wit,ax,N,fst) @ &m : res.`1].
+    byequiv (_:  E{2} = fst /\ aux{1} = aux{2} /\ n{1} = ea{2} /\ fevent{2} = false  /\
+      statement{1} = Ny{2} /\ witness{1} = w{2} /\
+        ={glob Sim1, glob HonestProver, glob D, glob V, glob MW.IFB.IM.W} ==> _)  ;auto. proc.
+    inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
+    call (_:true).  simplify. inline Simulator(Sim1,V).simulate. wp. sp.
+    call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
+    progress.
+    have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]
+      = Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ].
+    byequiv.  proc. sim. auto. auto.
+    apply (one_to_many_zk (Sim1(V)) D _ _ _ &m stat wit p0 negl N
+    Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _
+    ) .  apply (sim1_run_ll V). apply H0. auto. 
+    apply (qqq &m stat wit ax D V H0 H H1). apply H2. auto.
+    qed.
+end section.
+
+
+   end StatisticalZKDeriv.
+
+   end StatisticalZK.
 
   end ZK.
 
