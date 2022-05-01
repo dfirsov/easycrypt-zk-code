@@ -12,6 +12,8 @@ clone import ComputationalPoK with
 section.
 declare module P : MaliciousProver {HonestVerifier}.
 
+axiom P_response_ll : islossless P.response.
+
 op ss : hc_prob.
 op auxx : auxiliary_input.
 
@@ -52,7 +54,7 @@ lemma hc_computational_PoK &m :
    - (1%r/2%r) * Pr[Soundness(P, HonestVerifier).run(ss, auxx) @ &m : res])
      - Pr[BindingExperiment(SpecialSoundnessBinder(SpecialSoundnessAdversary(P))).main() @ &m : res].
 rewrite - ex_a_eq1. 
-apply (computational_PoK P ExtractionReduction &m).
+apply (computational_PoK P ExtractionReduction _ &m). apply P_response_ll.
 apply (ex_a_eq2 &m).
 qed.
 
@@ -63,7 +65,7 @@ lemma hc_computational_soundness &m :
      <= sqrt (Pr[BindingExperiment(SpecialSoundnessBinder(SpecialSoundnessAdversary(P))).main() @ &m : res] + 1%r/2%r).
 proof.  progress.
 rewrite - ex_a_eq1. 
-apply (computational_soundness P ExtractionReduction &m ss auxx _ ).
+apply (computational_soundness P ExtractionReduction _ &m ss auxx _ ). apply P_response_ll.
 auto.
 apply (ex_a_eq2 &m).
 qed.

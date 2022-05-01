@@ -60,18 +60,6 @@ module ZKP(P : HonestProver, V : MaliciousVerifier) = {
   }
 }.
 
-(* module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = { *)
-(*   proc main(Ny : hc_prob, aux: auxiliary_input, w : hc_wit) = { *)
-(*     var c,b,r,result,rb; *)
-(*     c <- P.commitment(Ny,w); *)
-(*     b <- V.challenge(Ny,c,aux); *)
-(*     r <- P.response(b); *)
-(*     result <- V.summitup(Ny,r); *)
-(*     rb <- D.guess(Ny,w,aux,result); *)
-(*     return rb; *)
-(*   } *)
-(* }. *)
-
 
 local lemma zkp_hp'_hp (a : hc_prob * hc_wit):  IsHC a =>
   equiv [ ZKP(HonestProver, V).run ~ ZKP(HP',V).run : (arg{2}.`1, arg{2}.`2) = a  /\ ={arg, glob V} ==> ={res} ].
@@ -135,7 +123,6 @@ qed.
 
 
 
-
 (* one-time simulator  *)
 local module Sim1_0(V : MaliciousVerifier, D : ZKDistinguisher) = {
   module ZKP_HP = ZKP(HonestProver,V)
@@ -143,7 +130,6 @@ local module Sim1_0(V : MaliciousVerifier, D : ZKDistinguisher) = {
   proc sinit(p_a : hc_prob) : bool * (hc_com * hc_resp) = {
     var n, g,bb,r;
     (n,g) <- (p_a.`1, p_a.`2);
-
     bb <$ {0,1};
 
     if (bb) {
@@ -219,8 +205,6 @@ g <- compl_graph n;
 }.
 
 (*
-
-
 
 ZKDB ~ Sim1  
 (ZKDB is like ZKD, but outputs additionally a random bit, and if this random bit is "fail", outputs a fixed value)
@@ -767,19 +751,20 @@ qed.
 
 
 
-local lemma sim11v_eq : equiv [ Sim1(V).run ~ Sim1'(V).run :  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg}   ==> ={res} ].
-proc. simplify. sim. 
+local lemma sim11v_eq N : 0 <= N => equiv [ Sim1(V).run ~ Sim1'(V).run :  ={glob D, glob  V, glob HP', glob HonestProver} /\ ={arg}   
+  /\ N = arg.`1.`1{1} 
+   ==> ={res} ].
+progress. proc. simplify. sim. 
 inline Sim1(V).sinit.
 inline Sim1'(V).sinit.
-
 sp. wp. 
-
 seq 1 1 : ( p_a{2} = pa{2} /\
   g{2} = p_a{2}.`2 /\
   n{2} = p_a{2}.`1 /\
   p_a{1} = pa{1} /\
   g{1} = p_a{1}.`2 /\
   n{1} = p_a{1}.`1 /\
+   N = n{1} /\
   (={glob D} /\
    ={glob V} /\
    ={HP'.pi_gwco, HP'.pi_gco, HP'.pi_wco, HP'.zpd_w, HP'.zpd_g, HP'.pi_w,
@@ -787,11 +772,11 @@ seq 1 1 : ( p_a{2} = pa{2} /\
    ={HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
        HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n}) /\
   ={pa, aux,bb}).
-
 rnd. skip. progress. if.  smt. sim.
-print zkp_hp'_hp.
-exists* n{1}. elim*. progress.
-call (zkp_hp'_hp ((n_L, compl_graph n_L),(compl_graph_cyc n_L))). admit. skip. progress. 
+progress.
+call (zkp_hp'_hp ((N, compl_graph N),(compl_graph_cyc N))). 
+apply compl_graph_prop.  auto.
+skip. progress. 
 qed.
 
 
@@ -807,25 +792,27 @@ progress.
 have ->: Pr[Sim1(V).run(p, ax) @ &m : res.`1] 
   = Pr[Sim1'(V).run(p, ax) @ &m : res.`1].
 byequiv (_: 
-  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg}   ==> res.`1{1} = res.`1{2});auto. 
-conseq sim11v_eq. auto. smt.
+  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg} /\ arg{1} = (p,ax)   ==> res.`1{1} = res.`1{2});auto. 
+conseq (sim11v_eq p.`1 _). auto. progress. smt. smt.
 have ->: Pr[W0(Sim1(V), D).run(p, w, ax) @ &m : res.`2.`1 /\ res.`1]
   = Pr[W0(Sim1'(V), D).run(p, w, ax) @ &m : res.`2.`1 /\ res.`1].
-byequiv (_:  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg}   ==> ={res});auto. 
+byequiv (_:  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg} /\ arg{1} =(p,w,ax)   ==> ={res});auto. 
 proc.
 call (_:true). 
-call sim11v_eq. skip. progress. apply qqq. 
+call (sim11v_eq p.`1) . smt. skip. progress. apply qqq. 
 apply D_run_ll.
 apply V_summitup_ll.
 auto.
 qed.
 
-lemma sim1assc &m stat ax : inv 2%r - negl2 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1].
+lemma sim1assc &m stat ax : 0 <= fst stat =>
+ inv 2%r - negl2 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1].
+progress.
 have ->: Pr[Sim1(V).run(stat, ax) @ &m : res.`1]
  = Pr[Sim1'(V).run(stat, ax) @ &m : res.`1].
 byequiv (_: 
-  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg}   ==> res.`1{1} = res.`1{2});auto. 
-conseq sim11v_eq. auto. smt.
+  ={glob D, glob  V, glob HP', glob HonestProver} /\   ={arg} /\ arg{1} = (stat,ax) ==> res.`1{1} = res.`1{2});auto. 
+conseq (sim11v_eq stat.`1 _). auto. smt.  auto. smt.
 have ->: Pr[Sim1'(V).run(stat, ax) @ &m : res.`1] = 
  Pr[Sim1_0(V,D).simulate(stat, ax, witness) @ &m : res.`1] .
 progress. byequiv (_: _ ==> res{1}.`1 = res{2}.`1);auto. proc.

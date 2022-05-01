@@ -1,7 +1,7 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
-
 require import Permutation Basics.
+
 
 axiom kjk prm n w : prm \in perm_d n =>
  uniq w => (forall i, i \in w => 0 <= i < n) =>

@@ -16,6 +16,7 @@ type hc_resp = (permutation * (opening list) , hc_wit * (opening list)) sum.
 
 op compl_graph     : int -> graph.
 op compl_graph_cyc : int -> int list = range 0.
+
 (* flatten and permute  *)
 op fap (p : permutation) (g : graph) : bool list.
 op prj  : hc_wit -> permutation.
@@ -56,6 +57,8 @@ op IsHC (x : hc_prob * hc_wit) : bool
      n * n = size g /\ 
      perm_eq w (range 0 n) /\ 
      nseq n true = take n (hc_align w g).
+
+axiom compl_graph_prop n : 0 <= n => IsHC ((n, compl_graph n), compl_graph_cyc n).
 
 
 clone include ZKProtocol with 

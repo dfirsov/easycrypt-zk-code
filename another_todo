@@ -12,24 +12,19 @@ Generic definitions
 Generic Results
 ================
 
+- 1-time sim => ZK   (for small "challenge_set", OneToManyZK.ec)
+   + stat
+   - comp
+ 
 
-- 1-time sim => ZK (stat/comp)
-  (for small "challenge_set")
-  (Generic_ZK.ec)
+- Special soundness => extractability (Generic_KE.ec)
+  - stat
+  + comp
 
-- Special soundness => extractability (stat/comp)
-  (Generic_KE.ec)
 
 - extractability => soundness (stat/comp)
-  (Axiom: soundness_error such that: x > soundness_error => extraction_success_function x > 0.
-  Take SoundnessAdv.
-  For statement s not in language:
-  - Let v(s) := success of SoundnessAdv
-  - By extractability: Extractor(SoundnessAdv,s) -> witness with prob >= "extraction_success_function v(s)"
-  - witness does not exist => Extractor(SoundnessAdv,s) -> witness with prob = 0
-  - ==> 0 >= extraction_success_function v(s)
-  - ==> v(s) <= soundness_error)
-
+  - stat
+  + comp
 
 - perfect => statistical => computational (Maybe not)
 
@@ -37,12 +32,11 @@ Generic Results
 Concrete Results
 ================
 
-
 - HC (stat hiding / comp binding):
   + Completeness
   + Special soundness (comp)
   + Sim1 
-  +? auto-derived ZK (stat2)
+  + auto-derived ZK (stat)
   + auto-derived extractability (comp)
   + auto-derived soundness (comp)
 
@@ -51,17 +45,17 @@ Concrete Results
   - Completeness
   - Special soundness (perfect)
   - Sim1 stuff
-  - auto-derived ZK (?)
+  - auto-derived ZK
   - auto-derived soundness (stat)
   - auto-derived extractability (stat)
 
 
-- Dlog:
+- DL:
   - Completeness
   - Special soundness (perfect)
-  + NOT ZK (because size(challenge_set) big)
-  + NOT soundness (because pointless)
   - auto-derived extractability (stat)
+  + NOT ZK (size(challenge_set) too big)
+  + NOT soundness (meaningless)
 
 
 

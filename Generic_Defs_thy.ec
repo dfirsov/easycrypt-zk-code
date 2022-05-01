@@ -236,6 +236,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     declare module P : MaliciousProver {HonestVerifier}.
     declare module ExtractionReduction : ExtractionReduction.
     
+    axiom P_response_ll : islossless P.response.
+
     local module A(P : MaliciousProver) : Adv = {
       proc init (p : statement, aux : auxiliary_input) : commitment = {
         var i : commitment;
@@ -288,7 +290,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
       (p, aux)
      Pr[ExtractionReduction(P).run(p, aux) @ &m : res]  
     _
-    ). admit.   auto.
+    ). proc. call P_response_ll;auto.
+   auto.
     qed.
 
 
@@ -330,7 +333,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     smt. qed.
     lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
     smt. qed.
-
       
     lemma computational_soundness &m p aux :
         ! in_language soundness_relation p =>
@@ -495,7 +497,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     declare module HonestProver : HonestProver.
     declare module Sim1 : Simulator1 {MW.IFB.IM.W, MW.IFB.DW}.
  
-    axiom sim1_run_ll : forall (V <: MaliciousVerifier),  islossless Sim1(V).run.
+    axiom sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
 
     axiom qqq &m (p : statement) (w : witness) 
      (aux : auxiliary_input) (D <: ZKDistinguisher{HonestProver, Sim1}) 
@@ -524,6 +526,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         forall (V <: MaliciousVerifier {Sim1, MW.IFB.IM.W, HonestProver, MW.IFB.DW}) 
                (D <: ZKDistinguisher{Sim1, MW.IFB.IM.W, V, HonestProver}),
           islossless V.summitup =>
+          islossless V.challenge =>
           islossless D.guess =>
         forall stat wit ax N p0 &m,
         zk_relation stat wit => 0 <= N =>
@@ -531,12 +534,12 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
           `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
-    proof.
-    progress.
+    proof. progress.
     have ->: 
      `|Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] -
       Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]|
-     = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] - Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]|. smt.
+      = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
+          - Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]|. smt.
     have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
      = Pr[Iter(Sim1(V), D).run(false,stat,wit,ax,N,fst) @ &m : res.`1].
     byequiv (_:  E{2} = fst /\ aux{1} = aux{2} /\ n{1} = ea{2} /\ fevent{2} = false  /\
@@ -551,8 +554,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     byequiv.  proc. sim. auto. auto.
     apply (one_to_many_zk (Sim1(V)) D _ _ _ &m stat wit p0 negl N
     Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _
-    ) .  apply (sim1_run_ll V). apply H0. auto. 
-    apply (qqq &m stat wit ax D V H0 H H1). apply H2. auto.
+    ) .  apply (sim1_run_ll V). apply H0. auto. auto. auto.
+    apply (qqq &m stat wit ax D V);auto. auto.  auto.
     qed.
 end section.
 

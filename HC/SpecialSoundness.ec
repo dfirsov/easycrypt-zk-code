@@ -1,6 +1,5 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
-
 require import Aux Permutation Basics.
 
 
@@ -24,8 +23,6 @@ rewrite phase1_2.
 rewrite - phase1_1.    
 apply H.
 qed.
-
-
     
 
 local lemma is_hc_perm_2 (n : int) (g : graph) (w : hc_wit) :
@@ -55,7 +52,6 @@ smt (is_hc_perm_2).
 qed.
 
 
-
 local lemma quasi_fin ['a] (l' : bool list) n (l X : 'a list) ver : 
      false \in l'
   => all ver (zip (nseq n true) X)
@@ -69,7 +65,6 @@ progress.
 have f : (forall (i : int), 0 <= i && i < size (zip (nseq (size l') true) X) =>
             ver (nth witness (zip (nseq (size l') true) X) i)).
 smt (all_nthP).
-
 have : ver (nth witness (zip (nseq (size l') true) X) (index false l')). apply f. smt.
 have ->:  (nth witness (zip (nseq (size l') true) X) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness X (index false l'))). timeout 20. smt.
 smt.
@@ -99,14 +94,12 @@ proof.
 move => p0 p1 p2 .
 apply (quasi_fin ((take n (hc_align w (fap p g)))) n) .
 apply is_hc_perm_2.   split. 
-
 have ->: IsHC ((n, fap p g), w) = IsHC ((n, fap (inv p) (fap p g)), permute_wit (inv p) w).
 smt. smt.
 split. elim p2. smt.
 split.  elim p1. smt. elim p1 p2. smt.
 elim p1 p2. progress. smt.
 elim p1 p2. progress. rewrite /hc_align. rewrite - zip_ip. apply phase1. auto.
-
 elim p1 p2. progress.
   have : size (hc_align w (fap p g)) = (size w * size w). smt.
   smt.
@@ -134,10 +127,8 @@ op my_extract (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
  with r1 = Right z, r2 = Left  x => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
                                      permute_wit (inv p) w
-
  with r1 = Left  x, r2 = Left  z => witness
  with r1 = Right x, r2 = Right z => witness.
-
 
 op special_soundness_extract (p : hc_prob) (r1 r2 : transcript) : int list = 
  my_extract p r1.`1  r1.`3 r2.`3.
@@ -158,17 +149,14 @@ op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitme
                                     let w = z.`1 in let X = z.`2 in 
    ((true,  nth witness (take n (zip (hc_align w c)
                              X)) (index false (take n (hc_align w (fap p g))))), 
-
                                  (false, nth witness (take n (zip (hc_align w c)
                              (hc_align w o1))) (index false (take n (hc_align w (fap p g))))))
  with r1 = Right z, r2 = Left  x => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
                             ((true,  nth witness (take n (zip (hc_align w c)
                              X)) (index false (take n (hc_align w (fap p g))))), 
-
                                  (false, nth witness (take n (zip (hc_align w c)
                              (hc_align w o1))) (index false (take n (hc_align w (fap p g))))))
-
  with r1 = Left  x, r2 = Left  z => ((witness, witness), (witness, witness))
  with r1 = Right x, r2 = Right z => ((witness, witness), (witness, witness)).
 
@@ -184,8 +172,6 @@ module (SpecialSoundnessAdvReduction : SpecialSoundnessAdvReduction) (A : Specia
 }.
 
 
-
-
 lemma computational_special_soundness:
       forall (s : hc_prob) (aux : auxiliary_input) &m
         (SpecialSoundnessAdversary <: SpecialSoundnessAdversary),
@@ -193,8 +179,7 @@ lemma computational_special_soundness:
           Pr[SpecialSoundnessAdversary.attack(s, aux) @ &m :
              valid_transcript_pair s res.`1 res.`2 /\
              ! IsHC
-                 (s,
-                  special_soundness_extract s res.`1 res.`2)] in
+                 (s, special_soundness_extract s res.`1 res.`2)] in
         let red_prob =
           Pr[SpecialSoundnessAdvReduction(SpecialSoundnessAdversary).run
              (s, aux) @ &m : res] in
@@ -221,16 +206,12 @@ move => x p1 p2 p3 p4.
 simplify. move => p5.
 rewrite fin_bind_real.  auto. 
 smt. smt. simplify. 
-
- 
 have : s.`1 <= size (hc_align x.`1 p1.`2). 
 elim p4. move => _. elim.
 progress. 
 have ->: size (hc_align x.`1 p1.`2) = s.`1 * s.`1. smt. smt.
 have : s.`1 <=  size x.`2.  smt.
 smt. smt.
-
-
 move => q.
 have z : result_R.`1.`2 = false. smt.
 clear q. 
@@ -243,17 +224,14 @@ smt. smt. simplify. smt.
 elim result_R.`2.`3. 
 move => x p1 p2 p3.
 simplify. move => p4. progress. smt. smt. 
-
-
 have : size p1.`2 <= size (hc_align p1.`1 x.`2). 
 elim p3. move => _. elim.
 progress. 
 have ->: size (hc_align p1.`1 x.`2) = s.`1 * s.`1. smt. smt.
 have : s.`1 <=  size p1.`2.  smt.
-smt. smt.
-
- (* fin_bind_real *)
+smt. smt. (* fin_bind_real *)
 qed.
+
 
 
 theory SSB.

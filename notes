@@ -1,3 +1,14 @@
+- extractability => soundness (stat/comp)
+  (Axiom: soundness_error such that: x > soundness_error => extraction_success_function x > 0.
+  Take SoundnessAdv.
+  For statement s not in language:
+  - Let v(s) := success of SoundnessAdv
+  - By extractability: Extractor(SoundnessAdv,s) -> witness with prob >= "extraction_success_function v(s)"
+  - witness does not exist => Extractor(SoundnessAdv,s) -> witness with prob = 0
+  - ==> 0 >= extraction_success_function v(s)
+  - ==> v(s) <= soundness_error)
+
+
 Split Verifier/Prover to (A,H)Verifier/Prover
 
 ==================
