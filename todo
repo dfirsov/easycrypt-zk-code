@@ -1,4 +1,4 @@
 
-- generic results
-- iterated_failure_better add rewindability
+
+- add rewindability (iterated_failure_better, generic, hc)
 

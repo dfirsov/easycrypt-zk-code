@@ -116,17 +116,11 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         valid_transcript_pair statement transcript1 transcript2
         =>
         soundness_relation statement (special_soundness_extract statement transcript1 transcript2).
-
     end PerfectSpecialSoundnessStatement.   
 
 
     abstract theory ComputationalSpecialSoundnessStatement.
-
     op special_soundness_red_function : statement -> real -> real.
-
-
-
-
     abstract theory ExampleStatement.
     axiom computational_special_soundness:
           exists (SpecialSoundnessAdvReduction <: SpecialSoundnessAdvReduction),
@@ -378,7 +372,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     rewrite Pr[mu_eq]. smt. auto.
     smt. qed. 
 
-    (* has to be in Special soundness ? *)      
+  
     lemma computational_soundness &m p aux deltoid:
         ! in_language soundness_relation p =>
        Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
@@ -405,8 +399,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     qed.
 
     
-
-          (* has to be in Special soundness *)
     lemma statistical_soundness &m p aux :
         ! in_language soundness_relation p =>
       (! exists t1 t2, valid_transcript_pair p t1 t2 /\ ! soundness_relation p (special_soundness_extract p t1 t2)) =>
@@ -570,8 +562,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     declare module Sim1 : Simulator1 {MW.IFB.IM.W, MW.IFB.DW}.
  
     axiom sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
-
-   
 
 
      lemma computational_statisticalVpoly_zk 
