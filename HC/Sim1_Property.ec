@@ -145,7 +145,7 @@ local module Sim1_0(V : MaliciousVerifier, D : ZKDistinguisher) = {
     (b',zryb) <- sinit(pa);
     b <- V.challenge(pa, zryb.`1, aux);
     result <- V.summitup(pa, zryb.`2);
-    rb <- D.guess(pa, wa, aux, result); (* need to give witness to D, but here impossible, detach Sim1 and D *)
+    rb <- D.guess(pa, wa, aux, result);
     return (b = b', rb);
   }
 }.
@@ -191,7 +191,6 @@ g <- compl_graph n;
     return (map fst pi_gwco, Right (pi_w, map snd pi_wco));
 }
  *)
-
   
   proc simulate(pa : hc_prob, aux:auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b',b,zryb,result, rb;
@@ -302,7 +301,7 @@ admitted.
 
 (**
 
-Currently: AND(res) is indist. etbween Sim11, Sim12.
+Currently: AND(res) is indist. between Sim11, Sim12.
 
 Instead: (success, D-output) is indist. between them
 
@@ -661,16 +660,6 @@ qed.
 
 
 
-
-
-(* require OneToManyZK. *)
-(* clone import OneToManyZK as OMZK with type prob <- hc_prob,  *)
-(*                                       type wit <- hc_wit,  *)
-(*                                       type sbits <- adv_summary,  *)
-(*                                       type event <- bool,  *)
-(*                                       type auxiliary_input <- auxiliary_input, *)
-(*                                       op E <- (fun x => fst x), *)
-(*                                       op fevent <- false. *)
                                       
 local module Sim1'(V : MaliciousVerifier)  = {
   module ZKP_HP = ZKP(HonestProver,V)

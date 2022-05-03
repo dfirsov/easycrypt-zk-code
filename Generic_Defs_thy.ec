@@ -234,7 +234,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     section.
 
     declare module P : MaliciousProver {HonestVerifier}.
-    declare module ExtractionReduction : ExtractionReduction.
     
     axiom P_response_ll : islossless P.response.
 
@@ -271,24 +270,24 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
    qed.
    
 
-    local lemma hc_pok' &m p aux : 
+    local lemma hc_pok' &m p aux deltoid : 
        Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
-                 ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
-          Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
+                 ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <= deltoid
+           =>
 
       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
                   soundness_relation p (special_soundness_extract p res.`1 res.`2)]
         >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
              - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
-              - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+              - deltoid.
     proof. rewrite - ex_a_eq_f.
     move => f. simplify.
      rewrite -  (ex_a_eq_f &m p aux (fun x => x) ).
     apply (final_eq_step1 (A(P)) _ &m (fun pq (r : challenge * (response * commitment)) => hc_verify (fst pq) r.`2.`2 r.`1 r.`2.`1) (fun (pq :statement * auxiliary_input) (r1 r2 : challenge * (response * commitment)) => soundness_relation (fst pq) (special_soundness_extract (fst pq) (r1.`2.`2, r1.`1, r1.`2.`1) (r2.`2.`2, r2.`1, r2.`2.`1)))
       (p, aux)
-     Pr[ExtractionReduction(P).run(p, aux) @ &m : res]  
+     deltoid
     _
     ). proc. call P_response_ll;auto.
    auto.
@@ -316,32 +315,77 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     qed.
 
 
-    lemma computational_PoK &m p aux: 
+    lemma computational_PoK &m p aux deltoid: 
           Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
-             Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
+             deltoid =>
       Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
        (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
        - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
-         - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
-    smt (www hc_pok' qqq).
+         - deltoid.    
+    progress.
+    have f : Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                 valid_transcript_pair p res.`1 res.`2 /\
+                  soundness_relation p (special_soundness_extract p res.`1 res.`2)]
+        >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
+             - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
+              - deltoid. apply (hc_pok' &m p). auto.
+    smt (www qqq).
     qed.
+
+
+    lemma statistical_PoK &m p aux:
+      (! exists t1 t2, valid_transcript_pair p t1 t2 /\ ! soundness_relation p (special_soundness_extract p t1 t2))
+
+      =>
+
+      Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
+       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]).
+    proof.  progress.
+      have vte : forall t1 t2, valid_transcript_pair p t1 t2 =>  soundness_relation p (special_soundness_extract p t1 t2). smt.
+
+      have f : Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                    valid_transcript_pair p res.`1 res.`2 /\
+                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
+     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m : false]. smt.
+    rewrite Pr[mu_eq]. smt. auto. apply (computational_PoK &m p aux 0%r). rewrite f. auto.
+    qed.
+          
+
+
+
 
     require import Real RealExp.
     lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
     smt. qed.
     lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
     smt. qed.
+
+
+    lemma computational_statistical_soundness &m p aux f epsilon:
+        ! in_language soundness_relation p => 
+      Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
+       f Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+        => (forall s, f s <= 0%r => s <= epsilon) =>
+        Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+         <= epsilon.
+    proof. progress.
+    have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
+      have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
+      rewrite Pr[mu_false]. auto.
+    rewrite Pr[mu_eq]. smt. auto.
+    smt. qed. 
       
-    lemma computational_soundness &m p aux :
+    lemma computational_soundness &m p aux deltoid:
         ! in_language soundness_relation p =>
        Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
-             Pr[ExtractionReduction(P).run(p, aux) @ &m : res] =>
+            deltoid =>
          Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
-         <= sqrt (Pr[ExtractionReduction(P).run(p, aux) @ &m : res] + (1%r/ (size (challenge_set))%r)).
+         <= sqrt (deltoid + (1%r/ (size (challenge_set))%r)).
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
       have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
@@ -350,11 +394,11 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     have  :   0%r >=
        (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
        - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
-         - Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+         - deltoid.
      rewrite - f1.
     apply (computational_PoK &m p aux). auto. 
     pose a := Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
-    pose b := Pr[ExtractionReduction(P).run(p, aux) @ &m : res].
+    pose b := deltoid.
     have f2 : 0%r <= a <= 1%r. smt.
     smt (challenge_set_size qqq1 qqq2).
     qed.
@@ -561,9 +605,7 @@ end section.
 
 
    end StatisticalZKDeriv.
-
    end StatisticalZK.
-
   end ZK.
 
 end ZKProtocol.
