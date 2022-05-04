@@ -31,6 +31,9 @@ declare module A : Run {W, DW}.
 declare module D : Dist {A, W, DW}.
 
 axiom A_ll : islossless A.run.
+axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+
+axiom D_ll : islossless D.run.
 
 lemma if_whp_prop : 
   equiv [ W(A).whp ~ W(A).if_whp : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
@@ -187,8 +190,8 @@ call (whp_premat_1_eq  pa ia sa ea ra ja hp ph). skip. smt.
 case (W.c{1} = ja /\ pa r0{1}).
 conseq (_: ={glob W, glob D, r0} ==> _). smt.
 call (_:true). skip. smt. simplify.
-call {1} (_: true ==> true ).  admit.
-call {2} (_: true ==> true ).  admit.
+call {1} (_: true ==> true ).  apply D_ll.
+call {2} (_: true ==> true ).  apply D_ll.
 skip. smt. auto.  auto.
 qed.
 
@@ -240,7 +243,7 @@ have FF : forall ea, 0 <= ea => phoare[ W(A).whp :
    arg = (pa,ia,1,ea,r) /\ (glob A) = (glob A){m}
      ==> !pa res ] = (Pr[ A.run(ia) @ &m : !pa res ] ^ ea).
 move => ea0 ea0p.
-  conseq (final_zz_ph_m A _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _). auto. apply A_ll. auto. auto. 
+  conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _). auto. apply A_ll. apply A_rew_ph. auto. auto. 
 bypr. move => &m0 [eq1 eq2]. rewrite eq1. 
 byequiv (_: ={arg, glob A} ==> ={res}). sim. progress. rewrite eq2.
 auto. auto.
@@ -257,18 +260,19 @@ call whp_if_prop. skip. progress.
 auto. auto.
 
 
-byphoare (_: arg = (pa, ia, 1, ja - 1, r) /\ (glob A) = (glob A){m} ==> _).
+byphoare (_: arg = (pa, ia, 1, ja - 1, r) /\ (glob A) = (glob A){m} ==> _);auto.
 proc. inline W3.M.whp_if. 
 seq 3 : (! p ri) (Pr[ A.run(ia) @ &m : !pa res ] ^ (ja - 2))  p1 1%r 0%r (e = ja - 1 /\ W.c <= e  /\ i = ia /\ p = pa 
- /\ (!p ri => W.c = e)  /\  (glob A) = (glob A){m} ).
-inline*. sp.
+ /\ (!p ri => W.c = e)  /\  (glob A) = (glob A){m} );auto.
+inline W(A).whp. sp.
 wp.
 while (W.c <= e0 + 1 /\  (glob A) = (glob A){m} ). wp. 
 call H2.
    skip. progress. smt. skip. progress.   smt. smt.  
   call (FF (ja - 2)  ).  smt. wp. skip. progress.  
 rcondt 1. skip. progress. simplify. 
-admit. 
+
+admit.                          (* TODO: show that p1 = Pr[A @ m] * Pr[D @ m] then  *)
 (* wp. call FG. skip. progress.  *)
 (* smt. *)
 hoare.
@@ -276,7 +280,7 @@ simplify.
 if. wp. call (_:true ==> true). auto.
 wp.  call (_:true ==> true).
 auto. skip. smt.
-call (_: true ==> true). auto. wp. skip.   smt.  auto. auto. auto.
+call (_: true ==> true). auto. wp. skip.   smt.  
 qed.
 
 
@@ -346,7 +350,7 @@ local lemma whp_cap_fin_int_D &m pa ia (ea : int) ra :
   pa ra = false => 1 <= ea =>
    Pr[ W1.run(pa,ia,1,ea,ra) @ &m : 1 < W.c <= ea + 1 ] = 1%r.
 progress. byphoare (_: arg = (pa, ia, 1, ea, ra) ==> _).
-proc.  call (_:true ==> true). admit.
+proc.  call (_:true ==> true). apply D_ll. 
 call (whp_cap_fin_int pa ia ea ra). skip. auto. auto. auto.
 qed.
 

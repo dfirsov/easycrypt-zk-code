@@ -61,7 +61,17 @@ declare module A : HasRun {W, DW}.
 
 axiom A_ll : islossless A.run.
 
-
+axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+lemma A_rew_h x : hoare[ A.run : (glob A) = x ==> (glob A) = x ] .
+bypr. progress. 
+have <- : Pr[A.run(z{m}) @ &m : false ] = 0%r. smt.
+have : 1%r = Pr[A.run(z{m}) @ &m : (glob A) <> (glob A){m} ]
+  + Pr[A.run(z{m}) @ &m : (glob A) = (glob A){m} ].
+   have <- :  Pr[A.run(z{m}) @ &m : true ] = 1%r. byphoare. apply  A_ll. auto. auto.
+rewrite Pr[mu_split (glob A) = (glob A){m} ]. smt.
+have ->: Pr[A.run(z{m}) @ &m : (glob A) = (glob A){m} ] = 1%r. byphoare (_: (glob A) = (glob A){m} ==> _). apply (A_rew_ph). auto. auto.
+smt.
+qed.
   
 lemma asdistr_rew : forall (D : (glob A) -> irt -> rrt distr),
   (forall &m M a, mu (D (glob A){m} a) M = Pr[ A.run(a) @ &m :  M res ])
@@ -89,14 +99,12 @@ have -> : Pr[A.run(z{2}) @ &2 :
    rewrite - H2.
    byphoare (_: (glob A) = (glob A){2} ==> _ ). hoare.  simplify.
     have f : forall ga, phoare[ A.run : (glob A) = ga ==> (glob A) = ga] = 1%r. 
-    move => ga. admit.  admit.
-    auto. auto.
+    move => ga. apply A_rew_ph.  apply A_rew_h. auto. auto.
      smt.
 smt.  
 byequiv (_: ={glob A} /\ arg{2} = z{2} /\ (glob A){2} = (glob A){m} /\ arg{1} = D (glob A){m} z{2} ==> _). 
 exists* z{2}. elim*. progress.
 proc*.
-
 call  (asdistr A D H &m arg_R ).
 auto. progress. auto. 
 move => hp.
@@ -110,7 +118,7 @@ rewrite hpp.
    rewrite - H2.
    byphoare (_: (glob A) = (glob A){2} ==> _ ). hoare.  simplify.
     have f : forall ga, phoare[ A.run : (glob A) = ga ==> (glob A) = ga] = 1%r. 
-    move => ga. admit. admit. auto. auto.
+    move => ga. apply A_rew_ph. apply A_rew_h.  auto. auto.
      smt.
 auto.
 qed.

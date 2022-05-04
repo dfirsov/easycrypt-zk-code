@@ -26,6 +26,7 @@ section.
 declare module A : Run {W, DW}.
 
 axiom A_ll : islossless A.run.
+axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
 
 lemma if_whp_prop : 
   equiv [ W(A).whp ~ W(A).if_whp : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
@@ -142,7 +143,6 @@ qed.
 
 
 require import Real.
-print final_zz_ph_m.
 lemma whp_cap_fin &m pa q ia (ea : int) r ja   :
   2  <= ja     =>
   ja <= ea + 1 =>
@@ -167,7 +167,9 @@ have FF : forall ea, 0 <= ea => phoare[ W(A).whp :
    arg = (pa,ia,1,ea,r) /\ (glob A) = (glob A){m}
      ==> !pa res ] = (Pr[ A.run(ia) @ &m : !pa res ] ^ ea).
 move => ea0 ea0p.
-  conseq (final_zz_ph_m A _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _). auto. apply A_ll. auto. auto. 
+  conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _). auto. apply A_ll. 
+apply A_rew_ph.
+auto. auto.
 bypr. move => &m0 [eq1 eq2]. rewrite eq1. 
 byequiv (_: ={arg, glob A} ==> ={res}). sim. progress. rewrite eq2.
 auto. auto.

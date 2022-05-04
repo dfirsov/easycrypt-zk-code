@@ -4,12 +4,13 @@ require import Aux.
 
 type prob, wit, sbits, event, auxiliary_input.
 
-require While_Props.
-clone import While_Props as MW with type irt   <- prob * auxiliary_input,
+require While_Props_Better.
+clone import While_Props_Better as MW with type irt   <- prob * auxiliary_input,
                                     type rrt   <- event * sbits,
                                     type sbits <- sbits.
 import MW.IFB.
 import MW.IFB.IM.
+
 
 
 module type Dist = {
@@ -62,6 +63,11 @@ declare module Sim1 : Simulator1{DW, W}.
 declare module D : Dist {Sim1,W}.
 
 axiom Sim1_ll : islossless Sim1.run.
+
+axiom Sim1_rew_ph : forall (x : (glob Sim1)),
+  phoare[ Sim1.run : (glob Sim1) = x ==> (glob Sim1) = x] = 1%r.
+
+
 axiom D_ll    : islossless D.guess.
 
 op fevent : event.
@@ -264,7 +270,7 @@ have ie1 : `|Pr[ Iter(Sim1, D).run(fevent, p,w,aux,ea,E)
            @ &m : E res.`2 /\  res.`1 ]  
          - coeff * zkp| <= eps.
 apply (zk_non_final &m p eps ea coeff zkp);auto. smt.
-apply ots. admit.  admit.
+apply ots. admit. admit.
 auto.
 qed.
 
@@ -378,7 +384,7 @@ smt.
  sp. wp. call {1} D_ll. 
   conseq (_: _==> r1{1} = r0{2}). smt.
 call (_: ={glob Sim1}).  sim. skip. progress. auto. auto.
-apply (final_zz_le (Sim1) Sim1_ll &m). smt. auto. 
+apply (final_zz_le (Sim1) Sim1_ll _ &m). apply Sim1_rew_ph. smt. auto. 
 have ->: Pr[Sim1.run(p,aux) @ &m : ! E res] 
   = Pr[W0(Sim1, D).run(p, w, aux) @ &m : ! E res.`2].
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).
