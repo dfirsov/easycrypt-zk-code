@@ -1,7 +1,6 @@
 require import AllCore DBool Bool List Distr Int Aux DJoin Permutation.
 require import Generic_Defs_thy.
 
-type sbits.
 
 require CommitmentSpecial.
 clone include CommitmentSpecial with type message <- bool.

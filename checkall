@@ -16,6 +16,13 @@ check() {
 
 # list of files to check
 
+## Generic stuff
+check OneToManyZK.ec
+check Generic_KE.ec
+check Iterated_Failure_better.ec
+check While_Props_Better.ec
+check Generic_Defs_thy.ec
+
 ## Hamilton-Blum protocol
 check HC/Basics.ec
 check HC/Completeness.ec
