@@ -17,7 +17,6 @@ have ->: (f \o transpose Int.(+) (-c)) = (fun (i : int) => f (i - c)).
 smt.
 have ->: (map (transpose Int.(+) c) (range 0 e)) = 
   range c (e + c).
-print range_add.
 have ->: (transpose Int.(+) c) = (+) c. smt.
 rewrite - (range_add 0 e c). auto.
 auto.
