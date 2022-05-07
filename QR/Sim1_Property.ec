@@ -7,7 +7,7 @@ require import Basics.
 
 clone import ZK.
 
-clone import StatisticalZK as HC_SZK.
+clone import StatisticalZK as QR_SZK.
 import OMZK.
 
 

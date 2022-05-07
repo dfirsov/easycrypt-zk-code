@@ -82,7 +82,7 @@ lemma sim1_rew_ph : forall (x : (glob V) * (glob Sim1)),
 progress. proc.
 exists* (glob V). elim* => V_v.
 progress.
-elim (rewindable_V_plus ).
+elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 seq 1 : (V_v = (glob V) /\ vstat = fA V_v /\
   ((glob V),
@@ -848,7 +848,7 @@ seq 1 0 : ((={glob D} /\
        HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n}) /\
   ={pa, aux} /\ N = pa{1}.`1).
 
-elim (rewindable_V_plus ).
+elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. 
 exists* (glob V){1}. elim*. progress.
 call {1} (s2 V_L). skip. progress.

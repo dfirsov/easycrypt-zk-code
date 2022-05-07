@@ -30,5 +30,14 @@ check HC/SpecialSoundness.ec
 check HC/PoK_Soundness.ec
 check HC/ZK.ec 
 
+## Quadratic residue protocol
+check QR/Basics.ec
+check QR/Completeness.ec
+check QR/PoK.ec
+check QR/Sim1_Property.ec
+check QR/Soundness.ec
+check QR/SpecialSoundness.ec
+check QR/ZK.ec
+
 
 echo "DONE";

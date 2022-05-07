@@ -2,18 +2,16 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 
 require import Permutation Basics Sim1_Property.
-import DJMM.
 import Sim1_Property.ZK.
 
-import Sim1_Property.HC_SZK.
+import Sim1_Property.QR_SZK.
 import OMZK.
 
-clone import StatisticalZKDeriv with op negl <- 2%r * negl + 20%r * negl2.
-axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
+clone import  StatisticalZKDeriv with op negl <- 0%r.
+
 
 require RewBasics.
 clone import RewBasics as Rew with type sbits <- sbits.
-
 
 section.
 
@@ -39,22 +37,24 @@ axiom rewindable_V_plus :
 
 
 
-lemma hc_statistical_zk stat wit ax N &m:
-        IsHC (stat, wit) => 
+lemma qr_statistical_zk stat wit ax N &m:
+        IsSqRoot stat  wit  => unit stat =>
         0 <= N =>
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
-          `|real_prob - ideal_prob| <= (2%r * negl + 20%r * negl2) + 2%r * (1%r- (1%r/2%r - negl2)) ^ N.
+          `|real_prob - ideal_prob| <= 2%r * (1%r / 2%r) ^ N.
 proof.
 progress.
 apply (statistical_zk HonestProver Sim1  V D _ _ _ _ _ _ _ stat wit ax N
-  (inv 2%r - negl2) &m). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
+  (1%r/2%r) &m). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
 apply rewindable_V_plus.
 apply (sim1_rew_ph V ). apply V_summitup_ll. apply V_challenge_ll. 
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress.
-apply (sim1_prop V D _ _  _ _ _ &m0 p w aux _ ).  apply (rewindable_A_plus V). exists f. split. auto. auto.
-auto. auto.   auto. apply negl2_prop.  auto. auto. auto. 
-apply (sim1assc V D);auto. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
-apply V_challenge_ll. apply negl2_prop. smt.
+rewrite (sim1_prop V D _ _  _ _ _  p w aux _ ).  apply (rewindable_A_plus V). exists f. split. auto. auto.
+auto. auto.   auto.  auto. auto.   auto. auto. 
+rewrite (sim1assc V D _ _ _ _ &m stat ax wit). apply (rewindable_A_plus V).
+apply rewindable_V_plus. 
+apply V_summitup_ll.
+apply V_challenge_ll. apply D_guess_ll. auto.  auto. 
 qed.

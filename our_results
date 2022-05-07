@@ -43,13 +43,13 @@ Concrete Results
   + auto-derived soundness (comp)
 
 
-- QR:
++ QR:
   + Completeness
   + Special soundness (perfect)
   + soundness (stat)
   + Sim1 stuff (perfect)
-  - auto-derived ZK (stat)
-  - auto-derived extractability (stat)
+  + auto-derived ZK (stat)
+  + auto-derived extractability (stat)
 
 
 - DL:
