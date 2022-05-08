@@ -21,3 +21,4 @@ apply (statistical_PoK P  _ &m). apply P_response_ll.
 smt (perfect_special_soundness).
 qed.
 
+end section.

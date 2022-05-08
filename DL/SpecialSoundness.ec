@@ -7,14 +7,33 @@ require import CyclicGroup.
 print CyclicGroup.
 import FDistr.
 
-(* t1 for true run, t2 for false run *)
 op my_extract (p : dl_prob) (t1 t2 : transcript) : dl_wit
- =  t1.`3  - t2.`3 .
-
+ =  (inv (t1.`2 - t2.`2)) * (t1.`3  - t2.`3).
 
 
 op special_soundness_extract (p : dl_prob) (t1 t2 : transcript): dl_wit
- = if t1.`2 then my_extract p t1 t2 else my_extract p t2 t1.
+ = my_extract p t1 t2.
+
+lemma qqq (a b c : t) : c * (a - b) = c * a + (c * - b).
+smt.
+qed.
+
+lemma www (a b c : t) : c * (a - b) = c * a - (c * b).
+rewrite qqq.
+smt.
+qed.
+
+lemma ttt (a b : t) : - (a * b) = (-a)  * b.
+rewrite mulNf.
+auto.
+qed.
+
+
+lemma uuu (a : group) : a ^ one = a.
+rewrite inj_gpow_log.
+rewrite pow_pow.
+smt.
+qed.
 
 
 
@@ -25,66 +44,36 @@ lemma perfect_special_soundness (statement:dl_prob)
     (special_soundness_extract statement transcript1 transcript2).
 proof. 
 rewrite /valid_transcript_pair. rewrite /verify_transcript.
-case (transcript1.`2). 
-case (transcript2.`2). 
-smt.
-rewrite /dl_verify. simplify.
+rewrite /dl_verify.
 progress. 
-rewrite /special_soundness_extract. 
-rewrite H0. simplify. rewrite /my_extract.
-rewrite /soundness_relation / IsDL. 
-have  : (statement.`2 * transcript1.`1) /  transcript1.`1
-   =  (statement.`1 ^ transcript1.`3) / transcript1.`1. 
+rewrite /special_soundness_extract /my_extract. 
+rewrite /soundness_relation /IsDL.
+rewrite H in H1.
+clear H.
+have ->:
+(inv (transcript1.`2 - transcript2.`2) * (transcript1.`3 - transcript2.`3))
+  = ((transcript1.`3 - transcript2.`3) * inv (transcript1.`2 - transcript2.`2)). smt.
+rewrite - pow_pow.
+have -> : 
+ g ^ (transcript1.`3 - transcript2.`3) = 
+  (statement ^ (transcript1.`2 - transcript2.`2)).
+  have ->: g ^ (transcript1.`3 - transcript2.`3)
+    = g ^ transcript1.`3 * g ^ (- transcript2.`3).
+  smt.
+  have ->: g ^ - transcript2.`3 = 
+    inv (g ^ transcript2.`3). smt.
+   rewrite H1 H2.
+  have ->: inv (statement ^ transcript2.`2 * transcript2.`1)  = inv (statement ^ transcript2.`2) * (inv transcript2.`1)    . smt.
+have ->: statement ^ transcript1.`2 * transcript2.`1 *
+  (inv (statement ^ transcript2.`2) * inv transcript2.`1) =
+  statement ^ transcript1.`2 * 
+  (inv (statement ^ transcript2.`2)).
+smt (mulN mulA mul1 mulC).
+have ->: inv (statement ^ transcript2.`2)
+  = (statement ^ - transcript2.`2).
+rewrite pow_opp. auto.
 smt.
-have -> : statement.`2 * transcript1.`1 /  transcript1.`1 = 
-  statement.`2. 
-  have -> : statement.`2 * transcript1.`1 / transcript1.`1 
-    = statement.`2 * transcript1.`1 * (inv transcript1.`1).
-smt.
-   have -> : statement.`2 * transcript1.`1 * inv transcript1.`1
-      = statement.`2 * (transcript1.`1 * inv transcript1.`1).
-   rewrite mulA. auto. rewrite  mulN.  rewrite mulC.  apply mul1.
-move => f. rewrite f.
-rewrite  H1.
-have -> : statement.`1 ^ transcript1.`3 / transcript2.`1
- = statement.`1 ^ transcript1.`3 * (inv transcript2.`1).
-smt.
-have ->: inv transcript2.`1
- = inv (statement.`1 ^ transcript2.`3).
-smt.
-have -> : inv (statement.`1 ^ transcript2.`3)
-  = (statement.`1 ^ (- transcript2.`3)).
-rewrite - (pow_opp). auto.
-smt.
-rewrite /dl_verify. simplify.
-progress. 
-rewrite /special_soundness_extract. 
-rewrite  H. simplify. rewrite /my_extract.
-have H4 : statement.`1 ^ transcript2.`3 = statement.`2 * transcript2.`1.
-smt. clear H3.
-pose tran2 := transcript1.
-pose tran1 := transcript2.
-rewrite /soundness_relation / IsDL. 
-have  : (statement.`2 * tran1.`1) /  tran1.`1
-   =  (statement.`1 ^ tran1.`3) / tran1.`1. 
-smt.
-have -> : statement.`2 * tran1.`1 /  tran1.`1 = 
-  statement.`2. 
-  have -> : statement.`2 * tran1.`1 / tran1.`1 
-    = statement.`2 * tran1.`1 * (inv tran1.`1).
-smt.
-   have -> : statement.`2 * tran1.`1 * inv tran1.`1
-      = statement.`2 * (tran1.`1 * inv tran1.`1).
-   rewrite mulA. auto. rewrite  mulN.  rewrite mulC.  apply mul1.
-move => f. rewrite f.
-have -> : statement.`1 ^ tran1.`3 / tran1.`1
- = statement.`1 ^ tran1.`3 * (inv tran1.`1).
-smt.
-have ->: inv tran1.`1
- = inv (statement.`1 ^ tran2.`3).
-rewrite - H0. smt. 
-have -> : inv (statement.`1 ^ tran2.`3)
-  = (statement.`1 ^ (- tran2.`3)).
-rewrite - (pow_opp). auto.
-smt.
+rewrite  pow_pow.
+rewrite  mulfV. smt.
+apply  uuu.
 qed.

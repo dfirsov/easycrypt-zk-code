@@ -33,6 +33,22 @@ Generic Results
 Concrete Results
 ================
 
++ QR:
+  + Completeness
+  + Special soundness (perfect)
+  + soundness (stat)
+  + Sim1 stuff (perfect)
+  + auto-derived ZK (stat)
+  + auto-derived extractability (stat)
+
+
++ DL:
+  + Completeness
+  + Special soundness (perfect)
+  + auto-derived extractability (stat)
+  + NO soundness (meaningless)
+  + NO ZK 
+
 
 - HC (stat hiding / comp binding):
   + Completeness
@@ -43,18 +59,3 @@ Concrete Results
   + auto-derived soundness (comp)
 
 
-+ QR:
-  + Completeness
-  + Special soundness (perfect)
-  + soundness (stat)
-  + Sim1 stuff (perfect)
-  + auto-derived ZK (stat)
-  + auto-derived extractability (stat)
-
-
-- DL:
-  - Completeness
-  - Special soundness (perfect)
-  - auto-derived extractability (stat)
-  + NOT ZK (size(challenge_set) too big)
-  + NOT soundness (meaningless)
