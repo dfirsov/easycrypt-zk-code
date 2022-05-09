@@ -1,21 +1,11 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Aux.
 
-require import Generic_Defs_thy.
+require import GenericZK.
 
-(* https://crypto.stanford.edu/pbc/notes/numbertheory/qr.html *)
-
-
-(*  
-replace IsQR with IsSqRoot ((N, y), w)
-add invertability assumption into qr_prop7
-*)
-
-
-(* QR theory  *)
 
 require import ZModP.
-clone include ZModRing.         (* in ZModField it is efficiently computable *)
+clone include ZModRing.         (* must use ring since in ZModField QR is efficiently computable *)
 
 type qr_prob = zmod.
 type qr_wit  = zmod.
@@ -28,8 +18,6 @@ op IsQR (Ny : qr_prob) = exists w, IsSqRoot Ny w /\ unit Ny.
 
 
 op ZNS_dist :  (zmod * zmod) distr.
-
-
 
 axiom d_prop0  : is_uniform (ZNS_dist).
 axiom d_prop1 r rr :  (r, rr) \in ZNS_dist => r * r = rr.

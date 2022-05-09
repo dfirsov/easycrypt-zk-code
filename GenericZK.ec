@@ -218,8 +218,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
      }
     }.
 
-    require Generic_KE.
-    clone import Generic_KE as GKE with type pt <- statement,
+    require GenericKE.
+    clone import GenericKE as GKE with type pt <- statement,
                                         type auxt <- auxiliary_input,
                                         type irt <- commitment,
                                         type ct <- challenge,

@@ -3,7 +3,7 @@ require import CyclicGroup.
 
 import FDistr.
 
-require import Generic_Defs_thy.
+require import GenericZK.
 
 
 type dl_prob = group.

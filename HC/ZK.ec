@@ -1,11 +1,11 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 
-require import Permutation Basics Sim1_Property.
+require import Permutation Basics Sim1Property.
 import DJMM.
-import Sim1_Property.ZK.
+import Sim1Property.ZK.
 
-import Sim1_Property.HC_SZK.
+import Sim1Property.HC_SZK.
 import OMZK.
 
 clone import StatisticalZKDeriv with op negl <- 2%r * negl + 20%r * negl2.
@@ -32,7 +32,7 @@ axiom rewindable_V_plus :
         (exists (f : glob V -> sbits),
          injective f /\
          (forall &m, Pr[ V.getState() @ &m : (glob V) = ((glob V){m})
-                                          /\ res = f ((glob V){m} ) ] = 1%r) /\
+                                               /\ res = f ((glob V){m}) ] = 1%r) /\
          (forall &m b (x: glob V), b = f x =>
            Pr[V.setState(b) @ &m : glob V = x] = 1%r) /\
          islossless V.setState).
@@ -54,7 +54,9 @@ apply (sim1_rew_ph V ). apply V_summitup_ll. apply V_challenge_ll.
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress.
 apply (sim1_prop V D _ _  _ _ _ &m0 p w aux _ ).  apply (rewindable_A_plus V). exists f. split. auto. auto.
-auto. auto.   auto. apply negl2_prop.  auto. auto. auto. 
+auto. auto.   auto. apply negl2_prop. auto. auto. auto.
 apply (sim1assc V D);auto. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
 apply V_challenge_ll. apply negl2_prop. smt.
 qed.
+
+end section.

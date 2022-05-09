@@ -3,8 +3,6 @@ require import AllCore Bool.
 require import Basics.
 
 require import CyclicGroup.
-
-print CyclicGroup.
 import FDistr.
 
 op my_extract (p : dl_prob) (t1 t2 : transcript) : dl_wit

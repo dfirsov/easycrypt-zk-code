@@ -725,7 +725,7 @@ smt (sim_9_pr1 sim_9_pr2).
 qed.
 
 
-require import Pr_arg.  
+require import PrArg.  
 require import AllCore Distr FSet StdRing StdOrder StdBigop List.
 (*---*) import RField RealOrder Bigreal BRA.
 import BRM.

@@ -35,7 +35,7 @@ wp.  rnd. skip. simplify.
 progress. smt. auto. auto. auto.
 qed.
 
-    (* (c1 - c2) * a    *)
+
 lemma dl_completeness: forall (statement : dl_prob) (witness : dl_wit) &m,
   IsDL statement witness =>
      Pr[Completeness(HonestProver, HonestVerifier).run(statement, witness) 

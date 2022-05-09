@@ -4,7 +4,7 @@ timeout=35
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./HC -timeout $timeout $1 2>/dev/null;
+  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./program_logic -timeout $timeout $1 2>/dev/null;
   then echo passed: $1;
        echo "";
   else echo failed: $1;
@@ -16,12 +16,16 @@ check() {
 
 # list of files to check
 
-## Generic stuff
-check OneToManyZK.ec
-check Generic_KE.ec
-check Iterated_Failure_better.ec
-check While_Props_Better.ec
-check Generic_Defs_thy.ec
+## Generic prog. results
+check program_logic/OneToManyZK.ec
+check program_logic/GenericKE.ec
+check program_logic/WhileNoSuccess.ec
+check program_logic/WhileNotB.ec
+check program_logic/WhileCycle.ec
+
+
+## Generic ZK results
+check GenericZK.ec
 
 ## Hamilton-Blum protocol
 check HC/Basics.ec
@@ -36,7 +40,7 @@ check QR/Completeness.ec
 check QR/SpecialSoundness.ec
 check QR/PoK.ec
 check QR/Soundness.ec
-check QR/Sim1_Property.ec
+check QR/Sim1Property.ec
 check QR/ZK.ec
 
 

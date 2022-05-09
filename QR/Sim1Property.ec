@@ -3,8 +3,6 @@ require import AllCore DBool Bool List Distr Aux RealExp.
 require import Basics.
 
 
-
-
 clone import ZK.
 
 clone import StatisticalZK as QR_SZK.

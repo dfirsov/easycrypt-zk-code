@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Int IntDiv.
+require import AllCore DBool Bool List Distr.
 require import Basics.
 
 
@@ -11,15 +11,13 @@ move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
 skip. progress.   apply (d_prop4 rrr.`1 rrr.`2). smt. 
-
- have -> : statement{hr}  = (witness{hr} * witness{hr}).
+have -> : statement{hr}  = (witness{hr} * witness{hr}).
 apply qra.
 have ->: challenge00. smt. 
 simplify.
 have -> : rrr.`2 = rrr.`1 * rrr.`1.  smt(d_prop1).
 smt.
 apply (d_prop4 rrr.`1 rrr.`2). smt. 
-
 have ->: !challenge00. smt. 
 simplify. smt.
 qed.
@@ -30,7 +28,7 @@ local lemma qr_complete_ph ya wa : IsSqRoot ya wa /\ unit ya
    => phoare [ Completeness(HonestProver,HonestVerifier).run : arg = (ya,wa) ==> res ] = 1%r.
 move => [qra invrtbl].
 proc*.
-seq 1 : (true) 1%r 1%r 1%r 0%r (r).
+seq 1 : true 1%r 1%r 1%r 0%r r.
 call (qr_complete_h ya wa). auto.
 conseq (_: true ==> true). inline*. sp.
 wp.  progress. rnd. simplify.
@@ -45,7 +43,7 @@ lemma qr_completeness: forall (statement : qr_prob) (witness : qr_wit) &m,
      Pr[Completeness(HonestProver, HonestVerifier).run(statement, witness) 
             @ &m : res] = 1%r.
 progress. byphoare (_: arg = (statement, witness) ==> _);auto.
-conseq (qr_complete_ph  statement witness _). auto. 
+conseq (qr_complete_ph statement witness _). auto. 
 qed.
 
 end section.

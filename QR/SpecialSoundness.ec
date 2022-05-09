@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Int IntDiv Aux DJoin.
+require import AllCore DBool Bool List Distr.
 require import Aux Permutation Basics.
 
 
@@ -31,6 +31,5 @@ have -> : statement
 rewrite H1.
 rewrite H6.
 smt.   
-(* same as above but derived automatically  *)
-smt.
+timeout 20. smt. (* same as above but derived automatically  *)
 qed.

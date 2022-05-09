@@ -1,10 +1,10 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 
-require import Permutation Basics Sim1_Property.
-import Sim1_Property.ZK.
+require import Permutation Basics Sim1Property.
+import Sim1Property.ZK.
 
-import Sim1_Property.QR_SZK.
+import Sim1Property.QR_SZK.
 import OMZK.
 
 clone import  StatisticalZKDeriv with op negl <- 0%r.
