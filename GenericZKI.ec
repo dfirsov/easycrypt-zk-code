@@ -475,6 +475,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
   }.
 
   module type Simulator1(V: MaliciousVerifier) = {
+    proc init () : unit
     proc run(statement: statement, aux: auxiliary_input) : bool * adv_summary
   }.
 
@@ -483,6 +484,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
   module ZKReal(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness, aux: auxiliary_input) = {
       var commit, challenge, response, summary, guess;
+      V.init();
       commit <@ P.commitment(statement, witness);
       challenge <@ V.challenge(statement, commit, aux);
       response <@ P.response(challenge);
@@ -497,6 +499,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
   module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness, n : int, aux: auxiliary_input) = {
       var summary, guess;
+      V.init();
       summary <@ S(V).simulate(statement, n, aux);
       guess <@ D.guess(statement, witness, aux, summary);
       return guess;
@@ -533,8 +536,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     op zk_error : statement -> int -> real.
 
 
-    require OneToManyZK.
-    clone import OneToManyZK as OMZK with type prob <- statement, 
+    require OneToManyZKI.
+    clone import OneToManyZKI as OMZK with type prob <- statement, 
                                           type wit <- witness, 
                                           type sbits <- adv_summary, 
                                           type event <- bool, 
@@ -547,6 +550,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = {
       proc main(Ny : statement, aux: auxiliary_input, w : witness) = {
         var c,b,r,result,rb;
+        V.init();
         c <- P.commitment(Ny,w);
         b <- V.challenge(Ny,c,aux);
         r <- P.response(b);
@@ -581,7 +585,10 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
     axiom sim1_run_ll : forall (V0 <: MaliciousVerifier),  
          islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
+    axiom sim1_init_ll : forall (V0 <: MaliciousVerifier),  
+         islossless V0.init => islossless Sim1(V0).init.
     axiom V_summitup_ll  : islossless V.summitup.
+    axiom V_init_ll  : islossless V.init.
     axiom V_challenge_ll : islossless V.challenge.
     axiom D_guess_ll     : islossless D.guess.
 
@@ -599,17 +606,18 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
                   phoare[ Sim1(V).run : (glob Sim1(V)) = x ==> (glob Sim1(V)) = x] = 1%r.
 
 
+    axiom eee : equiv[ V.init ~ Sim1(V).init :  ={glob V, glob Sim1} ==> ={glob V, glob Sim1} ].
 
      lemma computational_statisticalVpoly_zk stat wit ax N p0 negl &m:
         zk_relation stat wit => 
 
+         (*  Dominique: ask the same but without init (more natural and simpler?)  *)
         `|Pr[W0(Sim1(V), D).run(stat, wit, ax) @ &m : fst res.`2 /\ res.`1] /
-             Pr[Sim1(V).run(stat,ax) @ &m : fst res] 
+             Pr[W0(Sim1(V),D).run(stat,wit, ax) @ &m : fst res.`2] 
          - Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ]| <= negl =>
 
         0 <= N =>
-
-        p0 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1] =>
+        (forall &m0, p0 <= Pr[Sim1(V).run(stat, ax) @ &m0 : res.`1]) =>
 
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
@@ -627,15 +635,16 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         ={glob Sim1, glob HonestProver, glob D, glob V, glob MW.IFB.IM.W} ==> _)  ;auto.  proc.
     inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
     call (_:true).  simplify. inline Simulator(Sim1,V).simulate. wp. sp.
-    call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
+    call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. wp.  call eee. skip. progress.
     progress.
     have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]
       = Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ].
     byequiv.  proc. sim. auto. auto.
    
-    apply (one_to_many_zk (Sim1(V)) D _ _ _ _ &m stat wit p0 negl N
+    apply (one_to_many_zki (Sim1(V)) D _ _ _ _ _ &m stat wit p0 negl N
        Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _).  
-    apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll. 
+    apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll. apply (sim1_init_ll V).
+    apply V_init_ll.
     apply sim1_rew_ph. apply D_guess_ll. 
     auto. auto. auto. auto.
     qed.
@@ -693,13 +702,14 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 
        zk_relation p w =>  
         `|Pr[W0(Sim1(V), D).run(p, w, aux) @ &m : fst res.`2 /\ res.`1] /
-             Pr[Sim1(V).run(p,aux) @ &m : fst res] 
+             Pr[W0(Sim1(V),D).run(p,w,aux) @ &m : fst res.`2] 
                   - Pr[ ZKD(HonestProver,V,D).main(p,aux,w) @ &m : res ]| <= negl.
 
+    axiom eee : equiv[ V.init ~ Sim1(V).init :  ={glob V, glob Sim1} ==> ={glob V, glob Sim1} ].
     
      lemma statistical_zk stat wit ax N p0 &m:
         zk_relation stat wit => 0 <= N =>
-        p0 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1] =>
+        (forall &m, p0 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1]) =>
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
           `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
@@ -716,15 +726,16 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         ={glob Sim1, glob HonestProver, glob D, glob V, glob MW.IFB.IM.W} ==> _)  ;auto. proc.
     inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
     call (_:true).  simplify. inline Simulator(Sim1,V).simulate. wp. sp.
-    call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
+    call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. wp. call eee. skip. progress.
     progress.
     have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]
       = Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ].
     byequiv.  proc. sim. auto. auto.
-    apply (one_to_many_zk (Sim1(V)) D _ _ _ _ &m stat wit p0 negl N
+    apply (one_to_many_zki (Sim1(V)) D _ _ _ _ _ &m stat wit p0 negl N
     Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _
-    ) .  apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.  
-    apply (qqq &m stat wit ax D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. auto.
+    ) .  apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. admit. apply sim1_rew_ph. apply D_guess_ll. auto.  
+     apply (qqq &m stat wit ax D V _ _ _ _ _).  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. auto.  auto.
+    auto.
     qed.
 
    end section.

@@ -41,7 +41,6 @@ clone include ZKProtocol with
   op completeness_relation <- completeness_relation,
   op zk_relation           <- zk_relation.
 
-
 module HonestProver : HonestProver = {
  var pa : dl_prob
  var wa : dl_wit

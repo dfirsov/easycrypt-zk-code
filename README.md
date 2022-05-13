@@ -9,6 +9,8 @@ Generic definitions
 + PoK (stat/comp)
 
 
+- Amplified variants of the defs
+
 Generic Results
 ================
 
@@ -26,6 +28,13 @@ Generic Results
   + stat
   + comp
 
+
+- Amplification
+  - completeness (not an amplification but a lack of degradation)
+  - soundness
+  - ZK (not an amplification but a lack of degradation)
+  - PoK
+  
 
 - perfect => statistical => computational (Maybe not, runtime? (likely not))
 

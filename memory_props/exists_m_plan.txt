@@ -1,0 +1,53 @@
+
+p <= Pr[ A.init; A.run() @ m : {yes} ] 
+   ==> exists &n, p <= Pr[A.run() @ n  : {yes} XS] 
+
+
+We open the composition lemma.
+The assumption p <= Pr[ A.init; A.run() @ m] then is equivalent to dlet (D1 g0) D2 {yes} >= p for g0 := glob A{m}.
+Losslessness of init translates to D1 g0 UNIV = 1 (alternatively, we have <=1).
+Assume we can show exists g, D1 g0 g > 0 /\ D2 g {yes} >= p, then we can conclude the proof.
+Namely, fix that g. D1 g0 g > 0 means that Pr[A.init() : glob A = g] > 0 . This implies exists &n, glob A{n} = g.
+And then D2 g {yes} >= p implies Pr[A.run @ &n] >= p .
+This shows your theorem.So we have reduced the theorem to the purely probability theoretic statement: dlet (D1 g0) D2 {yes} >= p and D1 g0 UNIV = 1  implies the existence of g with D1 g0 g > 0 /\ D2 g {yes} >= p .Do you agree?
+
+
+And the missing step is shown as follows:
+
+Assume the conclusion (existence of g with D1 g0 g > 0 /\ D2 g {yes} >= p) does not hold.
+Then D2 g {yes} < p for all g with D1 g0 g > 0.
+Since D1 g0 UNIV = 1 > 0, exists some g such that D1 g0 g > 0.
+Then dlet (D1 g0) D2 {yes} 
+     = dlet (D1 g0 - g) D2 {yes} + D2 g {yes} * D1 g0 g  (here D1 g0 - g is D1 g0 restricted to everything but g).
+     <= dlet (D1 g0 - g) (%x. bernoulli p) {yes} + D1 g0 g * D2 g {yes}   (here bernoulli p  is the distribution that says yes with probability p)
+     < dlet (D1 g0 - g) (%x. bernoulli p) {yes} + D1 g0 g * p
+     = dlet (D1 g0) (%x. bernouilli p) {yes}
+     = p * D1 g0 UNIV = p * 1 = p .
+
+
+So we showed dlet (D1 g0) D2 {yes} < p  in contradiction to one of the assumption.
+
+
+
+
+exists &n, Pr[ A.init; A.run() @ m] = Pr[A.run() @ n ] ?
+No, that's not true. (edited) 
+
+
+###########################
+
+exists &n, Pr[A.init; A.run1 @ m] - Pr[A.init A.run2  @ m] <= Pr[A.run1 @ n ] - Pr[A.run2 @ n] (edited) 
+
+Define A.run12 as follows:
+
+    Pick a bit b
+    If b=0, run A.run1 and returns its success bit.
+    If b=1, run A.run2 and return its negated success bit.
+
+Then the lhs is a linear monotone function of Pr[A.init; A.run12], and the rhs is the same linear monotone function of Pr[A.run12].
+
+(linear monotone functionc preserve things:
+
+   exists  &n, Pr[init run12]  <= Pr[run12]
+
+       => exists &n, f-monotone (Pr[init run12])  <= f-monotone (Pr[run12])

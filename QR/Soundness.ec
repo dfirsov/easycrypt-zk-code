@@ -14,7 +14,7 @@ local lemma qr_soundness_ph s ax :
 proof. move => qra.
 proc. inline*. 
 wp.
-seq 3 : ((statement,aux) = (s,ax) /\ statement0 = statement /\ commitment = commit) (1%r) (1%r/2%r) (0%r) (1%r).  auto. auto.
+seq 4 : ((statement,aux) = (s,ax) /\ statement0 = statement /\ commitment = commit) (1%r) (1%r/2%r) (0%r) (1%r).  auto. auto.
 exists* commit. elim*. move => cv.
 case (!IsQR cv).
 seq 1 : (!challenge0) (1%r/2%r) (0%r) (1%r/2%r) (1%r) (cv = commit /\ s = statement /\ ax = aux /\ !IsQR cv).
@@ -39,7 +39,7 @@ rewrite duniform1E_uniq. auto. simplify. auto. auto.
 conseq (_: _ ==> true). call (_:true ==> true). auto.
 wp. skip. auto. auto.
 hoare.
-simplify. auto. call (_ : true ==> true).  auto. skip. auto. auto.
+simplify. auto. call (_ : true ==> true).  auto. call (_:true). skip. auto. auto.
 qed.
 
 

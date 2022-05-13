@@ -77,7 +77,7 @@ call (s5 V_v).
 call (_: true ==> true). apply V_summitup_ll.
 call (_: true ==> true). apply V_challenge_ll.
 call (_: true ==> true). proc. sp.
-seq 1 : (true). rnd. auto. auto. smt.
+seq 1 : (true). rnd.  skip. auto. auto. auto.  smt.
 auto. smt. auto. auto. auto. hoare. simplify.
 call (s3 V_v). skip. progress. auto.
 qed.
@@ -118,6 +118,7 @@ local module Sim1'  = {
 
   proc sinit() : bool * zmod * zmod  = {
     var r,rr,bb;
+
     (r,rr)  <$ ZNS_dist;    
     bb <$ {0,1};
     return (bb,rr,r);
@@ -157,15 +158,15 @@ inline*. sp.
 call (_:true).  simplify. call (_:true).
 wp. simplify. call (_:true).
 wp. swap {2} 2 -1.
-rnd. rnd {2}. skip. progress .
+ rnd . rnd{2}.    skip. progress .
 qed.
 
 
 
 local lemma exss ya wa : IsSqRoot ya wa /\ unit ya =>
  equiv[ Sim1(V).sinit ~ Sim1'.sinit
-   : arg{1} = (ya) ==>
-       (res{1}.`1, res{1}.`2) = (res{2}.`1, res{2}.`2)
+   : arg{1} = (ya) /\ ={glob V} ==>
+    ={glob V} /\  (res{1}.`1, res{1}.`2) = (res{2}.`1, res{2}.`2)
         /\ (res{1}.`1 = true  => res{1}.`2 = res{1}.`3 * res{1}.`3 * (inv ya) 
                 /\ res{1}.`3 * (inv wa)   = res{2}.`3)
         /\ (res{1}.`1 = false => res{1}.`2= res{1}.`3 * res{1}.`3
@@ -173,7 +174,7 @@ local lemma exss ya wa : IsSqRoot ya wa /\ unit ya =>
                 /\ res{1}.`3  = res{2}.`3 ) ].
 proof. 
 move => [isqr invrtbl]. proc. swap 2 -1.
-seq 1 1 : (={bb} /\ (y{1}) = (ya)). rnd. skip. auto.
+seq 1 1 : (={bb} /\ (y{1}) = (ya) /\ ={glob V}). rnd.    skip. progress. 
 exists* bb{1}. elim*. progress.
 wp. case (bb_L = true).     
 rnd (fun (x : zmod * zmod) => (x.`1 * inv wa, x.`2 * (inv y{1}) ))
@@ -328,13 +329,13 @@ local lemma sim1'not &m ya wa ax :
 proof.
 have ->: Pr[Sim1'.run(ya, wa, ax) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m : ! res.`1]. 
 byequiv. proc.
-sim. wp.  inline*.  wp. rnd.  rnd.  wp. skip. progress. auto. auto.
+sim. wp.  inline*.  wp. rnd.  rnd.  wp.   skip. progress. auto. auto.
 byphoare. proc. inline*. simplify. 
 swap [2..3] 5. wp.
 seq 6 : true (1%r) (1%r/2%r) 1%r 0%r.
 auto. call D_guess_ll.
 call summitup_ll. wp. 
-call challenge_ll. wp. rnd. skip. smt. 
+call challenge_ll. wp. rnd.  skip. smt. 
 rnd. skip. progress. smt. 
 exfalso. auto. auto.  auto. auto.
 qed.
@@ -342,16 +343,16 @@ qed.
 local lemma sim1'notnot &m ya wa ax : 
      Pr[Sim1'.run(ya, wa, ax) @ &m :  res.`1] = 1%r/2%r.
 proof.
-have ->: Pr[Sim1'.run(ya, wa, ax) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m :  res.`1]. 
+have ->: Pr[Sim1'.run(ya, wa, ax) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m :  res.`1].
 byequiv. proc.
 sim. wp.  inline*.  wp. rnd.  rnd.  wp. skip. progress. auto. auto.
-byphoare. proc. inline*. simplify. 
+byphoare. proc. inline*. simplify.
 swap [2..3] 5. wp.
 seq 6 : true (1%r) (1%r/2%r) 1%r 0%r.
 auto. call D_guess_ll.
-call summitup_ll. wp. 
-call challenge_ll. wp. rnd. skip. smt. 
-rnd. skip. progress. 
+call summitup_ll. wp.
+call challenge_ll. wp. rnd. skip. smt.
+rnd. skip. progress.
 case (b{hr}). smt.
 smt.
 exfalso. auto. auto.  auto. auto.
