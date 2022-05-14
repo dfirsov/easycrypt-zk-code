@@ -46,8 +46,18 @@ Define A.run12 as follows:
 
 Then the lhs is a linear monotone function of Pr[A.init; A.run12], and the rhs is the same linear monotone function of Pr[A.run12].
 
-(linear monotone functionc preserve things:
 
-   exists  &n, Pr[init run12]  <= Pr[run12]
+Linear monotone functionc preserve order:
 
-       => exists &n, f-monotone (Pr[init run12])  <= f-monotone (Pr[run12])
+    Pr[init run12]  <= Pr[run12] => f-monotone (Pr[init run12])  <= f-monotone (Pr[run12])
+
+
+Pr[A.run12] = 1/2 * Pr[A.run1 : r] + 1/2 * Pr[A.run2 : !r] = 
+  = 1/2 * (Pr[A.run : r] + (1 - Pr[A.run2 : r]))
+  = 1/2 * (1 + Pr[A.run1 : r] - Pr[A.run2 : r])
+
+op f-mono(x) := 1/2 * (1 + x)
+
+
+
+

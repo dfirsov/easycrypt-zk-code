@@ -1,4 +1,4 @@
-require import AllCore Distr.
+require import AllCore Distr DBool.
 
 
 
@@ -211,11 +211,12 @@ rewrite H1. smt.
 
 qed.
 
-lemma zzz &m M i1 i2 p: 
+lemma ZzZ &m M i1 i2 p: 
        p <= Pr[ RCR(A).main(i1,i2) @ &m : M (glob A) ] 
+   => 0%r < p
    => exists &n, p <= Pr[ A.ex2(tt, tt) @ &n  : M (glob A)] .
 elim (www &m p). progress.
-elim (H2 M). progress.
+elim (H2 M _ _);auto. smt. progress.
 have f1 : Pr[A.ex1() @ &m : glob A = g] > 0%r.
 have f2 : mu (D1 tt (glob A){m}) (fun x => snd x = g)  = Pr[A.ex1() @ &m : (glob A) = g].
 rewrite (H &m ). auto. smt. 
@@ -241,3 +242,127 @@ exists &n.
 rewrite -  (H0 &n M tt tt). auto.
 qed.
 
+
+
+module type IR1R2 = {
+  proc init() : unit
+  proc run1() : bool
+  proc run2() : bool
+}.
+
+module P(A : IR1R2) = {
+  proc main1() = {
+    var r : bool;
+    A.init();
+    r <- A.run1();
+    return r;
+  }
+
+  proc main2() = {
+    var r : bool;
+    A.init();
+    r <- A.run2();
+    return r;
+  }
+
+  proc init_main12() = {
+   var b, r', r : bool;
+
+   A.init();
+   b <$ {0,1};
+   
+   if(b){
+     r <@ A.run1();
+   }else{
+     r' <@ A.run2();
+     r  <- !r;
+   }
+   return r;
+  }
+
+  proc main12() = {
+   var b, r', r : bool;
+   b <$ {0,1};
+   
+   if(b){
+     r <@ A.run1();
+   }else{
+     r' <@ A.run2();
+     r  <- !r;
+   }
+   return r;
+  }
+
+
+}.
+
+section.
+
+declare module A : IR1R2.
+
+op f (x : real) : real = 1%r/2%r * (1%r + x).
+op fop (x : real) : real = 2%r * x - 1%r.
+
+lemma f_pr1 (a b : real) : a <= b => f a <= f b.
+smt.
+qed.
+
+
+lemma f_pr2 (a b : real) : f a <= f b => a <= b.
+smt.
+qed.
+
+lemma f_pr3 (a  : real) : f (fop a) = a.
+smt.
+qed.
+
+lemma f_pr4 (a  : real) : fop (f a) = a.
+smt.
+qed.
+
+
+lemma f_pr5 (a b : real) : a <= b => fop a <= fop b.
+smt.
+qed.
+
+lemma f_pr6 (a b : real) : fop a <= fop b =>  a <= b.
+smt.
+qed.
+
+
+
+lemma d_b1 &m : Pr[ P(A).init_main12() @ &m : res ] 
+  = f (Pr[ P(A).main1() @ &m : res ] - Pr[ P(A).main2() @ &m : res ]) .
+admitted.
+
+lemma d_b2 &m : Pr[ P(A).main12() @ &m : res ] 
+  = f (Pr[ A.run1() @ &m : res ] - Pr[ A.run2() @ &m : res ]) .
+admitted.
+
+
+lemma d_b3 &m p : p <= Pr[ P(A).init_main12() @ &m : res ] 
+   => exists &n, p <= Pr[ P(A).main12() @ &n : res ].
+admitted.
+
+
+lemma d_b' &m p: 
+       p <=  Pr[ P(A).main1() @ &m : res ]  - 
+               Pr[ P(A).main2() @ &m : res ]
+   => exists &n, p <= Pr[ A.run1() @ &n : res ] - Pr[ A.run2() @ &n : res ].
+progress.
+have f1 : Pr[P(A).main1() @ &m : res] - Pr[P(A).main2() @ &m : res]
+  = fop (Pr[ P(A).init_main12() @ &m : res ] ).
+rewrite d_b1. smt.
+have f2 : p <= fop Pr[P(A).init_main12() @ &m : res].
+smt.
+have f3 : f p <= Pr[P(A).init_main12() @ &m : res]. smt.
+have f4 : exists &n,  f p <= Pr[ P(A).main12() @ &n : res ].
+apply (d_b3 &m (f p)). auto.
+elim f4. progress.
+exists &n.
+smt.
+qed.
+  
+
+
+   
