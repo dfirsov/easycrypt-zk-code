@@ -2,6 +2,8 @@ require import AllCore List Distr.
 
 theory ZKProtocol.
 
+  (* .init() and init does not have a star *)
+
 type statement, witness, commitment, response, challenge, auxiliary_input, adv_summary, sbits.
 type relation = statement -> witness -> bool.
 type transcript = commitment * challenge * response.
@@ -45,13 +47,11 @@ module type HonestVerifier = {
 }.
 
 module type MaliciousProver = {  
-  proc init() : unit
   proc commitment(s: statement, aux: auxiliary_input) : commitment
   proc response(challenge: challenge) : response
 }.
 
 module type MaliciousVerifier = {
-  proc init() : unit
   proc challenge(_:statement * commitment * auxiliary_input) : challenge
   proc summitup(statement: statement, response: response) : adv_summary
 
@@ -89,8 +89,6 @@ module Completeness(P: HonestProver, V: HonestVerifier) = {
 module Soundness(P: MaliciousProver, V: HonestVerifier) = {
   proc run(statement: statement, aux: auxiliary_input) : bool = {
     var commit, challenge, response, accept; 
-    P.init();
-  (* P.init() and init does not have a star *)
     commit <@ P.commitment(statement, aux);
     challenge <@ V.challenge(statement,commit);
     response <@ P.response(challenge);
@@ -204,7 +202,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     module SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdversary = {
       proc attack(statement : statement, aux : auxiliary_input) : transcript * transcript = {
         var i,c1,c2,r1,r2;
-        P.init();
         i <@ P.commitment(statement, aux);
 
         c1 <$ duniform (challenge_set );
@@ -243,7 +240,6 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     local module A(P : MaliciousProver) : Adv = {
       proc init (p : statement, aux : auxiliary_input) : commitment = {
         var i : commitment;
-        P.init();
         i <@ P.commitment(p,aux);
         return i;
      }
@@ -270,7 +266,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
                  f  (soundness_relation  p (special_soundness_extract p res.`1 res.`2))].
    proof. byequiv;auto.
    proc. simplify. inline*. wp.  call (_:true).  wp. rnd. wp. call (_:true). wp. rnd. 
-   wp.  call (_:true). wp. call (_:true). wp. skip. progress;smt.
+   wp.  call (_:true). wp.  skip. progress;smt.
    qed.
    
 
@@ -305,7 +301,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
      <=  Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res].
     byequiv. proc. inline*. wp. call (_:true).
     rnd.  simplify. call (_:true). rnd.  call (_:true).
-    wp. simplify. call (_:true). wp. skip. progress. smt. smt. 
+    wp. simplify. wp. skip. progress. smt. smt. 
     qed.
 
 
@@ -315,7 +311,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
      = Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
     byequiv. proc. inline*. wp. call (_:true).
-    wp. rnd.  wp. call (_:true). wp.  call(_:true). wp.
+    wp. rnd.  wp. call (_:true). wp.  
     skip. simplify. progress. auto. auto. 
     qed.
 
