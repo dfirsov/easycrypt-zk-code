@@ -289,7 +289,8 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
       (p, aux)
      deltoid
     _
-    ). admit. auto. 
+    ). proc. call P_response_ll;auto.
+   auto. 
     qed.
 
 
@@ -332,7 +333,19 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
         >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
              - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
               - deltoid. apply (hc_pok' &m p). auto.
-    timeout 20. admit.
+    timeout 20.  
+
+    have g :       Pr[ InitRun1(A(P)).run(p,aux) @ &m 
+          : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
+     = Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]. apply www.
+
+     have j :       Pr[SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+           valid_transcript_pair p res.`1 res.`2 /\
+           soundness_relation p (special_soundness_extract p res.`1 res.`2)]
+     <=  Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res].
+    apply qqq.
+
+     smt.
     qed.
 
 
@@ -718,18 +731,14 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     apply (one_to_many_zk (Sim1(V)) D _ _ _ _ &m stat wit p0 negl N
     Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _
   ) .
-
   apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.  
     apply (qqq &m stat wit ax D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. auto.
     qed.
 
    end section.
    end StatisticalZKDeriv.
-
-
    end StatisticalZK.
   end ZK.
-
 end ZKProtocol.
 
 
