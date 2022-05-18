@@ -236,7 +236,7 @@ qed.
 
 theory SSB.
 section.
-declare module S : SpecialSoundnessAdversary.
+declare module S <: SpecialSoundnessAdversary.
 
 op ss : hc_prob.
 op auxx : auxiliary_input.

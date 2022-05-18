@@ -22,10 +22,10 @@ module Sim1(V : MaliciousVerifier)  = {
 
   proc run(Ny : qr_prob, aux : auxiliary_input) : bool * adv_summary  = {
     var r,z,b',b,result, vstat;
-    vstat <- V.getState();
-    (b',z,r) <- sinit(Ny);
-    b  <- V.challenge(Ny,z,aux);
-    result <- V.summitup(Ny,r);
+    vstat <@ V.getState();
+    (b',z,r) <@ sinit(Ny);
+    b  <@ V.challenge(Ny,z,aux);
+    result <@ V.summitup(Ny,r);
     V.setState(vstat);
     return (b = b', result);
   }
@@ -34,11 +34,11 @@ module Sim1(V : MaliciousVerifier)  = {
 
 section.
 
-declare module V : MaliciousVerifier {HonestProver}.
+declare module V <: MaliciousVerifier {-HonestProver}.
 
 
-axiom V_summitup_ll : islossless V.summitup.
-axiom V_challenge_ll : islossless V.challenge.
+declare axiom V_summitup_ll : islossless V.summitup.
+declare axiom V_challenge_ll : islossless V.challenge.
 
 
 axiom rewindable_V_plus : 
@@ -90,10 +90,10 @@ end section.
 
 section.
 
-declare module V : MaliciousVerifier {HonestProver}.
-declare module D : ZKDistinguisher {V, HonestProver}.
+declare module V <: MaliciousVerifier {-HonestProver}.
+declare module D <: ZKDistinguisher {-V, -HonestProver}.
 
-axiom rewindable_V_plus : 
+declare axiom rewindable_V_plus2 : 
   exists (f : glob V -> sbits),
   injective f /\
   (forall (x : glob V),
@@ -107,9 +107,9 @@ axiom rewindable_V_plus :
     hoare[V.setState: b = f x ==> glob V = x]) /\
   islossless V.setState.
 
-axiom summitup_ll  :  islossless V.summitup.
-axiom challenge_ll :  islossless V.challenge.
-axiom D_guess_ll : islossless D.guess.
+declare axiom summitup_ll  :  islossless V.summitup.
+declare axiom challenge_ll :  islossless V.challenge.
+declare axiom D_guess_ll : islossless D.guess.
 
 
 (* transformed simulator with independent coin flip *)
@@ -126,10 +126,10 @@ local module Sim1'  = {
     
   proc run(Ny : qr_prob, w : qr_wit, aux : auxiliary_input) : bool * bool  = {
     var z,r,b',b,ryb,result, rd;
-    (b',z,r) <- sinit();
-    b  <- V.challenge(Ny,z,aux);
+    (b',z,r) <@ sinit();
+    b  <@ V.challenge(Ny,z,aux);
     ryb  <- (r * if b then w else one);
-    result <- V.summitup(Ny,ryb);
+    result <@ V.summitup(Ny,ryb);
     rd <@ D.guess(Ny, w, aux, result);    
     return (b = b', rd);
   }
@@ -140,9 +140,9 @@ local module Sim1'  = {
     bb <$ {0,1};
     b' <- bb;
     z <- rr ;
-    b  <- V.challenge(Ny,z,aux);
+    b  <@ V.challenge(Ny,z,aux);
     ryb  <- (r * if b then w else one);
-    result <- V.summitup(Ny,ryb);
+    result <@ V.summitup(Ny,ryb);
     rd <@ D.guess(Ny, w, aux, result);
     return (b = b', rd);
   }
@@ -259,7 +259,7 @@ seq 2 1 : (={glob D, glob V,b',z, aux,Ny,w}
          /\ (b'{2} = false => z{1} = r0{1} * r0{1} /\ r0{1} = r{2})
          /\ ((ya),wa) = (Ny{2},w{2})).
 call (exss ya wa). 
-elim rewindable_V_plus.
+elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. 
 exists* (glob V){1}. elim*. progress.
 call {1} (s2 V_L).
@@ -282,7 +282,7 @@ case (b0_L = true).
 call (_:true). 
 wp. 
 call {1} (_: true ==> true).
-elim rewindable_V_plus.
+elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
 call (_:true). skip. progress. smt.
 conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
@@ -290,7 +290,7 @@ call {1} (_: true ==> true). apply D_guess_ll.
 wp. 
 call {2} (_: true ==> true). apply D_guess_ll.
 call {1} (_: true ==> true). 
-elim rewindable_V_plus.
+elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
 call {1} (_: true ==> true). apply summitup_ll.
 call {2} (_: true ==> true). apply summitup_ll.  simplify. 
@@ -299,7 +299,7 @@ exists* b0{1}. elim*. progress.
 case (b0_L = false).
  call (_:true). wp. 
 call {1} (_: true ==> true). 
-elim rewindable_V_plus.
+elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
  call (_:true). skip. progress. smt.
 conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
@@ -307,7 +307,7 @@ call {1} (_: true ==> true). apply D_guess_ll.
 call {2} (_: true ==> true). apply D_guess_ll.
 wp.
 call {1} (_: true ==> true). 
-elim rewindable_V_plus.
+elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
 call {1} (_: true ==> true). apply summitup_ll.
 call {2} (_: true ==> true). apply summitup_ll.

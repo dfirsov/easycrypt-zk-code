@@ -27,13 +27,13 @@ clone import PrIntervalToSum as PIT with type rt <- bool * rrt,
 
 section.
 
-declare module A : Run {W, DW}.
-declare module D : Dist {A, W, DW}.
+declare module A <: Run {-W, -DW}.
+declare module D <: Dist {-A, -W, -DW}.
 
-axiom A_ll : islossless A.run.
-axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+declare axiom A_ll : islossless A.run.
+declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
 
-axiom D_ll : islossless D.run.
+declare axiom D_ll : islossless D.run.
 
 lemma if_whp_prop : 
   equiv [ W(A).whp ~ W(A).if_whp : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
@@ -103,8 +103,8 @@ qed.
 local module W0 = {
   proc run(a : irt ) = {
       var r, b;
-      r <- A.run(a);
-      b <- D.run(r);
+      r <@ A.run(a);
+      b <@ D.run(r);
       return (b, r);
   }
 }.
@@ -113,8 +113,8 @@ local module W1 = {
   module M = W(A)
   proc run(a : (rrt -> bool) * irt * int * int * rrt ) = {
       var r, b;
-      r <- M.whp(a);
-      b <- D.run(r);
+      r <@ M.whp(a);
+      b <@ D.run(r);
       return (b, r);
   }
 }.
@@ -124,8 +124,8 @@ local module W2 = {
   module M = W(A)
   proc run(a : (rrt -> bool) * irt * int * int * int * rrt ) = {
       var r, b;
-      r <- M.whp_split(a);
-      b <- D.run(r);
+      r <@ M.whp_split(a);
+      b <@ D.run(r);
       return (b, r);
   }
 }.
@@ -134,8 +134,8 @@ local module W3 = {
   module M = W(A)
   proc run(a : (rrt -> bool) * irt * int * int * rrt ) = {
       var r, b;
-      r <- M.whp_if(a);
-      b <- D.run(r);
+      r <@ M.whp_if(a);
+      b <@ D.run(r);
       return (b, r);
   }
 }.
@@ -146,7 +146,7 @@ local module W4 = {
   proc run(a : (rrt -> bool) * irt * int * int * rrt ) = {
       var r;
       M.whp(a);
-      r <- W0.run(a.`2);
+      r <@ W0.run(a.`2);
       return r;
   }
 }.
@@ -243,13 +243,11 @@ have FF : forall ea, 0 <= ea => phoare[ W(A).whp :
    arg = (pa,ia,1,ea,r) /\ (glob A) = (glob A){m}
      ==> !pa res ] = (Pr[ A.run(ia) @ &m : !pa res ] ^ ea).
 move => ea0 ea0p.
-  conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _). auto. apply A_ll. apply A_rew_ph. auto. auto. 
+
+  conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _).  auto. apply A_ll. apply A_rew_ph. auto.  auto. 
 bypr. move => &m0 [eq1 eq2]. rewrite eq1. 
-byequiv (_: ={arg, glob A} ==> ={res}). sim. progress. rewrite eq2.
-auto. auto.
-
-pose p1 := Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ].
-
+byequiv (_: ={arg, glob A} ==> ={res}). sim. progress. rewrite eq2. auto. auto.
+pose p1 := Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ]. auto. auto.
 rewrite  (whp_cap &m pa ia 1 ea r ja ). smt. smt.
 have ->: Pr[W1.run(pa, ia, 1, ja - 1, r) @ &m : W.c = ja /\ pa res.`2 /\ res.`1]
  = Pr[W3.run(pa, ia, 1, ja-1, r) @ &m : W.c = ja /\ pa res.`2 /\  res.`1].
@@ -258,8 +256,6 @@ inline W3.run. sp. wp.
 call (_:true). 
 call whp_if_prop. skip. progress. 
 auto. auto.
-
-
 byphoare (_: arg = (pa, ia, 1, ja - 1, r) /\ (glob A) = (glob A){m} ==> _);auto.
 proc. inline W3.M.whp_if. 
 seq 3 : (! p ri) (Pr[ A.run(ia) @ &m : !pa res ] ^ (ja - 2))  p1 1%r 0%r (e = ja - 1 /\ W.c <= e  /\ i = ia /\ p = pa 
@@ -271,7 +267,6 @@ call H2.
    skip. progress. smt. skip. progress.   smt. smt.  
   call (FF (ja - 2)  ).  smt. wp. skip. progress.  
 rcondt 1. skip. progress. simplify. 
-
 admit.                          (* TODO: show that p1 = Pr[A @ m] * Pr[D @ m] then  *)
 (* wp. call FG. skip. progress.  *)
 (* smt. *)

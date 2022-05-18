@@ -17,7 +17,7 @@ module M = {
 
   proc whp_if_end(MyP : rt -> bool,myd : rt distr, s : int, e : int, r : rt) = {
     var ri : rt;
-    ri <- whp(MyP,myd, s,e,r);     
+    ri <@ whp(MyP,myd, s,e,r);     
     if(c <= e + 1 /\ !MyP ri){
       ri <$ myd;
       c <- c + 1;

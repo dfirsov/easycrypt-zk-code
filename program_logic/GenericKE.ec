@@ -5,6 +5,8 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
 
+require import RealExp.
+
 require import AllpairsProp.
 
 
@@ -35,13 +37,13 @@ module type Adv = {
 module InitRun2(A : Adv) = {
   proc run(a : pt, aux : auxt) = {
     var i, c1, c2, r1, r2;
-    i <- A.init(a,aux);
+    i <@ A.init(a,aux);
     
     c1 <$ d;
-    r1 <- A.run(i,c1);
+    r1 <@ A.run(i,c1);
 
     c2 <$ d;
-    r2 <- A.run(i,c2);
+    r2 <@ A.run(i,c2);
 
     return ((c1,(r1,i)),(c2,(r2,i)));
   }
@@ -51,10 +53,10 @@ module InitRun2(A : Adv) = {
 module InitRun1(A : Adv) = {
   proc run(a : pt, aux : auxt) = {
     var i, c1, r1;
-    i <- A.init(a,aux);
+    i <@ A.init(a,aux);
     
     c1 <$ d;
-    r1 <- A.run(i,c1);
+    r1 <@ A.run(i,c1);
 
     return (c1,(r1,i));
   }
@@ -62,9 +64,9 @@ module InitRun1(A : Adv) = {
 
 
 section.
-declare module A : Adv.
+declare module A <: Adv.
 
-axiom A_ll : islossless A.run.
+declare axiom A_ll : islossless A.run.
 
 local module C2 : Comp = {
   proc rest(p : pt * auxt, c1c2 : ct * ct) : (rt * irt) * (rt * irt) = {
@@ -90,7 +92,7 @@ local module X1 = {
   proc run(p : pt * auxt) = {
     var c,r;
     c <$ d;
-    r <- C1.rest(p,c);
+    r <@ C1.rest(p,c);
     return (c,r);
   }
 }.
@@ -308,7 +310,7 @@ smt.
 qed.
 
 
-require import RealExp.
+
 
 
 lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.

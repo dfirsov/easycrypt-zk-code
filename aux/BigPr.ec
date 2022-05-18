@@ -36,7 +36,7 @@ module X(C : Comp) = {
   proc run(p : pt) = {
     var c1c2, r;
     c1c2 <$ d `*` d;
-    r <- C.rest(p,c1c2);
+    r <@ C.rest(p,c1c2);
     return (c1c2,r);
   }
 }.
@@ -47,7 +47,7 @@ module Xseq(C : Comp) = {
     var c1,c2, r;
     c1 <$ d;
     c2 <$ d;
-    r <- C.rest(p,(c1,c2));
+    r <@ C.rest(p,(c1,c2));
     return ((c1,c2),r);
   }
 }.
@@ -60,7 +60,7 @@ axiom avr &m M  p:  forall (C <: Comp),
 
 
 section.
-declare module C : Comp.
+declare module C <: Comp.
 
     
 local lemma avr_lemma_1 &m M p : 

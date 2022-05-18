@@ -47,7 +47,7 @@ module DW = {
   proc whp_d(p : rrt -> bool,d : rrt distr, s : int, e : int, r : rrt) = { 
     c <- s;
     while(c <= e /\ !p r){
-     r <- SF.sampleFrom(d);
+     r <@ SF.sampleFrom(d);
      c <- c + 1;
     }
     return r;
@@ -57,11 +57,12 @@ module DW = {
 
 
 
-declare module A : HasRun {W, DW}.
+declare module A <: HasRun {-W, -DW}.
 
-axiom A_ll : islossless A.run.
+declare axiom A_ll : islossless A.run.
 
-axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+
 lemma A_rew_h x : hoare[ A.run : (glob A) = x ==> (glob A) = x ] .
 bypr. progress. 
 have <- : Pr[A.run(z{m}) @ &m : false ] = 0%r. smt.

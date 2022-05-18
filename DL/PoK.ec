@@ -12,7 +12,7 @@ import FDistr.
 clone import ComputationalPoK with op special_soundness_extract <- special_soundness_extract. (* should not be needed after statistical_PoK is "moved" to SpecialSoundness  *)
 
 section.
-declare module P : MaliciousProver{HonestVerifier}.
+declare module P <: MaliciousProver{-HonestVerifier}.
 
 axiom P_response_ll : islossless P.response.
 

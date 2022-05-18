@@ -5,7 +5,7 @@ require import Aux.
 type prob, wit, sbits, event, auxiliary_input.
 
 require WhileCycle.
-clone import WhileCycle as MW with type irt   <- prob * auxiliary_input,
+clone import WhileCycle as MW with type irt    <- prob * auxiliary_input,
                                     type rrt   <- event * sbits,
                                     type sbits <- sbits.
 import MW.IFB.
@@ -27,8 +27,8 @@ module W0(Sim1:Simulator1,  D : Dist) = {
   module Sim1 = Sim1
   proc run(a : prob, w : wit, aux : auxiliary_input) = {
       var r, b;
-      r <- Sim1.run(a,aux);
-      b <- D.guess(a,w,aux,r.`2);
+      r <@ Sim1.run(a,aux);
+      b <@ D.guess(a,w,aux,r.`2);
       return (b, r);
   }
 }.
@@ -38,8 +38,8 @@ module W1(Sim1:Simulator1,  D : Dist) = {
   module M = W(Sim1)
   proc run(a : (event * sbits -> bool) * (prob * auxiliary_input) * int * int * (event * sbits), w : wit) = {
       var r, b;
-      r <- M.whp(a);
-      b <- D.guess(a.`2.`1,w,a.`2.`2, r.`2);
+      r <@ M.whp(a);
+      b <@ D.guess(a.`2.`1,w,a.`2.`2, r.`2);
       return (b, r);
   }
 }.
@@ -62,20 +62,20 @@ module Iter(Sim1 : Simulator1,  D : Dist)  = {
 
 section.
 (* declare module V : MaliciousVerifier{DW,W}. *)
-declare module Sim1 : Simulator1{DW, W}.
-declare module D : Dist {Sim1,W}.
+declare module Sim1 <: Simulator1{-DW, -W}.
+declare module D <: Dist {-Sim1,-W}.
 
-axiom Sim1_ll : islossless Sim1.run.
+declare axiom Sim1_ll : islossless Sim1.run.
 
-axiom Sim1_rew_ph : forall (x : (glob Sim1)),
+declare axiom Sim1_rew_ph : forall (x : (glob Sim1)),
   phoare[ Sim1.run : (glob Sim1) = x ==> (glob Sim1) = x] = 1%r.
 
 
-axiom D_ll    : islossless D.guess.
+declare axiom D_ll    : islossless D.guess.
 
 op fevent : event.
 op E : event * sbits -> bool.
-axiom  Estart :  E (fevent, witness) = false.
+declare axiom  Estart :  E (fevent, witness) = false.
 
 
 local lemma zk_step1 &m E p eps zkp:

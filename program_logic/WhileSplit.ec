@@ -15,7 +15,7 @@ module W(A : HasRun) = {
   proc whp(p : rrt -> bool, i : irt, s : int, e : int, r : rrt) = {
     c <- s;
     while(c <= e /\ !p r){
-     r <- A.run(i);
+     r <@ A.run(i);
      c <- c + 1;
     }
     return r;
@@ -25,19 +25,19 @@ module W(A : HasRun) = {
   proc if_whp(p : rrt -> bool, i : irt, s : int, e : int, r : rrt) = {
     c <- s;
     if(c <= e /\ !p r){
-     r <- A.run(i);
+     r <@ A.run(i);
      c <- c + 1;
     }
-    r <- whp(p,i,W.c,e,r);
+    r <@ whp(p,i,W.c,e,r);
     return r;
   }
 
   proc whp_if(p : rrt -> bool, i : irt, s : int, e : int, r : rrt) = {
     var ri;
     c <- s;
-    ri <- whp(p,i,s,e-1,r);
+    ri <@ whp(p,i,s,e-1,r);
     if(c <= e /\ !p ri){
-     ri <- A.run(i);
+     ri <@ A.run(i);
      c <- c + 1;
     }
     return ri;
@@ -45,8 +45,8 @@ module W(A : HasRun) = {
 
   proc whp_split(p : rrt -> bool, i : irt, s : int, m : int, e : int, r : rrt) = {
     c <- s;
-    r <- whp(p,i,s,m,r);
-    r <- whp(p,i,W.c,e,r);
+    r <@ whp(p,i,s,m,r);
+    r <@ whp(p,i,W.c,e,r);
     return r;
   }
   

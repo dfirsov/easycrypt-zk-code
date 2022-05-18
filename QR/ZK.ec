@@ -15,18 +15,18 @@ clone import RewBasics as Rew with type sbits <- sbits.
 
 section.
 
-declare module V : MaliciousVerifier{HonestProver, OMZK.MW.IFB.IM.W, OMZK.MW.IFB.DW}.
-declare module D : ZKDistinguisher{HonestProver, OMZK.MW.IFB.IM.W, V}.
+declare module V <: MaliciousVerifier{-HonestProver, -OMZK.MW.IFB.IM.W, -OMZK.MW.IFB.DW}.
+declare module D <: ZKDistinguisher{-HonestProver, -OMZK.MW.IFB.IM.W, -V}.
 
 
-axiom Sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
+declare axiom Sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
 
-axiom V_summitup_ll : islossless V.summitup. 
-axiom V_challenge_ll : islossless V.challenge.
-axiom D_guess_ll : islossless D.guess.
+declare axiom V_summitup_ll : islossless V.summitup. 
+declare axiom V_challenge_ll : islossless V.challenge.
+declare axiom D_guess_ll : islossless D.guess.
 
 
-axiom rewindable_V_plus : 
+declare axiom rewindable_V_plus : 
         (exists (f : glob V -> sbits),
          injective f /\
          (forall &m, Pr[ V.getState() @ &m : (glob V) = ((glob V){m})
@@ -46,15 +46,15 @@ lemma qr_statistical_zk stat wit ax N &m:
 proof.
 progress.
 apply (statistical_zk HonestProver Sim1  V D _ _ _ _ _ _ _ stat wit ax N
-  (1%r/2%r) &m). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
-apply rewindable_V_plus.
+  (1%r/2%r) &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
+apply rewindable_V_plus. 
 apply (sim1_rew_ph V ). apply V_summitup_ll. apply V_challenge_ll. 
-apply (rewindable_A_plus V). apply rewindable_V_plus.
-progress.
-rewrite (sim1_prop V D _ _  _ _ _  p w aux _ ).  apply (rewindable_A_plus V). exists f. split. auto. auto.
+progress. 
+rewrite (sim1_prop V D _ _  _ _ _  p w aux _ ).  apply (rewindable_A_plus V).
+ exists f. split. auto. auto.
 auto. auto.   auto.  auto. auto.   auto. auto. 
 rewrite (sim1assc V D _ _ _ _ &m stat ax wit). apply (rewindable_A_plus V).
-apply rewindable_V_plus. 
+apply rewindable_V_plus.
 apply V_summitup_ll.
 apply V_challenge_ll. apply D_guess_ll. auto.  auto. 
 qed.

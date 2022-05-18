@@ -28,7 +28,7 @@ module type RunMain = {
 
 section.
 
-declare module A : RunMain.
+declare module A <: RunMain.
 local lemma zzz &m : forall (a : iat) (f : (glob A) -> int) 
   (P : iat -> rt -> (glob A) -> bool) (s e : int),
   0 <= e =>

@@ -1,6 +1,9 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 
+require  PrArg.  
+require  AllCore Distr FSet StdRing StdOrder StdBigop List.
+
 require import Permutation Basics.
 import DJMM.
 
@@ -14,8 +17,8 @@ import OMZK.
 module ZKP(P : HonestProver, V : MaliciousVerifier) = {
   proc run(Ny : hc_prob, w : hc_wit, b : bool) = {
     var c,r;
-    c <- P.commitment(Ny,w);
-    r <- P.response(b);
+    c <@ P.commitment(Ny,w);
+    r <@ P.response(b);
     return (c,r);
   }
 }.
@@ -28,21 +31,21 @@ module Sim1(V : MaliciousVerifier)  = {
     (n,g) <- (p_a.`1, p_a.`2);
     bb <$ {0,1};
     if (bb) {
-       r <- ZKP_HP.run(p_a, witness, bb);
+       r <@ ZKP_HP.run(p_a, witness, bb);
     }else{
-       r <- ZKP_HP.run((n, compl_graph n), (compl_graph_cyc n), bb);
+       r <@ ZKP_HP.run((n, compl_graph n), (compl_graph_cyc n), bb);
     }
     return (bb, r);
   }
 
   proc run(pa : hc_prob, aux : auxiliary_input)   = {
     var b',b,zryb,result,vstat, hpstat;
-    vstat <- V.getState();
+    vstat <@ V.getState();
     hpstat <- (HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
     HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n);
-    (b',zryb) <- sinit(pa);
-    b <- V.challenge(pa, zryb.`1, aux);
-    result <- V.summitup(pa, zryb.`2);
+    (b',zryb) <@ sinit(pa);
+    b <@ V.challenge(pa, zryb.`1, aux);
+    result <@ V.summitup(pa, zryb.`2);
     V.setState(vstat);
     (HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
     HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n) <- hpstat;
@@ -51,14 +54,14 @@ module Sim1(V : MaliciousVerifier)  = {
 }.
 
 section.
-declare module V : MaliciousVerifier {HonestProver}.
+declare module V <: MaliciousVerifier {-HonestProver}.
 
 
-axiom V_summitup_ll : islossless V.summitup.
-axiom V_challenge_ll : islossless V.challenge.
+declare axiom V_summitup_ll : islossless V.summitup.
+declare axiom V_challenge_ll : islossless V.challenge.
 
 
-axiom rewindable_V_plus : 
+declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
   injective f /\
   (forall (x : glob V),
@@ -115,12 +118,12 @@ end section.
 
 
 section.
-declare module V : MaliciousVerifier {HonestProver}.
-declare module D : ZKDistinguisher {V,HonestProver}.
+declare module V <: MaliciousVerifier {-HonestProver}.
+declare module D <: ZKDistinguisher {-V,-HonestProver}.
 
 
 
-axiom rewindable_V_plus : 
+declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
   injective f /\
   (forall (x : glob V),
@@ -168,9 +171,9 @@ local module HP' : HonestProver  = {
 }.
 
 
-axiom D_run_ll : islossless D.guess.
-axiom V_summitup_ll : islossless V.summitup.
-axiom V_challenge_ll : islossless V.challenge.
+declare axiom D_run_ll : islossless D.guess.
+declare axiom V_summitup_ll2 : islossless V.summitup.
+declare axiom V_challenge_ll2 : islossless V.challenge.
 
 
 
@@ -249,19 +252,19 @@ local module Sim1_0(V : MaliciousVerifier, D : ZKDistinguisher) = {
     bb <$ {0,1};
 
     if (bb) {
-       r <- ZKP_HP.run(p_a, witness, bb);
+       r <@ ZKP_HP.run(p_a, witness, bb);
     }else{
-       r <- ZKP_HP'.run((n, compl_graph n), (compl_graph_cyc n), bb);
+       r <@ ZKP_HP'.run((n, compl_graph n), (compl_graph_cyc n), bb);
     }
     return (bb, r);
   }
 
   proc simulate(pa : hc_prob, aux : auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b',b,zryb,result, rb;
-    (b',zryb) <- sinit(pa);
-    b <- V.challenge(pa, zryb.`1, aux);
-    result <- V.summitup(pa, zryb.`2);
-    rb <- D.guess(pa, wa, aux, result);
+    (b',zryb) <@ sinit(pa);
+    b <@ V.challenge(pa, zryb.`1, aux);
+    result <@ V.summitup(pa, zryb.`2);
+    rb <@ D.guess(pa, wa, aux, result);
     return (b = b', rb);
   }
 }.
@@ -278,9 +281,9 @@ local module Sim1_1(V : MaliciousVerifier) = {
     bb <$ {0,1};
 
     if (bb) {
-       r <- ZKP_HP.run(p_a, w_a, bb);
+       r <@ ZKP_HP.run(p_a, w_a, bb);
     }else{
-        r <- ZKP_HP'.run((n, compl_graph n), w_a, bb);
+        r <@ ZKP_HP'.run((n, compl_graph n), w_a, bb);
         (* 
 Alternative:
 
@@ -310,10 +313,10 @@ g <- compl_graph n;
   
   proc simulate(pa : hc_prob, aux:auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b',b,zryb,result, rb;
-    (b',zryb) <- sinit(pa,wa);
-    b <- V.challenge(pa, zryb.`1, aux);
-    result <- V.summitup(pa,zryb.`2);
-    rb <- D.guess(pa, wa, aux, result);
+    (b',zryb) <@ sinit(pa,wa);
+    b <@ V.challenge(pa, zryb.`1, aux);
+    result <@ V.summitup(pa,zryb.`2);
+    rb <@ D.guess(pa, wa, aux, result);
     return (b = b', rb);
   }
 
@@ -385,19 +388,19 @@ local module Sim1_2(V : MaliciousVerifier) = {
 
     bb <$ {0,1};
     if (bb) {
-       r <- ZKP_HP.run(p_a, w_a, bb);
+       r <@ ZKP_HP.run(p_a, w_a, bb);
     }else{
-       r <- ZKP_HP'.run(p_a, w_a, bb);
+       r <@ ZKP_HP'.run(p_a, w_a, bb);
     }
     return (bb, r);
   }
 
   proc simulate(pa : hc_prob, aux: auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b',b,zryb,result, rb;
-    (b',zryb) <- sinit(pa,wa);
-    b <- V.challenge(pa, zryb.`1, aux);
-    result <- V.summitup(pa,zryb.`2);
-    rb <- D.guess(pa, wa, aux, result);
+    (b',zryb) <@ sinit(pa,wa);
+    b <@ V.challenge(pa, zryb.`1, aux);
+    result <@ V.summitup(pa,zryb.`2);
+    rb <@ D.guess(pa, wa, aux, result);
     return (b = b', rb);
   }
 }.
@@ -406,7 +409,7 @@ local module Sim1_2(V : MaliciousVerifier) = {
 
 (* hiding props  *)
 op negl, negl2 : real.
-axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
+declare axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
 
 
 local lemma sim_1_2 &m pa wa aux: 
@@ -451,15 +454,15 @@ local module Sim1_3(V : MaliciousVerifier) = {
     var n, g,bb,r;
     (n,g) <- (p_a.`1, p_a.`2);
     bb <$ {0,1};
-    r <- ZKP_HP.run(p_a, w_a, bb);
+    r <@ ZKP_HP.run(p_a, w_a, bb);
     return (bb, r);
   }
 
   proc simulate(pa : hc_prob, aux : auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b',b,zryb,result,rb;
-    (b',zryb) <- sinit(pa,wa);
-    b <- V.challenge(pa, zryb.`1, aux);
-    result <- V.summitup(pa, zryb.`2);
+    (b',zryb) <@ sinit(pa,wa);
+    b <@ V.challenge(pa, zryb.`1, aux);
+    result <@ V.summitup(pa, zryb.`2);
     rb <@ D.guess(pa, wa, aux, result);
     return (b = b', rb);
   }
@@ -507,9 +510,9 @@ local module Sim1_4(V : MaliciousVerifier) = {
     var b,result,r,n,g,bb,rb;
     (n,g) <- (pa.`1, pa.`2);
     bb <$ {0,1};
-    r <- ZKP_HP.run(pa, wa, bb);
-    b <- V.challenge(pa, r.`1, aux);
-    result <- V.summitup(pa, r.`2);
+    r <@ ZKP_HP.run(pa, wa, bb);
+    b <@ V.challenge(pa, r.`1, aux);
+    result <@ V.summitup(pa, r.`2);
     rb <@ D.guess(pa, wa, aux, result);
     return (b = bb, rb);
   }
@@ -529,10 +532,10 @@ local module Sim1_5(V : MaliciousVerifier) = {
     var b,result,r1,r2,n,g,bb,rb;
     (n,g) <- (pa.`1, pa.`2);
     bb <$ {0,1};
-    r1 <- HonestProver.commitment(pa,wa);
-    r2 <- HonestProver.response(bb);
-    b <- V.challenge(pa, r1, aux);
-    result <- V.summitup(pa,r2);
+    r1 <@ HonestProver.commitment(pa,wa);
+    r2 <@ HonestProver.response(bb);
+    b <@ V.challenge(pa, r1, aux);
+    result <@ V.summitup(pa,r2);
     rb <@ D.guess(pa, wa, aux, result);
     return (b = bb, rb);
   }
@@ -553,11 +556,11 @@ local module Sim1_6(V : MaliciousVerifier) = {
   proc simulate(pa : hc_prob, aux : auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b,result,r1,r2,n,g,bb,rb;
     (n,g) <- (pa.`1, pa.`2);
-    r1 <- HonestProver.commitment(pa,wa);
+    r1 <@ HonestProver.commitment(pa,wa);
     bb <$ {0,1};
-    b <- V.challenge(pa, r1, aux);
-    r2 <- HonestProver.response(bb);
-    result <- V.summitup(pa,r2);
+    b <@ V.challenge(pa, r1, aux);
+    r2 <@ HonestProver.response(bb);
+    result <@ V.summitup(pa,r2);
     rb <@ D.guess(pa, wa, aux, result);
     return (b = bb, rb);
   }
@@ -574,11 +577,11 @@ local module Sim1_7(V : MaliciousVerifier) = {
   proc simulate(pa : hc_prob, aux: auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b,result,r1,r2,n,g,bb,rb;
     (n,g) <- (pa.`1, pa.`2);
-    r1 <- HonestProver.commitment(pa,wa);
+    r1 <@ HonestProver.commitment(pa,wa);
     bb <$ {0,1};
-    b <- V.challenge(pa, r1, aux);
-    r2 <- HonestProver.response(b);
-    result <- V.summitup(pa,r2);
+    b <@ V.challenge(pa, r1, aux);
+    r2 <@ HonestProver.response(b);
+    result <@ V.summitup(pa,r2);
     rb <@ D.guess(pa, wa, aux, result);
     return (b = bb, rb);
   }
@@ -596,8 +599,8 @@ inline*. wp.  rnd. wp.  rnd. wp.  skip. progress.
 case (b{1} <> bb{1}).
 call {1} (_:true ==> true). apply D_run_ll. 
 call {2} (_:true ==> true). apply D_run_ll. 
-call {1} (_:true ==> true). apply V_summitup_ll. 
-call {2} (_:true ==> true). apply V_summitup_ll. 
+call {1} (_:true ==> true). apply V_summitup_ll2. 
+call {2} (_:true ==> true). apply V_summitup_ll2. 
 call {1} (_:true ==> true). proc. wp. skip. auto.
 call {2} (_:true ==> true). proc. wp. skip. auto.
 skip.  smt.
@@ -609,10 +612,10 @@ local module Sim1_8(V : MaliciousVerifier) = {
   proc simulate(pa : hc_prob, aux: auxiliary_input, wa : hc_wit) : bool * bool  = {
     var b,result,r1,r2,n,g,bb,rb;
     (n,g) <- (pa.`1, pa.`2);
-    r1 <- HonestProver.commitment(pa,wa);
-    b <- V.challenge(pa,r1,aux);
-    r2 <- HonestProver.response(b);
-    result <- V.summitup(pa,r2);
+    r1 <@ HonestProver.commitment(pa,wa);
+    b <@ V.challenge(pa,r1,aux);
+    r2 <@ HonestProver.response(b);
+    result <@ V.summitup(pa,r2);
     rb <@ D.guess(pa, wa, aux, result);
     bb <$ {0,1};
     return (bb, rb);
@@ -636,7 +639,7 @@ local module Sim1_9(V : MaliciousVerifier) = {
   module ZKD = ZKD(HonestProver,V,D)
   proc simulate(pa : hc_prob, aux: auxiliary_input, wa : hc_wit) : bool * bool  = {
     var bb,rb;
-    rb <- ZKD.main(pa,aux,wa);
+    rb <@ ZKD.main(pa,aux,wa);
     bb <$ {0,1};
     return (bb, rb);
   }
@@ -697,7 +700,7 @@ proc*.
 inline Sim1_9(V).simulate.
 wp . rnd {1}.
 simplify. sp.  sim.
-inline*. sim. wp.  skip. progress.
+(* inline*. sim. wp.  skip. progress. *)
 qed.
 
 
@@ -785,18 +788,18 @@ local module Sim1'(V : MaliciousVerifier)  = {
     (n,g) <- (p_a.`1, p_a.`2);
     bb <$ {0,1};
     if (bb) {
-       r <- ZKP_HP.run(p_a, witness, bb);
+       r <@ ZKP_HP.run(p_a, witness, bb);
     }else{
-       r <- ZKP_HP'.run((n, compl_graph n), (compl_graph_cyc n), bb);
+       r <@ ZKP_HP'.run((n, compl_graph n), (compl_graph_cyc n), bb);
     }
     return (bb, r);
   }
 
   proc run(pa : hc_prob, aux : auxiliary_input)   = {
     var b',b,zryb,result;
-    (b',zryb) <- sinit(pa);
-    b <- V.challenge(pa, zryb.`1, aux);
-    result <- V.summitup(pa, zryb.`2);
+    (b',zryb) <@ sinit(pa);
+    b <@ V.challenge(pa, zryb.`1, aux);
+    result <@ V.summitup(pa, zryb.`2);
     return (b = b', result);
   }
 }.
@@ -869,10 +872,10 @@ seq 1 1 : ( p_a{2} = pa{2} /\
   ={pa, aux,bb}).
 rnd. skip. progress. if.  smt.
 call {1} (_: true ==> true). 
-elim (rewindable_V_plus ).
+elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. apply s7.
 sim.
-call {1} (_: true ==> true).  elim (rewindable_V_plus ).
+call {1} (_: true ==> true).  elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. apply s7.
 sim.
 progress.
@@ -903,7 +906,7 @@ proc.
 call (_:true). 
 call (sim11v_eq p.`1) . smt. skip. progress. apply qqq. 
 apply D_run_ll.
-apply V_summitup_ll.
+apply V_summitup_ll2.
 auto.
 qed.
 

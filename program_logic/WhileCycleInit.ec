@@ -31,10 +31,10 @@ section.
 declare module A : Run {W, DW}.
 declare module D : Dist {A, W, DW}.
 
-axiom A_ll : islossless A.run.
-axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+declare axiom A_ll : islossless A.run.
+declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
 
-axiom D_ll : islossless D.run.
+declare axiom D_ll : islossless D.run.
 
 lemma if_whp_prop : 
   equiv [ W(A).whp ~ W(A).if_whp : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].

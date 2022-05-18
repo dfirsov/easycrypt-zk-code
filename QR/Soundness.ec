@@ -4,9 +4,9 @@ require import Basics Aux.
 
 
 section.
-declare module P : MaliciousProver {HonestVerifier}.
 
-axiom P_response_ll : islossless P.response.
+declare module P <: MaliciousProver {-HonestVerifier}.
+declare axiom P_response_ll : islossless P.response.
 
 local lemma qr_soundness_ph s ax :
    ! in_language IsSqRoot s => 
@@ -53,3 +53,4 @@ qed.
 
 
 end section.
+
