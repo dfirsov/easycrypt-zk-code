@@ -12,7 +12,7 @@ clone import ReflComp with type at1 <- unit,
 
 
 section.
-declare module A : RewEx1Ex2.
+declare module A <: RewEx1Ex2.
 axiom A_run_ll : islossless A.ex1.    
 lemma  qq &m : phoare[ A.ex1 :  (glob A) = (glob A){m} ==> exists &n, (glob A) = (glob A){n} ]=  1%r.
 proc*.
@@ -91,11 +91,10 @@ have : mu (dlet (D1 tt (glob A){m}) (D2 tt)) M < p.
 rewrite  dlet_mu_main.
 print sum_split.
 rewrite (sum_split _ (pred1 (tt, g))). 
-have ->: (fun (a : unit * (glob A)) => mu1 (D1 tt (glob A){m}) a * mu (D2 tt a) M)
-  = (fun (a : unit * (glob A)) => mass (D1 tt (glob A){m}) a * mu (D2 tt a) M).
-apply fun_ext.  move => x. smt.
 
-apply (summable_mass_wght ((D1 tt (glob A){m})) (fun x => mu (D2 tt x) M)   _) .
+
+
+apply (summable_mu1_wght ((D1 tt (glob A){m})) (fun x => mu (D2 tt x) M)   _) .
 smt.
 
 simplify.
@@ -103,15 +102,16 @@ have -> : sum
   (fun (x : unit * (glob A)) =>
      if  pred1 (tt, g) x then mu1 (D1 tt (glob A){m}) x * mu (D2 tt x) M
      else 0%r) = mu1 (D1 tt (glob A){m}) (tt,g) * mu (D2 tt (tt,g)) M.
+
   have ->: (fun (x : unit * (glob A)) =>
      if  pred1 (tt, g) x then mu1 (D1 tt (glob A){m}) x * mu (D2 tt x) M
      else 0%r) = (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) (tt,g) * mu (D2 tt (tt,g)) M *
-     if  pred1 (tt, g) x then (mass (duniform [(tt,g)]) x)
+     if  pred1 (tt, g) x then (mu1 (duniform [(tt,g)]) x)
      else 0%r).
 apply fun_ext. move => x.  
 case (pred1 (tt, g) x). simplify. progress.
 rewrite H4. 
-have -> : mass (duniform [(tt, g)]) (tt, g) = 1%r. smt. smt.
+have -> : mu1 (duniform [(tt, g)]) (tt, g) = 1%r. smt. smt.
 smt.
 
 rewrite sumZ. 
@@ -136,23 +136,23 @@ smt.
 
 have ->: (fun (x : unit * (glob A)) =>
      if ! pred1 (tt, g) x then mu1 (D1 tt (glob A){m}) x * mu (D2 tt x) M
-     else 0%r) = (fun (x : unit * (glob A)) => mass (D1 tt (glob A){m}) x * 
+     else 0%r) = (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x * 
      if ! pred1 (tt, g) x then mu (D2 tt x) M
      else 0%r).
 apply fun_ext. move => x. smt.
-apply summable_mass_wght. progress. smt. smt.
+apply summable_mu1_wght. progress. smt. smt.
 have -> : (fun (x : unit * (glob A)) =>
      if ! pred1 (tt, g) x then mu1 (D1 tt (glob A){m}) x * p else 0%r)
  = (fun (x : unit * (glob A)) => p *
-     if ! pred1 (tt, g) x then mass (D1 tt (glob A){m}) x else 0%r).
+     if ! pred1 (tt, g) x then mu1 (D1 tt (glob A){m}) x else 0%r).
 apply fun_ext. move => x. smt.
 apply summableZ.
 have ->: (fun (x : unit * (glob A)) =>
-     if ! pred1 (tt, g) x then mass (D1 tt (glob A){m}) x else 0%r)
- = (fun (x : unit * (glob A)) => mass (D1 tt (glob A){m}) x *
+     if ! pred1 (tt, g) x then mu1 (D1 tt (glob A){m}) x else 0%r)
+ = (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x *
      if ! pred1 (tt, g) x then 1%r else 0%r).
 smt.
-apply summable_mass_wght. progress. smt. smt.
+apply summable_mu1_wght. progress. smt. smt.
 have : mu1 (D1 tt (glob A){m}) (tt, g) * mu (D2 tt (tt, g)) M +
 sum
   (fun (x : unit * (glob A)) =>
@@ -195,21 +195,31 @@ simplify. auto.
 
 have ->: sum (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x * p)
  = p * sum (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x).
-rewrite - sumZ.  smt.
- have ->: (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x) 
- = (fun (x : unit * (glob A)) => if predT x then mass (D1 tt (glob A){m}) x else 0%r).
+rewrite -  sumZ.   simplify.
+
+
+
+
+ have ->: (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x * p) 
+ = (fun (x : unit * (glob A)) => p * mu1 (D1 tt (glob A){m}) x).
 smt.
-rewrite - muE. 
+auto.
 
 
 
+
+have ->: (fun (x : unit * (glob A)) => mu1 (D1 tt (glob A){m}) x)
+ = (fun (x : unit * (glob A)) => if predT x then mu1 (D1 tt (glob A){m}) x else 0%r).
+smt.
+
+rewrite - muE.
 smt.
 smt.
-
-
 rewrite H1. smt.
 
 qed.
+
+
 
 lemma ZzZ &m M i1 i2 p: 
        p <= Pr[ RCR(A).main(i1,i2) @ &m : M (glob A) ] 
@@ -254,14 +264,14 @@ module P(A : IR1R2) = {
   proc main1() = {
     var r : bool;
     A.init();
-    r <- A.run1();
+    r <@ A.run1();
     return r;
   }
 
   proc main2() = {
     var r : bool;
     A.init();
-    r <- A.run2();
+    r <@ A.run2();
     return r;
   }
 
@@ -296,9 +306,11 @@ module P(A : IR1R2) = {
 
 }.
 
+end section.
+
 section.
 
-declare module A : IR1R2.
+declare module A <: IR1R2.
 
 op f (x : real) : real = 1%r/2%r * (1%r + x).
 op fop (x : real) : real = 2%r * x - 1%r.
@@ -366,3 +378,4 @@ qed.
 
 
    
+end section.
