@@ -26,7 +26,9 @@ module Sim1(V : MaliciousVerifier)  = {
     (b',z,r) <@ sinit(Ny);
     b  <@ V.challenge(Ny,z,aux);
     result <@ V.summitup(Ny,r);
-    V.setState(vstat);
+    if(b <> b'){
+      V.setState(vstat);
+    }
     return (b = b', result);
   }
 }.
@@ -41,7 +43,7 @@ declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom V_challenge_ll : islossless V.challenge.
 
 
-axiom rewindable_V_plus : 
+declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
   injective f /\
   (forall (x : glob V),
@@ -55,11 +57,11 @@ axiom rewindable_V_plus :
     hoare[V.setState: b = f x ==> glob V = x]) /\
   islossless V.setState.
 
-
+  
 lemma sim1_rew_ph : forall (x : (glob V) * (glob Sim1)),
     phoare[ Sim1(V).run :
              ((glob V), (glob Sim1)) = x
-                 ==> ((glob V), (glob Sim1)) = x] = 1%r.
+                 ==> ! res.`1 => ((glob V), (glob Sim1)) = x] = 1%r.
 proof. progress.
 exists* (glob V). elim* => V_v.
 progress.
@@ -73,12 +75,19 @@ call (_: true ==> true). auto. skip. auto.
 call (s2 V_v).
 skip. progress.
 wp.
-call (s5 V_v).
-call (_: true ==> true). apply V_summitup_ll.
-call (_: true ==> true). apply V_challenge_ll.
-call (_: true ==> true). proc. sp.
-seq 1 : (true). rnd.  skip. auto. auto. auto.  smt.
-auto. smt. auto. auto. auto. hoare. simplify.
+seq 3 : (vstat = fA V_v /\ x.`1 = V_v) 1%r.
+call (_:true).  call (_:true). call (_:true). rnd. rnd. skip. auto. skip. auto.
+simplify. call V_summitup_ll. call V_challenge_ll.
+inline*.  wp. rnd. rnd. wp. skip.  smt.
+case (b = b').
+rcondf 1. skip. auto. skip. auto.
+rcondt 1. skip. auto. call (s5 V_v). skip. auto. 
+progress. 
+have -> : tt = x.`2. smt.
+smt.
+hoare. simplify.
+call (_:true). call (_:true). call (_:true). rnd. rnd. skip. auto.
+skip. auto. auto.  hoare. simplify. 
 call (s3 V_v). skip. progress. auto.
 qed.
 
@@ -91,7 +100,7 @@ end section.
 section.
 
 declare module V <: MaliciousVerifier {-HonestProver}.
-declare module D <: ZKDistinguisher {-V, -HonestProver}.
+declare module D <: ZKDistinguisher.
 
 declare axiom rewindable_V_plus2 : 
   exists (f : glob V -> sbits),
@@ -149,18 +158,21 @@ local module Sim1'  = {
 }.
 
 
+
+axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
+
 local lemma qrp_zk2_eq ya wa ax : IsSqRoot ya wa =>
   equiv [ZKReal(HonestProver, V, D).run ~ Sim1'.run
-         : ={arg, glob V, glob D} /\ arg{1} = (ya, wa, ax)
+         : ={arg, glob V} /\ arg{1} = (ya, wa, ax)
           ==> res{1} = res{2}.`2 ].
 move => isqr. proc.
+call jk.
 inline*. sp.
-call (_:true).  simplify. call (_:true).
+call (_:true).  simplify.  
 wp. simplify. call (_:true).
 wp. swap {2} 2 -1.
  rnd . rnd{2}.    skip. progress .
 qed.
-
 
 
 local lemma exss ya wa : IsSqRoot ya wa /\ unit ya =>
@@ -246,11 +258,11 @@ qed.
 
 local lemma qkok ya wa P : IsSqRoot  ya wa /\ unit ya =>
   equiv [ W0(Sim1(V),D).run ~ Sim1'.run
-   :   ={glob V, glob D,arg} /\  (ya,wa) = (Ny{2},w{2})
+   :   ={glob V,arg} /\  (ya,wa) = (Ny{2},w{2})
        ==>  (fst res{1}.`2) /\ P res{1}.`1 <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => [isqr invrtbl]. proc.
 inline W0(Sim1(V), D).Sim1.run. sp.
-seq 2 1 : (={glob D, glob V,b',z, aux,Ny,w} 
+seq 2 1 : (={glob V,b',z, aux,Ny,w} 
          /\ aux0{1} = aux{2}
          /\ aux0{1} = aux{1}
          /\ Ny{1} = a{1}
@@ -264,7 +276,7 @@ move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 exists* (glob V){1}. elim*. progress.
 call {1} (s2 V_L).
 skip. progress. smt.  smt.  
-seq 1 1 : (={glob D,glob V,b',z,Ny,w} 
+seq 1 1 : (={glob V,b',z,Ny,w} 
          /\ aux0{1} = aux{2}
          /\ aux0{1} = aux{1}
          /\ Ny{1} = a{1}
@@ -279,38 +291,43 @@ exists* b'{1}. elim*. progress.
 case (b'_L = true).
 exists* b0{1}. elim*. progress.
 case (b0_L = true). 
-call (_:true). 
-wp. 
-call {1} (_: true ==> true).
+call jk. 
+wp.  simplify.
+case (b0{1} = b'{1}). 
+rcondf {1} 2. progress. call (_:true). skip. auto.
+call (_:true). skip. progress. smt.
+rcondt {1} 2. progress. call (_:true). skip. auto.
+conseq (_: b0{1} <> b'{1} ==> true ). smt. smt.
 elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
-call (_:true). skip. progress. smt.
+call {1} s7.
+call (_:true). skip. smt.
 conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
 call {1} (_: true ==> true). apply D_guess_ll.
 wp. 
-call {2} (_: true ==> true). apply D_guess_ll.
-call {1} (_: true ==> true). 
-elim rewindable_V_plus2.
-move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
+call {2} (_: true ==> true). apply D_guess_ll. simplify.
+seq 1 1 : (b0{1} <> b'{1}).
 call {1} (_: true ==> true). apply summitup_ll.
 call {2} (_: true ==> true). apply summitup_ll.  simplify. 
 skip. auto.
+if{1}.
+elim rewindable_V_plus2.
+move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  call {1} s7. skip. auto.
+skip. smt.
 exists* b0{1}. elim*. progress.
 case (b0_L = false).
- call (_:true). wp. 
+ call jk. wp.  simplify.
+rcondf {1} 2. progress. call (_:true). skip. smt.
+call (_:true). skip. progress. smt.
+conseq (_: b0{1} <> b'{1} ==>  !r{1}.`1 ). smt. smt.
+call {1} D_guess_ll.
+call {2} D_guess_ll. wp. simplify.
+rcondt {1} 2. progress. call (_:true). skip. auto.
 call {1} (_: true ==> true). 
 elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
- call (_:true). skip. progress. smt.
-conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
-call {1} (_: true ==> true). apply D_guess_ll.
-call {2} (_: true ==> true). apply D_guess_ll.
-wp.
-call {1} (_: true ==> true). 
-elim rewindable_V_plus2.
-move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
-call {1} (_: true ==> true). apply summitup_ll.
-call {2} (_: true ==> true). apply summitup_ll.
+call {1} summitup_ll.
+call {2} summitup_ll.
 skip. progress. 
 qed.
 
@@ -321,6 +338,7 @@ local lemma ssim ya wa  : IsSqRoot ya wa /\ unit ya =>
        ==> (fst res{1}.`2) = res.`1{2} ].
 move => ii.
 conseq (qkok ya wa (fun x => true) ii). smt.
+progress. smt.
 qed.
 
 
@@ -328,8 +346,10 @@ local lemma sim1'not &m ya wa ax :
      Pr[Sim1'.run(ya, wa, ax) @ &m : ! res.`1] = 1%r/2%r.
 proof.
 have ->: Pr[Sim1'.run(ya, wa, ax) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m : ! res.`1]. 
-byequiv. proc.
-sim. wp.  inline*.  wp. rnd.  rnd.  wp.   skip. progress. auto. auto.
+byequiv. proc. 
+call jk. progress.
+call (_:true). wp.  simplify.
+call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt. auto. auto.
 byphoare. proc. inline*. simplify. 
 swap [2..3] 5. wp.
 seq 6 : true (1%r) (1%r/2%r) 1%r 0%r.
@@ -345,7 +365,9 @@ local lemma sim1'notnot &m ya wa ax :
 proof.
 have ->: Pr[Sim1'.run(ya, wa, ax) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m :  res.`1].
 byequiv. proc.
-sim. wp.  inline*.  wp. rnd.  rnd.  wp. skip. progress. auto. auto.
+call jk. progress.
+call (_:true). wp.  simplify.
+call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt. auto. auto.
 byphoare. proc. inline*. simplify.
 swap [2..3] 5. wp.
 seq 6 : true (1%r) (1%r/2%r) 1%r 0%r.
@@ -369,7 +391,7 @@ have <-: Pr[Sim1'.run(ya,wa,ax) @ &m : ! res.`1] = inv 2%r.
 apply sim1'not.
 byequiv (_: _ ==> (fst res.`2){1} = res.`1{2}). 
 conseq (ssim ya wa ii). auto. auto. auto. 
-smt. 
+smt.  auto. smt.
 qed.
 
 lemma simnresnotnot ya wa ax : IsSqRoot ya wa /\ unit ya =>
@@ -381,7 +403,7 @@ have <-: Pr[Sim1'.run(ya,wa,ax) @ &m :  res.`1] = inv 2%r.
 apply sim1'notnot.
 byequiv (_: _ ==> (fst res.`2){1} = res.`1{2}). 
 conseq (ssim ya wa ii). auto. auto. auto. 
-smt. 
+smt.  auto. smt.
 qed.
 
   
@@ -391,6 +413,7 @@ local lemma qrp_zk2_pr_l &m ya wa ax : IsSqRoot ya wa =>
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
 conseq (qrp_zk2_eq ya wa ax _). auto. auto. auto. auto.
+smt. auto. auto. auto.
 qed.
 
 
@@ -402,7 +425,7 @@ have : Pr[ Sim1'.run(ya,wa,ax) @ &m : res.`1 /\ res.`2 ]
  = Pr[ Sim1'.run(ya,wa,ax) @ &m : !res.`1 /\ res.`2 ].
 byequiv (_: ={glob Sim1',arg} ==> _).  
 proc.  inline*.
-call (_:true). wp. 
+call jk. wp. 
 call (_:true). wp. 
 call (_:true). wp. 
 rnd (fun x => !x). rnd. wp. skip. progress.
@@ -447,7 +470,7 @@ byequiv (_: _ ==> (fst res{1} = fst res.`2{2})).
 proc. simplify.
  inline*. 
 call {2} D_guess_ll. wp. simplify.
-sim. auto.  smt.  
+sim. auto.  smt.   smt. smt.
 byphoare (_: arg = (stat, w, ax) ==> _). 
 conseq (simnresnotnot stat w ax _). auto. auto.  auto.
 qed.
@@ -467,7 +490,7 @@ have ->: Pr[ZKReal(HonestProver, V, D).run(p, w, ax) @ &m : res] * 2%r / 2%r
 smt.
 have : Pr[ZKReal(HonestProver, V, D).run(p, w, ax) @ &m : res] =
   Pr[ZKD(HonestProver, V, D).main(p, ax, w) @ &m : res] .
-byequiv. proc. sim. auto. auto. smt.
+byequiv. proc. call jk. sim. smt. smt.  auto. smt.
 qed.
 
 

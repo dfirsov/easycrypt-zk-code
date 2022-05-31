@@ -16,7 +16,7 @@ clone import RewBasics as Rew with type sbits <- sbits.
 section.
 
 declare module V <: MaliciousVerifier{-HonestProver, -OMZK.MW.IFB.IM.W, -OMZK.MW.IFB.DW}.
-declare module D <: ZKDistinguisher{-HonestProver, -OMZK.MW.IFB.IM.W, -V}.
+declare module D <: ZKDistinguisher.
 
 
 declare axiom Sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
@@ -48,7 +48,11 @@ progress.
 apply (statistical_zk HonestProver Sim1  V D _ _ _ _ _ _ _ stat wit ax N
   (1%r/2%r) &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
 apply rewindable_V_plus. 
-apply (sim1_rew_ph V ). apply V_summitup_ll. apply V_challenge_ll. 
+
+print sim1_rew_ph.
+
+apply (sim1_rew_ph V). 
+ apply V_summitup_ll. apply V_challenge_ll.  apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress. 
 rewrite (sim1_prop V D _ _  _ _ _  p w aux _ ).  apply (rewindable_A_plus V).
  exists f. split. auto. auto.

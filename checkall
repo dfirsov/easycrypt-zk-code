@@ -27,12 +27,12 @@ check program_logic/WhileCycle.ec
 ## Generic ZK results
 check GenericZK.ec
 
-## Hamilton-Blum protocol
-check HC/Basics.ec
-check HC/Completeness.ec
-check HC/SpecialSoundness.ec
-check HC/PoK_Soundness.ec
-check HC/ZK.ec 
+# ## Hamilton-Blum protocol
+# check HC/Basics.ec
+# check HC/Completeness.ec
+# check HC/SpecialSoundness.ec
+# check HC/PoK_Soundness.ec
+# check HC/ZK.ec 
 
 ## Quadratic residue protocol
 check QR/Basics.ec
@@ -44,11 +44,11 @@ check QR/Sim1Property.ec
 check QR/ZK.ec
 
 
-## Quadratic residue protocol
-check DL/Basics.ec
-check DL/Completeness.ec
-check DL/SpecialSoundness.ec
-check DL/PoK.ec
+# ## Quadratic residue protocol
+# check DL/Basics.ec
+# check DL/Completeness.ec
+# check DL/SpecialSoundness.ec
+# check DL/PoK.ec
 
 
 

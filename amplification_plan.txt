@@ -1,13 +1,12 @@
 
 
-   (* init makes things harder *) 
- module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = { (* consider init before the first iteration which  *) 
+
+ module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = { 
    proc run(statement:statement, witness:witness, N : int) = { (* or N is a constant *) 
      var commit, challenge, response, accept; 
      accept <- true; 
-     P.init(); 
      for (i=0 to N) { 
-         copy Soundness without init 
+       Soundness(P,V).run();
        accept = accept /\ r 
      } 
      return accept; 
@@ -30,51 +29,40 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
 
 
 module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
-  proc run(statement: statement, witness: witness, aux: auxiliary_input) = {
+  proc run(statement: statement, witness: witness) = {
     var commit, challenge, response, summary, guess;
-     V.init();
 
-     while(){
+     while(i=0 to N){
        commit <@ P.commitment(statement, witness);
        challenge <@ V.challenge(statement, commit, aux);
        response <@ P.response(challenge);
        summary <@ V.summitup(statement, response);
      }
 
-    guess <@ D.guess(statement, witness, aux, summary);
+    guess <@ D.guess(statement, witness, summary);
     return guess;
   }
 }.
 
-
-
-
-
 module SimAmp(S: Simulator) = { 
-  proc simulate(statement, n) = { 
+  proc simulate(statement, N,n) = { 
   var summary; 
-    for (i=1..N) { 
+    while(i=1 to N) { 
       summary <@ S.simulate(statement, n); 
+      (* Sim1 rewinds itself therefore this must be undone *) 
     } 
     return summary; 
-    }; 
+  }; 
 }
 
 
 Goal: If ZKReal ~ ZKIdeal(S), then ZKRealAmp ~ ZKIdel(SimAmp(S))
-
 ZKHybrid(i) := First i iteration: ZKReal, remaining: S
-
 Claim 1: ZKRealAmp = ZKHybrid(N)
-
 Claim 2: ZKIdeal(SimAmp(S)) = ZKHybrid(0)
-
 Claim 3: ZKHybrid(i+1) ~(eps) ZKHybrid(i)  for uniformly random i  [by reduction]
-
 Claim 4: ZKHybrid(i+1) ~(eps_i) ZKHybrid(i)   with eps = sum eps_i / N
-
 Induction: ZKRealAmp ~(sum eps_i) ZKIdeal(SimAmp(S))
-
 Thus ZKRealAmp ~(N eps)  ZKIdeal(SimAmp(S))
 
 
@@ -98,18 +86,8 @@ D' = run bunch of ZKIdeal; run D
 
 Pr[HybGame L @ m ] - Pr[HybGame R @ m]
 = Pr[bunch, ZKReal(V), D' @ m] - Pr[bunch, ZKIdeal(V), D' @ m]
-<= max-n ( Pr[ZKReal, D' @ n] - Pr[ZKIdeal, D' @ n] )
-[Or: if we add .init: = Pr[ZKReal(V'), D' @ n] - Pr[ZKIdea(V')l, D' @ n]
-
-soundness
-  init
-  ...
-
-soundnessAmp
-    init
-  while
-
-    ..
+{exists n,}
+<=   ( Pr[ZKReal, D' @ n] - Pr[ZKIdeal, D' @ n] )
 
 
   lemma Hybrid_restr &m (p:glob A -> glob Ob -> int -> outputA -> bool):
@@ -118,28 +96,25 @@ soundnessAmp
     = 1%r/q%r * (  Pr[Ln(Ob,A).main() @ &m : p (glob A) (glob Ob) Count.c res]
                  - Pr[Rn(Ob,A).main() @ &m : p (glob A) (glob Ob) Count.c res]).
 
+
+
+
+
 abstract theory Jensen.
-
 type argI, argA, argB
-
 module type M = { proc init(...) : unit  proc a(arg:argA) : bool  proc b(...) : bool }
-
 module WithInit = { proc runA = { init(...); a(...); }  proc runB = {... } }
-
 lemma argI argA argB M &m:
   (forall &m, Pr[res : M.a(argA) @ &m] <= f(Pr[res : M.b(argB) @ &m]))
   =>
   Pr[res : WithInit(M).runA &m] <= f(Pr[res : WithInit(M).runB @ &m])
-
 end theory
-
 
 module M = {
 proc init = bunch
 proc a = ZKReal
 proc b = ZKIdeal
 }
-
 lemma WithInit(M).runA = HybGame(L); WithInit(M).runB = HybGame(R)
 
 
@@ -185,17 +160,24 @@ lemma WithInit(M).runA = HybGame(L); WithInit(M).runB = HybGame(R)
 
 
 
+module ExtractorAmp(P : MProver3N) = {
+  proc extract(p : statement) = {
+    var w;
+   while( i = 0 to N /\ ! soundness_relation p w) {
+    PX := something(P)
+    w <- Extractor(PX : MProver3).extract(p)
+   }
+   return w;
+}
+
+}
 
 
 
+    lemma statistical_PoK &m p aux:
+      (forall &m, Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >= deltoid)
 
-
-
-
-
-
-
-
+   =>  Pr[ExtractorAmp(P).extract(p) @ &m : soundness_relation p res] >= f deltoid 
 
 
 

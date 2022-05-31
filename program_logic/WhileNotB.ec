@@ -4,6 +4,7 @@ require import Int.
 
 type rt.
 
+
 module M = {
   var c : int
   proc whp(MyP : rt -> bool,myd : rt distr, s : int, e : int, r : rt) = {

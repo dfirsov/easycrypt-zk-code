@@ -4,10 +4,13 @@ require import Aux.
 
 type prob, wit, sbits, event, auxiliary_input.
 
+op E : event * sbits -> bool.
+
 require WhileCycle.
 clone import WhileCycle as MW with type irt    <- prob * auxiliary_input,
                                     type rrt   <- event * sbits,
-                                    type sbits <- sbits.
+                                    type sbits <- sbits,
+                                    op MyPred <- E.
 import MW.IFB.
 import MW.IFB.IM.
 
@@ -63,18 +66,18 @@ module Iter(Sim1 : Simulator1,  D : Dist)  = {
 section.
 (* declare module V : MaliciousVerifier{DW,W}. *)
 declare module Sim1 <: Simulator1{-DW, -W}.
-declare module D <: Dist {-Sim1,-W}.
+declare module D <: Dist.
 
 declare axiom Sim1_ll : islossless Sim1.run.
 
 declare axiom Sim1_rew_ph : forall (x : (glob Sim1)),
-  phoare[ Sim1.run : (glob Sim1) = x ==> (glob Sim1) = x] = 1%r.
+  phoare[ Sim1.run : (glob Sim1) = x ==> !E res => (glob Sim1) = x] = 1%r.
 
 
 declare axiom D_ll    : islossless D.guess.
 
 op fevent : event.
-op E : event * sbits -> bool.
+
 declare axiom  Estart :  E (fevent, witness) = false.
 
 
@@ -221,8 +224,30 @@ have ->:
            @ &m : E res.`2 /\ res.`1 ] .  
  byequiv (_: _==> ={res}). proc*.
 inline Iter(Sim1, D).run. sp. wp. 
-call (_: ={glob Sim1, glob D}). simplify. sim.  
-skip. smt. auto. auto.
+inline W1(Sim1, D).run. sp. 
+seq 1 1 :   (a0{2} = a{2} /\
+  w0{2} = w{2} /\
+  a{1} = (E0{1}, (Ny0{1}, aux0{1}), 1, ea0{1}, (fevent0{1}, witness)) /\
+  w1{1} = w0{1} /\
+  fevent0{1} = fevent{1} /\
+  Ny0{1} = Ny{1} /\
+  w0{1} = w{1} /\
+  aux0{1} = aux{1} /\
+  ea0{1} = ea{1} /\
+  E0{1} = E{1} /\
+  (a{2}, w{2}) = ((Top.E, (p, aux), 1, ea, (Top.fevent, witness)), w) /\
+  (glob D){2} = (glob D){m} /\
+  (glob Sim1){2} = (glob Sim1){m} /\
+  (fevent{1}, Ny{1}, w{1}, aux{1}, ea{1}, E{1}) =
+  (Top.fevent, p, w, aux, ea, Top.E) /\
+  (glob D){1} = (glob D){m} /\ (glob Sim1){1} = (glob Sim1){m} /\ r1{1} = r0{2}).
+admit. wp. call (_:true). skip. progress. smt. auto. auto.
+
+
+
+
+(* call (_: ={glob Sim1, glob D}). simplify. sim.   *)
+(* skip. smt. auto. auto. *)
 have : coeff <= 1%r. 
 rewrite H4.
 have ->: Pr[W0(Sim1,D).run(p,w,aux) @ &m : ! E res.`2]
@@ -392,7 +417,7 @@ have ->: Pr[Sim1.run(p,aux) @ &m : ! E res]
   = Pr[W0(Sim1, D).run(p, w, aux) @ &m : ! E res.`2].
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).
   skip. progress. auto. auto. auto.
-smt.
+smt. auto. auto. auto. smt.
 qed.
 
 
@@ -408,7 +433,7 @@ have ->: Pr[Sim1.run(p,aux) @ &m : E res]
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).
   skip. progress. auto. auto. auto.
 progress.
-apply (zk_final_clean' &m p w p0 eps ea zkp aux);auto.
+smt. auto.  auto. apply (zk_final_clean' &m p w p0 eps ea zkp aux);auto.
 qed.
 end section.
 

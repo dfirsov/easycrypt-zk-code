@@ -3,6 +3,8 @@ require import Int.
 
 type rrt, irt, sbits.
 
+op MyPred : rrt -> bool.
+
 module type Dist = {
   proc run(r:rrt) : bool
 }.
@@ -17,7 +19,8 @@ clone import WhileNoSuccess as IFB with
   type rrt <- rrt,
   type irt <- irt,
   type iat <- (rrt -> bool) * irt * int * int * rrt,
-  type sbits <- sbits.
+  type sbits <- sbits,
+  op  MyPred <- MyPred.
 
 import IM.
 
@@ -31,7 +34,7 @@ declare module A <: Run {-W, -DW}.
 declare module D <: Dist {-A, -W, -DW}.
 
 declare axiom A_ll : islossless A.run.
-declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> (glob A) = x ] = 1%r.
+declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] = 1%r.
 
 declare axiom D_ll : islossless D.run.
 
@@ -223,42 +226,42 @@ qed.
 
 require import Real.
 
-local lemma whp_cap_fin &m pa ia (ea : int) r ja   :
+local lemma whp_cap_fin &m ia (ea : int) r ja   :
   2  <= ja     =>
   ja <= ea + 1 =>
-  pa r = false =>
+  MyPred r = false =>
   (hoare[ A.run : (glob A) = (glob A){m} 
              ==> (glob A) = (glob A){m} ]) => 
-   Pr[ W1.run(pa,ia,1,ea,r) @ &m : W.c = ja /\ pa res.`2 /\ res.`1 ]
-     = (Pr[ A.run(ia) @ &m : !pa res ] ^ (ja - 2)) 
-        * Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ]. 
+   Pr[ W1.run(MyPred,ia,1,ea,r) @ &m : W.c = ja /\ MyPred res.`2 /\ res.`1 ]
+     = (Pr[ A.run(ia) @ &m : !MyPred res ] ^ (ja - 2)) 
+        * Pr[ W0.run(ia) @ &m : MyPred res.`2 /\ res.`1 ]. 
 proof. progress.
 have FG :  phoare[ W0.run : arg = ia /\ (glob A) = (glob A){m}  /\ (glob D) = (glob D){m}
-  ==> pa res.`2 /\ res.`1 ] = Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ].
+  ==> MyPred res.`2 /\ res.`1 ] = Pr[ W0.run(ia) @ &m : MyPred res.`2 /\ res.`1 ].
 
 bypr. move => &m0 [eq1 eq2].  rewrite eq1. rewrite -eq1.
 byequiv (_: ={glob A, glob D, arg} ==> ={res}).  sim. auto. auto.
 
 have FF : forall ea, 0 <= ea => phoare[ W(A).whp : 
-   arg = (pa,ia,1,ea,r) /\ (glob A) = (glob A){m}
-     ==> !pa res ] = (Pr[ A.run(ia) @ &m : !pa res ] ^ ea).
+   arg = (MyPred,ia,1,ea,r) /\ (glob A) = (glob A){m}
+     ==> !MyPred res ] = (Pr[ A.run(ia) @ &m : !MyPred res ] ^ ea).
 move => ea0 ea0p.
 
-  conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! pa res] pa ia ea0 r _ _ _).  auto. apply A_ll. apply A_rew_ph. auto.  auto. 
+  conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! MyPred res]  ia ea0 r _ _ _).  auto. apply A_ll. apply A_rew_ph. auto.  auto. 
 bypr. move => &m0 [eq1 eq2]. rewrite eq1. 
 byequiv (_: ={arg, glob A} ==> ={res}). sim. progress. rewrite eq2. auto. auto.
-pose p1 := Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ]. auto. auto.
-rewrite  (whp_cap &m pa ia 1 ea r ja ). smt. smt.
-have ->: Pr[W1.run(pa, ia, 1, ja - 1, r) @ &m : W.c = ja /\ pa res.`2 /\ res.`1]
- = Pr[W3.run(pa, ia, 1, ja-1, r) @ &m : W.c = ja /\ pa res.`2 /\  res.`1].
+pose p1 := Pr[ W0.run(ia) @ &m : MyPred res.`2 /\ res.`1 ]. auto. auto.
+rewrite  (whp_cap &m MyPred ia 1 ea r ja ). smt. smt.
+have ->: Pr[W1.run(MyPred, ia, 1, ja - 1, r) @ &m : W.c = ja /\ MyPred res.`2 /\ res.`1]
+ = Pr[W3.run(MyPred, ia, 1, ja-1, r) @ &m : W.c = ja /\ MyPred res.`2 /\  res.`1].
 byequiv (_: ={glob W(A), arg, glob D} ==> _). proc*. inline W1.run. 
 inline W3.run. sp. wp. 
 call (_:true). 
 call whp_if_prop. skip. progress. 
 auto. auto.
-byphoare (_: arg = (pa, ia, 1, ja - 1, r) /\ (glob A) = (glob A){m} ==> _);auto.
+byphoare (_: arg = (MyPred, ia, 1, ja - 1, r) /\ (glob A) = (glob A){m} ==> _);auto.
 proc. inline W3.M.whp_if. 
-seq 3 : (! p ri) (Pr[ A.run(ia) @ &m : !pa res ] ^ (ja - 2))  p1 1%r 0%r (e = ja - 1 /\ W.c <= e  /\ i = ia /\ p = pa 
+seq 3 : (! p ri) (Pr[ A.run(ia) @ &m : !MyPred res ] ^ (ja - 2))  p1 1%r 0%r (e = ja - 1 /\ W.c <= e  /\ i = ia /\ p = MyPred 
  /\ (!p ri => W.c = e)  /\  (glob A) = (glob A){m} );auto.
 inline W(A).whp. sp.
 wp.
@@ -350,33 +353,33 @@ call (whp_cap_fin_int pa ia ea ra). skip. auto. auto. auto.
 qed.
 
 
-local lemma whp_cap_fin_sum' &m pa ia (ea : int) r :
-  pa r = false =>
+local lemma whp_cap_fin_sum' &m  ia (ea : int) r :
+  MyPred r = false =>
   1 <= ea =>
   hoare[ A.run : (glob A) = (glob A){m} 
            ==> (glob A) = (glob A){m} ] => 
-  Pr[ W1.run(pa,ia,1,ea,r) @ &m : pa res.`2 /\ res.`1 ]  
+  Pr[ W1.run(MyPred,ia,1,ea,r) @ &m : MyPred res.`2 /\ res.`1 ]  
      = big predT
-        (fun i => (Pr[ A.run(ia) @ &m : !pa res ] ^ (i - 2)) 
-          * Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ]  )
+        (fun i => (Pr[ A.run(ia) @ &m : !MyPred res ] ^ (i - 2)) 
+          * Pr[ W0.run(ia) @ &m : MyPred res.`2 /\ res.`1 ]  )
         (range 2 (ea + 2)). 
 proof. progress.
-have ->: Pr[ W1.run(pa,ia,1,ea,r) @ &m : pa res.`2 /\ res.`1 ]  
- = Pr[ W1.run(pa,ia,1,ea,r) @ &m : (1 < W.c <= ea + 1) 
-        /\ pa res.`2 /\ res.`1 ].
+have ->: Pr[ W1.run(MyPred,ia,1,ea,r) @ &m : MyPred res.`2 /\ res.`1 ]  
+ = Pr[ W1.run(MyPred,ia,1,ea,r) @ &m : (1 < W.c <= ea + 1) 
+        /\ MyPred res.`2 /\ res.`1 ].
 rewrite Pr[mu_split (1 < W.c && W.c <= ea + 1)].
-  have ->: Pr[W1.run(pa, ia, 1, ea, r) @ &m :
-   (pa res.`2 /\ res.`1) /\ ! (1 < W.c && W.c <= ea + 1)] = 0%r.
-   have : Pr[W1.run(pa, ia, 1, ea, r) @ &m : ! (1 < W.c && W.c <= ea + 1)] = 0%r.
-    have f3 : Pr[W1.run(pa, ia, 1, ea, r) @ &m : (1 < W.c && W.c <= ea + 1)] = 1%r. rewrite (whp_cap_fin_int_D &m). smt.
+  have ->: Pr[W1.run(MyPred, ia, 1, ea, r) @ &m :
+   (MyPred res.`2 /\ res.`1) /\ ! (1 < W.c && W.c <= ea + 1)] = 0%r.
+   have : Pr[W1.run(MyPred, ia, 1, ea, r) @ &m : ! (1 < W.c && W.c <= ea + 1)] = 0%r.
+    have f3 : Pr[W1.run(MyPred, ia, 1, ea, r) @ &m : (1 < W.c && W.c <= ea + 1)] = 1%r. rewrite (whp_cap_fin_int_D &m). smt.
   smt. 
-    have f2 : 1%r = Pr[W1.run(pa, ia, 1, ea, r) @ &m : ! (1 < W.c && W.c <= ea + 1)] + Pr[W1.run(pa, ia, 1, ea, r) @ &m : (1 < W.c && W.c <= ea + 1)]. 
-    have  <- : Pr[W1.run(pa, ia, 1, ea, r) @ &m : true ] = 1%r.
+    have f2 : 1%r = Pr[W1.run(MyPred, ia, 1, ea, r) @ &m : ! (1 < W.c && W.c <= ea + 1)] + Pr[W1.run(MyPred, ia, 1, ea, r) @ &m : (1 < W.c && W.c <= ea + 1)]. 
+    have  <- : Pr[W1.run(MyPred, ia, 1, ea, r) @ &m : true ] = 1%r.
     smt.
    rewrite Pr[mu_split (1 < W.c && W.c <= ea + 1)]. simplify.
    smt. auto. timeout 20. smt. smt. smt.
 rewrite big_int_cond.
-rewrite (whp_cap_fin_int_sum_D &m ia pa (fun x => pa (snd x) /\   fst x) ea r).
+rewrite (whp_cap_fin_int_sum_D &m ia MyPred (fun x => MyPred (snd x) /\   fst x) ea r).
 simplify.
 rewrite big_int_cond.
 apply eq_big. auto.
@@ -388,31 +391,31 @@ auto.
 qed.
 
 
-local lemma whp_cap_fin_sum'' &m pa ia (ea : int) r :
-  pa r = false =>
+local lemma whp_cap_fin_sum'' &m  ia (ea : int) r :
+  MyPred r = false =>
   1 <= ea =>
   hoare[ A.run : (glob A) = (glob A){m} 
            ==> (glob A) = (glob A){m} ] => 
-   Pr[ W1.run(pa,ia,1,ea,r) @ &m : pa res.`2 /\ res.`1 ]  
+   Pr[ W1.run(MyPred,ia,1,ea,r) @ &m : MyPred res.`2 /\ res.`1 ]  
       = big predT
-         (fun i => (Pr[ A.run(ia) @ &m : !pa res ] ^ i) 
-           * Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ])
+         (fun i => (Pr[ A.run(ia) @ &m : !MyPred res ] ^ i) 
+           * Pr[ W0.run(ia) @ &m : MyPred res.`2 /\ res.`1 ])
          (range 0 ea). 
 proof. progress.
 rewrite (whp_cap_fin_sum' &m);auto.
 rewrite (PIT.big_reindex (fun (i : int) =>
-     Pr[A.run(ia) @ &m : ! pa res] ^ i * Pr[W0.run(ia) @ &m : pa res.`2 /\  res.`1]) 2 ea). auto.
+     Pr[A.run(ia) @ &m : ! MyPred res] ^ i * Pr[W0.run(ia) @ &m : MyPred res.`2 /\  res.`1]) 2 ea). auto.
 qed.
 
 
-local lemma whp_cap_fin_sum &m pa ia (ea : int) r :
-  pa r = false =>
+local lemma whp_cap_fin_sum &m ia (ea : int) r :
+  MyPred r = false =>
   hoare[ A.run : (glob A) = (glob A){m} 
            ==> (glob A) = (glob A){m} ] => 
-  Pr[ W1.run(pa,ia,1,ea,r) @ &m : pa res.`2 /\ res.`1 ]  
+  Pr[ W1.run(MyPred,ia,1,ea,r) @ &m : MyPred res.`2 /\ res.`1 ]  
      = big predT
-        (fun i => (Pr[ A.run(ia) @ &m : !pa res ] ^ i) 
-          * Pr[ W0.run(ia) @ &m : pa res.`2 /\ res.`1 ])
+        (fun i => (Pr[ A.run(ia) @ &m : !MyPred res ] ^ i) 
+          * Pr[ W0.run(ia) @ &m : MyPred res.`2 /\ res.`1 ])
         (range 0 ea). 
 proof.
 case (1 <= ea).
@@ -420,12 +423,12 @@ progress. rewrite (whp_cap_fin_sum'' &m);auto.
 progress.
 have ->: bigi predT
   (fun (i : int) =>
-     Pr[A.run(ia) @ &m : ! pa res] ^ i * Pr[W0.run(ia) @ &m : pa res.`2 /\ res.`1])
+     Pr[A.run(ia) @ &m : ! MyPred res] ^ i * Pr[W0.run(ia) @ &m : MyPred res.`2 /\ res.`1])
   0 ea = 0%r.
 smt.
-byphoare (_: arg = (pa, ia, 1, ea, r) ==> _).
+byphoare (_: arg = (MyPred, ia, 1, ea, r) ==> _).
 hoare.
-conseq (_: _ ==> ! pa res.`2). smt.
+conseq (_: _ ==> ! MyPred res.`2). smt.
 proc. sp. simplify. inline W1.M.whp. sp.
 rcondf 1. skip. smt. call (_: true ==> true). auto. wp. skip. smt. auto. auto.
 qed.
