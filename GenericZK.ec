@@ -205,7 +205,6 @@ module Ob : Orclb = {
   proc leaks(x:inleaks) : outleaks = {
     return witness;
   }
-
   proc orclR() : adv_summary = {
     var commit, challenge, response, summary;
     commit <@ P.commitment(s, w);
@@ -214,15 +213,12 @@ module Ob : Orclb = {
     summary <@ V.summitup(s, response);
     return summary;
   }
-
   proc orclL() : adv_summary = {
     var summary;
     summary <@ Sim(V).simulate(s, n, aux);
     return summary;
   }
 }.
-
-
 module (A: AdvOrclb)(Ob : Orclb, O : Orcl) = {
   proc main() : bool = {
     var summary, guess,i;
@@ -236,8 +232,6 @@ module (A: AdvOrclb)(Ob : Orclb, O : Orcl) = {
     return guess;
   }
 }.
-
-
 module Y = {
   proc main() = {
    var summary, guess;
@@ -256,8 +250,6 @@ module Y = {
    return guess;
  }
 }.
-
-
 module Z = {
   proc main() = {
    var summary, guess;
@@ -276,7 +268,6 @@ module Z = {
    return guess;
  }
 }.
-
 module Z2 = {
   proc main() = {
    var summary, guess;
@@ -299,7 +290,6 @@ module Z2 = {
    return guess;
  }
 }.
-
 module Y2 = {
   proc main() = {
    var summary, guess;
@@ -322,8 +312,6 @@ module Y2 = {
    return guess;
  }
 }.
-
-
 module Z3 = {
   proc main() = {
     var commit, challenge, response, summary, guess;
@@ -347,7 +335,6 @@ module Z3 = {
    return guess;
  }
 }.
-
 module Y3 = {
   proc main() = {
     var commit, challenge, response, summary, guess;
@@ -374,7 +361,6 @@ module Y3 = {
    return guess;
  }
 }.
-
 lemma y &m :
   Pr[Y2.main() @ &m : res] = Pr[Y3.main() @ &m : res].
 byequiv(_: ={glob D, glob V, glob P, glob Sim, glob HybOrcl} ==> _).
@@ -409,10 +395,6 @@ sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt.
    skip. progress.
 admit. auto. auto.
 qed.
-
-
-
-
 lemma w &m :
   Pr[Z2.main() @ &m : res] =
     Pr[Z3.main() @ &m : res].
@@ -447,7 +429,6 @@ sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt.
    skip. progress.
 admit. auto. auto.
 qed.
-
 lemma yy &m : 
   Pr[Y.main() @ &m : res] = 
     Pr[Y2.main() @ &m : res].
@@ -459,7 +440,6 @@ sim.
 admit.
 auto. auto.
 qed.
-
 lemma ww &m : 
   Pr[Z.main() @ &m : res] = 
     Pr[Z2.main() @ &m : res].
@@ -471,7 +451,6 @@ sim.
 admit.
 auto. auto.
 qed.
-
 lemma www &m : 
   Pr[HybGame(A,Ob,L(Ob)).main() @ &m : res] = 
   Pr[Z.main() @ &m : res].
@@ -551,8 +530,6 @@ admit.
 auto.
 auto.
 qed.
-
-
 lemma qq &m:
         Pr[Ln(Ob,A).main() @ &m : res]
       - Pr[Rn(Ob,A).main() @ &m : res]
@@ -560,11 +537,6 @@ lemma qq &m:
             - Pr[HybGame(A,Ob,R(Ob)).main() @ &m : res]).
 apply (Hybrid_restr Ob A _ _ _ _ _ &m (fun _ _ _ r => r));admit.
 qed.
-
-
-lemma zz &m : Pr[Rn(Ob,A).main() @ &m : res] = 0%r.
-byphoare. proc. inline*.
-admitted.
 
 
 end ZKTheory.
