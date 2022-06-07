@@ -11,7 +11,7 @@ move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
 skip. progress.   apply (d_prop4 rrr.`1 rrr.`2). smt. 
-have -> : statement{hr}  = (witness{hr} * witness{hr}).
+have -> : s{hr}  = (w{hr} * w{hr}).
 apply qra.
 have ->: challenge00. smt. 
 simplify.
