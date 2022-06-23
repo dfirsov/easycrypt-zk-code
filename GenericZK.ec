@@ -1255,6 +1255,7 @@ end SoundnessTheory.
     rewrite Pr[mu_eq]. smt. auto.
     smt. qed. 
 
+
   
     lemma computational_soundness &m p aux deltoid:
         ! in_language soundness_relation p =>
@@ -1263,7 +1264,7 @@ end SoundnessTheory.
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
             deltoid =>
          Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
-         <= sqrt (deltoid + (1%r/ (size (challenge_set))%r)).
+         <=  (sqrt deltoid) + (1%r/ (size (challenge_set))%r).
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
       have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
@@ -1278,17 +1279,73 @@ end SoundnessTheory.
     pose a := Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
     pose b := deltoid.
     have f2 : 0%r <= a <= 1%r. smt.
-    smt (challenge_set_size qqq1 qqq2).
-    qed.
+    progress.     
+    have f3 : a ^ 2 - 1%r / (size challenge_set)%r * a  <= b.  smt.
+    have f4 : a * (a - 1%r / (size challenge_set)%r)  <= b.  smt.
+
+    case (a < 1%r / (size challenge_set)%r). smt. progress.
+   have f51:  (a >= 1%r / (size challenge_set)%r). smt.
+   have f52:  (a - 1%r / (size challenge_set)%r) <= a. smt.
+
+   have f54 :  0%r <= a. smt.
+   have f53:  (a - 1%r / (size challenge_set)%r) * (a - 1%r / (size challenge_set)%r) <= a * (a - 1%r / (size challenge_set)%r). 
+   smt.
+
+    have f5 : (a - 1%r / (size challenge_set)%r)^2  <= b.  smt.
+   smt. qed.
+
+
+         (*  depending on the size of challenge_set either computational_soundness or computational_soundness_II provide a better bound *)
+    lemma computational_soundness_II &m p aux deltoid:
+        ! in_language soundness_relation p =>
+       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+                    valid_transcript_pair p res.`1 res.`2 /\
+                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
+            deltoid =>
+         Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+         <=  ((size (challenge_set))%r * deltoid) + (1%r/ (size (challenge_set))%r).
+    proof. progress.
+    have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
+      have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
+      rewrite Pr[mu_false]. auto.
+    rewrite Pr[mu_eq]. smt. auto.
+    have  :   0%r >=
+       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+         - deltoid.
+     rewrite - f1.
+    apply (computational_PoK &m p aux). auto. 
+    pose a := Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
+    pose b := deltoid.
+    pose c := (size challenge_set)%r.
+    have f2 : 0%r <= a <= 1%r. smt.
+    progress.     
+    have f3 : a ^ 2 - 1%r / c * a  <= b.  smt.
+    have f4 : a * (a - 1%r /c)  <= b.  smt.
+
+   case (a < 1%r /c). smt. progress.
+   have f51:  (a >= 1%r / c). smt.
+   have f52:  (a - 1%r / c) <= a. smt.
+   have f54 :  0%r <= a. smt.
+
+   have f6 : a * c * (a - 1%r / c) <= b * c. smt.
+   have f7 : (1%r/c) * c * (a - 1%r / c) <= b * c. smt.
+   have f8 : (a - 1%r / c) <= b * c. smt.
+   have f9 : a  <= b * c + 1%r/c. smt.
+
+   smt (challenge_set_size). qed.
 
     
     lemma statistical_soundness &m p aux :
         ! in_language soundness_relation p =>
       (! exists t1 t2, valid_transcript_pair p t1 t2 /\ ! soundness_relation p (special_soundness_extract p t1 t2)) =>
          Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
-         <= sqrt ((1%r/ (size (challenge_set))%r)).
+         <=  ((1%r/ (size (challenge_set))%r)).
      
-     proof. progress. apply (computational_soundness &m p aux 0%r H _).
+     proof. progress. 
+       have ->: inv (size challenge_set)%r = sqrt 0%r + inv (size challenge_set)%r. smt.
+
+    apply (computational_soundness &m p aux 0%r H _).
       have -> : Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  

@@ -1,6 +1,8 @@
 require import AllCore DBool Bool List Distr Aux Finite.
 require import CyclicGroup.
 
+print CyclicGroup.
+
 import FDistr.
 
 require import GenericZK.
