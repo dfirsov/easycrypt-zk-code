@@ -3,12 +3,13 @@ require import AllCore List Distr.
 
 theory ZKProtocol.
 
-type statement, witness, commitment, response, challenge, auxiliary_input, adv_summary, sbits.
+type statement, witness, commitment, response, challenge,  adv_summary, sbits.
 type relation = statement -> witness -> bool.
 type transcript = commitment * challenge * response.
 
 op in_language (R:relation) statement : bool = exists witness, R statement witness.
 op challenge_set : challenge list. (* axiomitize that! *)
+
 axiom challenge_set_size : 0 < size challenge_set.
 op verify_transcript : statement -> transcript -> bool.
 
@@ -33,11 +34,11 @@ module type SpecialSoundnessExtractor = {
 }.
 
 module type SpecialSoundnessAdversary = { (* computational *)
-  proc attack(statement:statement, aux:auxiliary_input) : transcript * transcript
+  proc attack(statement:statement) : transcript * transcript
 }.
 
 module type SpecialSoundnessAdvReduction(A: SpecialSoundnessAdversary) = { (* computational *)
-  proc run(statement: statement, aux: auxiliary_input) : bool
+  proc run(statement: statement) : bool
 }.
 
 module type HonestVerifier = {
@@ -46,12 +47,12 @@ module type HonestVerifier = {
 }.
 
 module type MaliciousProver = {  
-  proc commitment(s: statement, aux: auxiliary_input) : commitment
+  proc commitment(s: statement) : commitment
   proc response(challenge: challenge) : response
 }.
 
 module type MaliciousVerifier = {
-  proc challenge(_:statement * commitment * auxiliary_input) : challenge
+  proc challenge(_:statement * commitment) : challenge
   proc summitup(statement: statement, response: response) : adv_summary
 
   proc getState() : sbits
@@ -60,6 +61,7 @@ module type MaliciousVerifier = {
 
 module HonestVerifier : HonestVerifier = {
   var c : commitment
+
   proc challenge(statement: statement, commitment: commitment) : challenge = {
     var challenge : challenge;
     challenge <$ duniform (challenge_set );
@@ -75,10 +77,10 @@ module HonestVerifier : HonestVerifier = {
 module Completeness(P: HonestProver, V: HonestVerifier) = {
   proc run(s:statement, w:witness) = {
     var commit, challenge, response, accept;
-    commit <@ P.commitment(s,w);
+    commit    <@ P.commitment(s,w);
     challenge <@ V.challenge(s,commit);
-    response <@ P.response(challenge);
-    accept <@ V.verify(s, (commit, challenge, response));
+    response  <@ P.response(challenge);
+    accept    <@ V.verify(s, (commit, challenge, response));
     return accept;
   }
 }.
@@ -97,10 +99,11 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
   } 
 }. 
 
+
 module Soundness(P: MaliciousProver, V: HonestVerifier) = {
-  proc run(statement: statement, aux: auxiliary_input) : bool = {
+  proc run(statement: statement) : bool = {
     var commit, challenge, response, accept; 
-    commit <@ P.commitment(statement, aux);
+    commit <@ P.commitment(statement);
     challenge <@ V.challenge(statement,commit);
     response <@ P.response(challenge);
     accept <@ V.verify(statement, (commit, challenge, response));
@@ -109,13 +112,13 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
 }.
 
 module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = { 
-  proc run(stat:statement,aux:auxiliary_input,N:int) = {
+  proc run(stat:statement,N:int) = {
     var accept : bool;
     var i : int;
     i <- 0;
     accept <- true; 
     while(i <= N /\ accept) {  
-      accept <@ Soundness(P,V).run(stat,aux);
+      accept <@ Soundness(P,V).run(stat);
       i <- i + 1;
     } 
     return accept; 
@@ -123,44 +126,40 @@ module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = {
 }. 
 
 
+module type ZKDistinguisher = {
+  proc guess(statement: statement, witness: witness, summary: adv_summary) : bool
+}.
 
+module type Simulator(V: MaliciousVerifier) = {
+  proc * simulate(statement: statement, n : int) : adv_summary
+}.
 
-
-  module type ZKDistinguisher = {
-    proc guess(statement: statement, witness: witness, aux: auxiliary_input, summary: adv_summary) : bool
-  }.
-
-  module type Simulator(V: MaliciousVerifier) = {
-    proc * simulate(statement: statement, n : int, aux: auxiliary_input) : adv_summary
-  }.
-
-  module type Simulator1(V: MaliciousVerifier) = {
-    proc run(statement: statement, aux: auxiliary_input) : bool * adv_summary
-  }.
+module type Simulator1(V: MaliciousVerifier) = {
+  proc run(statement: statement) : bool * adv_summary
+}.
 
 
 
 module ZKReal(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
-  proc run(statement: statement, witness: witness, aux: auxiliary_input) = {
+  proc run(statement: statement, witness: witness) = {
     var commit, challenge, response, summary, guess;
     commit <@ P.commitment(statement, witness);
-    challenge <@ V.challenge(statement, commit, aux);
+    challenge <@ V.challenge(statement, commit);
     response <@ P.response(challenge);
     summary <@ V.summitup(statement, response);
-    guess <@ D.guess(statement, witness, aux, summary);
+    guess <@ D.guess(statement, witness, summary);
     return guess;
   }
 }.
 
 
-
     (* TODO note: if we add "init", keep "aux". If we don't add "init", remove aux. *)
 
 module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: ZKDistinguisher) = {
-  proc run(statement: statement, witness: witness, n : int, aux: auxiliary_input) = {
+  proc run(statement: statement, witness: witness, n : int) = {
     var summary, guess;
-    summary <@ S(V).simulate(statement, n, aux);
-    guess <@ D.guess(statement, witness, aux, summary);
+    summary <@ S(V).simulate(statement, n);
+    guess <@ D.guess(statement, witness, summary);
     return guess;
   }
 }.
@@ -171,7 +170,6 @@ abstract theory ZKTheory.
 
 op s:statement.
 op w:witness.
-op aux:auxiliary_input.
 op n : int.
 
 axiom zkrel_prop : zk_relation s w.
@@ -196,7 +194,7 @@ module Ad(D : ZKDistinguisher, Ob : Orclb, O : Orcl) = {
        summary <@ O.orcl();
        i <- i + 1;
     }
-    guess <@ D.guess(s, w, aux, summary);
+    guess <@ D.guess(s, w, summary);
     return guess;
   }
 }.
@@ -209,14 +207,14 @@ module Obb(P : HonestProver, V : MaliciousVerifier, Sim : Simulator) = {
   proc orclR() : adv_summary = {
     var commit, challenge, response, summary;
     commit <@ P.commitment(s, w);
-    challenge <@ V.challenge(s, commit, aux);
+    challenge <@ V.challenge(s, commit);
     response <@ P.response(challenge);
     summary <@ V.summitup(s, response);
     return summary;
   }
   proc orclL() : adv_summary = {
     var summary;
-    summary <@ Sim(V).simulate(s, n, aux);
+    summary <@ Sim(V).simulate(s, n);
     return summary;
   }
 }.
@@ -264,7 +262,7 @@ module Y = {
      summary <@
        HybOrcl(Ob, R(Ob)).orcl();
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
  }
 }.
@@ -282,7 +280,7 @@ module Z = {
      summary <@
        HybOrcl(Ob, L(Ob)).orcl();
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
  }
 }.
@@ -304,7 +302,7 @@ module Z2 = {
      summary <@
        HybOrcl(Ob, L(Ob)).orcl();
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
  }
 }.
@@ -326,7 +324,7 @@ module Y2 = {
      summary <@
        HybOrcl(Ob, R(Ob)).orcl();
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
  }
 }.
@@ -338,18 +336,18 @@ module Z3 = {
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
      commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit, aux);
+     challenge <@ V.challenge(s, commit);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
      HybOrcl.l <- HybOrcl.l + 1;
    }
-   summary <@ Sim(V).simulate(s, n, aux);
+   summary <@ Sim(V).simulate(s, n);
    HybOrcl.l <- HybOrcl.l + 1;
    while (HybOrcl.l <= n) {
-    summary <@ Sim(V).simulate(s, n, aux);
+    summary <@ Sim(V).simulate(s, n);
     HybOrcl.l <- HybOrcl.l + 1;
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
  }
 }.
@@ -361,21 +359,21 @@ module Y3 = {
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
      commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit, aux);
+     challenge <@ V.challenge(s, commit);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
      HybOrcl.l <- HybOrcl.l + 1;
    }
      commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit, aux);
+     challenge <@ V.challenge(s, commit);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
    HybOrcl.l <- HybOrcl.l + 1;
    while (HybOrcl.l <= n) {
-    summary <@ Sim(V).simulate(s, n, aux);
+    summary <@ Sim(V).simulate(s, n);
     HybOrcl.l <- HybOrcl.l + 1;
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
  }
 }.
@@ -576,7 +574,7 @@ module Amem : IR1R2 = {
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
      commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit, aux);
+     challenge <@ V.challenge(s, commit);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
      HybOrcl.l <- HybOrcl.l + 1;
@@ -584,40 +582,40 @@ module Amem : IR1R2 = {
   }
   proc run1() = {
    var  summary, guess;
-   summary <@ Sim(V).simulate(s, n, aux);
+   summary <@ Sim(V).simulate(s, n);
    HybOrcl.l <- HybOrcl.l + 1;
    while (HybOrcl.l <= n) {
-    summary <@ Sim(V).simulate(s, n, aux);
+    summary <@ Sim(V).simulate(s, n);
     HybOrcl.l <- HybOrcl.l + 1;
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
   }
   proc run2() = {
    var commit, challenge, response, summary, guess;
    commit <@ P.commitment(s, w);
-   challenge <@ V.challenge(s, commit, aux);
+   challenge <@ V.challenge(s, commit);
    response <@ P.response(challenge);
    summary <@ V.summitup(s, response);
    HybOrcl.l <- HybOrcl.l + 1;
    while (HybOrcl.l <= n) {
-    summary <@ Sim(V).simulate(s, n, aux);
+    summary <@ Sim(V).simulate(s, n);
     HybOrcl.l <- HybOrcl.l + 1;
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w, summary);
    return guess;
   }
 }.
 
 module Dstar : ZKDistinguisher = {
-  proc guess(ss : statement, ww: witness, aa: auxiliary_input, summary: adv_summary) = {
+  proc guess(ss : statement, ww: witness, summary: adv_summary) = {
    var guess;
    HybOrcl.l <- HybOrcl.l + 1;
    while (HybOrcl.l <= n) {
-    summary <@ Sim(V).simulate(s, n, aux);
+    summary <@ Sim(V).simulate(s, n);
     HybOrcl.l <- HybOrcl.l + 1;
    }
-   guess <@ D.guess(s, w, aux, summary);
+   guess <@ D.guess(s, w,  summary);
    return guess;
   }
 }.
@@ -626,8 +624,8 @@ module Dstar : ZKDistinguisher = {
   (* semi-main goal *)
 lemma lll &m deltoid : 
    (forall &n N, 0 <= N =>
-   Pr[ZKIdeal(Sim, V, Dstar).run(s, w, N, aux) @ &n : res]
-    - Pr[ZKReal(P, V, Dstar).run(s, w, aux) @ &n : res] 
+   Pr[ZKIdeal(Sim, V, Dstar).run(s, w, N) @ &n : res]
+    - Pr[ZKReal(P, V, Dstar).run(s, w) @ &n : res] 
            < deltoid) =>
    Pr[HybGame(A1,Ob1,L(Ob1)).main() @ &m : res]
                - Pr[HybGame(A1,Ob1,R(Ob1)).main() @ &m : res] < deltoid.
@@ -658,18 +656,18 @@ have ko : exists &n, deltoid <= Pr[Amem.run1() @ &n : res] - Pr[Amem.run2() @ &n
 apply (o_o Amem &m).  auto.
 elim ko. move => &n. move => q.
 have ok : Pr[Amem.run1() @ &n : res] - Pr[Amem.run2() @ &n : res] < deltoid.
-have -> : Pr[Amem.run1() @ &n : res] = Pr[ZKIdeal(Sim, V, Dstar).run(s, w, n, aux) @ &n : res].
+have -> : Pr[Amem.run1() @ &n : res] = Pr[ZKIdeal(Sim, V, Dstar).run(s, w, n) @ &n : res].
 byequiv. proc.         
 inline Dstar.guess. wp.
-seq 3 7: (={glob V} /\ summary{1} = summary0{2}). sim. wp.
+seq 3 6: (={glob V} /\ summary{1} = summary0{2}). sim. wp.
 call (_: ={glob V}). sim. sim. sim. sim. skip. progress. 
 smt. smt.
 call D_guess_prop. skip. auto.
 auto.  auto. 
-have -> : Pr[Amem.run2() @ &n : res] = Pr[ZKReal(P, V, Dstar).run(s, w,aux) @ &n : res].
+have -> : Pr[Amem.run2() @ &n : res] = Pr[ZKReal(P, V, Dstar).run(s, w) @ &n : res].
 byequiv. proc.         
 inline Dstar.guess. wp.
-seq 6 10: (={glob V} /\ summary{1} = summary0{2}). sim. wp.
+seq 6 9: (={glob V} /\ summary{1} = summary0{2}). sim. wp.
 call (_:true). call (_:true).  call (_:true).  call (_:true). skip.
 progress. smt. smt. smt.  call D_guess_prop. skip. auto.
 auto.  auto. 
@@ -678,30 +676,30 @@ qed.
 
 
 module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
-  proc run(statement: statement, witness: witness, aux : auxiliary_input) = {
+  proc run(statement: statement, witness: witness) = {
     var commit, challenge, response, summary, guess,i;
      i <- 0;
      summary <- Pervasive.witness;
      while(i <= n){
        commit <@ P.commitment(statement, witness);
-       challenge <@ V.challenge(statement, commit, aux);
+       challenge <@ V.challenge(statement, commit);
        response <@ P.response(challenge);
        summary <@ V.summitup(statement, response);
        i <- i + 1;
      }
-    guess <@ D.guess(statement, witness, aux,summary);
+    guess <@ D.guess(statement, witness, summary);
     return guess;
   }
 }.
 
 
 module SimAmp(S: Simulator, V : MaliciousVerifier) = { 
-  proc simulate(statement:statement,N : int, aux: auxiliary_input) = { 
+  proc simulate(statement:statement,N : int) = { 
    var summary, i; 
    i <- 0;
    summary <- witness;
    while(i <= n) { 
-     summary <@ S(V).simulate(statement, N, aux); 
+     summary <@ S(V).simulate(statement, N); 
      i <- i + 1;
    } 
    return summary; 
@@ -711,30 +709,30 @@ module SimAmp(S: Simulator, V : MaliciousVerifier) = {
 
 lemma final &m deltoid : 
    (forall &n N, 0 <= N =>
-   Pr[ZKIdeal(Sim, V, Dstar).run(s, w, N, aux) @ &n : res]
-    - Pr[ZKReal(P, V, Dstar).run(s, w, aux) @ &n : res] 
+   Pr[ZKIdeal(Sim, V, Dstar).run(s, w, N) @ &n : res]
+    - Pr[ZKReal(P, V, Dstar).run(s, w) @ &n : res] 
            < deltoid) =>
 
-   Pr[ZKIdeal(SimAmp(Sim), V, D).run(s, w, n, aux) @ &m : res]
-        - Pr[ZKRealAmp(P, V, D).run(s, w, aux) @ &m : res]
+   Pr[ZKIdeal(SimAmp(Sim), V, D).run(s, w, n) @ &m : res]
+        - Pr[ZKRealAmp(P, V, D).run(s, w) @ &m : res]
           < n%r * deltoid.
 move => zk_ass.
-have -> : Pr[ZKIdeal(SimAmp(Sim), V, D).run(s, w, n, aux) @ &m : res]
+have -> : Pr[ZKIdeal(SimAmp(Sim), V, D).run(s, w, n) @ &m : res]
  = Pr[Ln(Ob,A).main() @ &m : res].
 byequiv (_:   
   (glob V){2} = (glob V){m} /\ ={glob Sim}/\
-  (statement{1}, witness{1}, n{1}, aux{1}) = (s, w, n, ZKTheory.aux) /\
+  (statement{1}, witness{1}, n{1}) = (s, w, n) /\
    (glob V){1} = (glob V){m} ==> _). proc. inline*. wp. sp.
-seq 2 1 : (={glob V, summary} /\ statement{1} = s{2} /\ witness{1} = w{2} /\ aux{1} = ZKTheory.aux).   simplify. wp.
-while (={i, glob V, glob Sim} /\ summary0{1} = summary{2} /\ statement0{1} = s /\   N{1} = ZKTheory.n /\   aux0{1} = ZKTheory.aux).
+seq 2 1 : (={glob V, summary} /\ statement{1} = s{2} /\ witness{1} = w{2}).   simplify. wp.
+while (={i, glob V, glob Sim} /\ summary0{1} = summary{2} /\ statement0{1} = s /\   N{1} = ZKTheory.n).
 wp. call (_: ={glob V}). sim. sim. sim. sim. wp.  skip. progress.
  skip. progress.  call D_guess_prop. skip. auto. auto. auto.
-have -> : Pr[ZKRealAmp(P, V, D).run(s, w, aux) @ &m : res]
+have -> : Pr[ZKRealAmp(P, V, D).run(s, w) @ &m : res]
  = Pr[Rn(Ob,A).main() @ &m : res].
-byequiv (_: ={glob V, glob P} /\ (statement{1}, witness{1}, aux{1}) = (s, w,  ZKTheory.aux) ==> _). proc.
+byequiv (_: ={glob V, glob P} /\ (statement{1}, witness{1}) = (s, w) ==> _). proc.
 inline*. wp. sp.
-seq 1 1 : (={glob V, summary} /\ statement{1} = s{2} /\ witness{1} = w{2} /\ aux{1} = ZKTheory.aux).   simplify. wp.
-while (={i, glob V, glob P} /\ summary{1} = summary{2} /\ statement{1} = s /\     aux{1} = ZKTheory.aux /\  witness{1} = w{2}). sp. wp.
+seq 1 1 : (={glob V, summary} /\ statement{1} = s{2} /\ witness{1} = w{2} ).   simplify. wp.
+while (={i, glob V, glob P} /\ summary{1} = summary{2} /\ statement{1} = s /\  witness{1} = w{2}). sp. wp.
 call (_:true). call (_:true). call (_:true). call (_:true). skip. progress.
 skip. progress. call D_guess_prop. skip.  auto. auto. auto.
 rewrite qq.
@@ -749,24 +747,24 @@ qed.
 
 
 module V0(V : MaliciousVerifier) : MaliciousVerifier = {
-  proc challenge (stat:statement, c: commitment, auxx : auxiliary_input) : challenge = {
+  proc challenge (stat:statement, c: commitment) : challenge = {
    var commit, challenge, response, summary;
    HybOrcl.l0 <$ [0..max 0 (n - 1)];
    HybOrcl.l <- 0;
    summary <- witness;
-     challenge <@ V.challenge(s, c, aux);
+     challenge <@ V.challenge(s, c);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
      HybOrcl.l <- HybOrcl.l + 1;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
      commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit, aux);
+     challenge <@ V.challenge(s, commit);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
      HybOrcl.l <- HybOrcl.l + 1;
     }
    commit <@ P.commitment(s, w);
-   challenge <@ V.challenge(s, commit, aux);
+   challenge <@ V.challenge(s, commit);
     
    return challenge;
  } 
@@ -788,7 +786,7 @@ module V0(V : MaliciousVerifier) : MaliciousVerifier = {
 print Simulator.
 module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
    module S = Sim(V)
-   proc simulate(ss:statement, nn:int, auxx:auxiliary_input) = {
+   proc simulate(ss:statement, nn:int) = {
 
    var commit, challenge, response, summary;
    HybOrcl.l0 <$ [0..max 0 (n - 1)];
@@ -796,13 +794,13 @@ module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
      commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit, aux);
+     challenge <@ V.challenge(s, commit);
      response <@ P.response(challenge);
      summary <@ V.summitup(s, response);
      HybOrcl.l <- HybOrcl.l + 1;
    }
 
-   summary <@ S.simulate(s,n,aux);
+   summary <@ S.simulate(s,n);
    return summary;
      
    }
@@ -933,7 +931,7 @@ abstract theory SoundnessTheory.
 
 require WhileNotBProc.
 clone import WhileNotBProc as WNBP with type rt <- bool,
-                                        type iat <- statement * auxiliary_input.
+                                        type iat <- statement.
 
 
 section.
@@ -951,33 +949,33 @@ declare axiom commitment_ll : islossless P.commitment.
 
 
 
-lemma soundness_amp &m statement ax n deltoid:
+lemma soundness_amp &m statement n deltoid:
     ! in_language soundness_relation statement =>
 
    (forall &n,
-     Pr[Soundness(P, HonestVerifier).run(statement, ax) @ &n : res]
+     Pr[Soundness(P, HonestVerifier).run(statement) @ &n : res]
         <= deltoid) =>
 
      0 <= n =>
-     Pr[SoundnessAmp(P, HonestVerifier).run(statement, ax, n) @ &m : res]
+     Pr[SoundnessAmp(P, HonestVerifier).run(statement, n) @ &m : res]
      <= deltoid ^ (n + 1).
 proof.
 move => nil sa nz.
-have phs : phoare[ Soundness(P,HonestVerifier).run : arg = (statement,ax) ==> res ] <= deltoid.
-bypr. progress. 
+have phs : phoare[ Soundness(P,HonestVerifier).run : arg = (statement) ==> res ] <= deltoid.
+bypr. move => &m0 H. 
 rewrite H. simplify. apply sa. 
-have ->: Pr[SoundnessAmp(P, HonestVerifier).run(statement, ax, n) @ &m : res]    
- = Pr[ M(Soundness(P,HonestVerifier)).whp((statement,ax), fun x => !x,1,n+1, true) @ &m :  res ].
-byequiv (_: ={glob P, glob HonestVerifier} /\  arg{1} = (statement, ax, n) /\ arg{2} = ((statement,ax), fun x => !x,1,n+1, true)  ==> _).  
+have ->: Pr[SoundnessAmp(P, HonestVerifier).run(statement, n) @ &m : res]    
+ = Pr[ M(Soundness(P,HonestVerifier)).whp((statement), fun x => !x,1,n+1, true) @ &m :  res ].
+byequiv (_: ={glob P, glob HonestVerifier} /\  arg{1} = (statement, n) /\ arg{2} = ((statement), fun x => !x,1,n+1, true)  ==> _).  
 proc.   sp.
 while (i{1} + 1 = M.c{2} /\ N{1} + 1 = e{2} /\ accept{1} = !MyP{2} r{2} /\ ={glob P, glob HonestVerifier}
   /\ (i{2}, MyP{2}, s{2}, e{2}) =
-  ((stat{1}, aux{1}), fun (x : bool) => !x, 1, N{1}+1)  ).
+  ((stat{1}), fun (x : bool) => !x, 1, N{1}+1)  ).
 wp.  call (_: ={glob P, glob HonestVerifier}).
 sim. skip. progress. smt. smt.
 skip. progress.  smt. smt.
 auto.  auto.
-byphoare (_: arg = ((statement, ax), fun (x : bool) => !x,
+byphoare (_: arg = ((statement), fun (x : bool) => !x,
                                        1, n + 1, true) ==> _).
 apply (asdsadq_le (Soundness(P,HonestVerifier))). 
 proc.
@@ -1027,12 +1025,12 @@ end SoundnessTheory.
     abstract theory ExampleStatement.
     axiom computational_special_soundness:
           exists (SpecialSoundnessAdvReduction <: SpecialSoundnessAdvReduction),
-          forall statement aux &m,
+          forall statement &m,
           forall (SpecialSoundnessAdversary <: SpecialSoundnessAdversary),
-        let attack_prob = Pr[SpecialSoundnessAdversary.attack(statement, aux) @ &m :
+        let attack_prob = Pr[SpecialSoundnessAdversary.attack(statement) @ &m :
           valid_transcript_pair statement res.`1 res.`2
           /\ ! soundness_relation statement (special_soundness_extract statement res.`1 res.`2)] in
-        let red_prob = Pr[SpecialSoundnessAdvReduction(SpecialSoundnessAdversary).run(statement, aux) @ &m : res] in
+        let red_prob = Pr[SpecialSoundnessAdvReduction(SpecialSoundnessAdversary).run(statement) @ &m : res] in
         attack_prob <= special_soundness_red_function statement red_prob.
     end ExampleStatement.
 
@@ -1048,7 +1046,7 @@ end SoundnessTheory.
   abstract theory PoK.
 
   module type Extractor(P: MaliciousProver) = {
-    proc extract(statement: statement, aux: auxiliary_input) : witness
+    proc extract(statement: statement) : witness
   }.
 
     abstract theory ComputationalPoK.
@@ -1059,18 +1057,18 @@ end SoundnessTheory.
     
 
     module type ExtractionReduction(P: MaliciousProver) = {
-      proc run(statement: statement, aux: auxiliary_input) : bool
+      proc run(statement: statement) : bool
     }.
 
     module SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdversary = {
-      proc attack(statement : statement, aux : auxiliary_input) : transcript * transcript = {
+      proc attack(statement : statement) : transcript * transcript = {
         var i,c1,c2,r1,r2;
-        i <@ P.commitment(statement, aux);
+        i <@ P.commitment(statement);
 
-        c1 <$ duniform (challenge_set );
+        c1 <$ duniform challenge_set;
         r1 <@ P.response(c1);
 
-        c2 <$ duniform (challenge_set );
+        c2 <$ duniform challenge_set;
         r2 <@ P.response(c2);
         return ((i,c1,r1), (i,c2,r2));
       }
@@ -1078,21 +1076,21 @@ end SoundnessTheory.
 
     module (Extractor : Extractor)(P : MaliciousProver) = {  
       module SA = SpecialSoundnessAdversary(P)
-      proc extract(p : statement, aux : auxiliary_input) : witness = {
+      proc extract(p : statement) : witness = {
         var t1,t2;
-        (t1,t2) <@ SA.attack(p, aux);
+        (t1,t2) <@ SA.attack(p);
         return special_soundness_extract p t1 t2;
      }
     }.
 
     require GenericKE.
     clone import GenericKE as GKE with type pt <- statement,
-                                        type auxt <- auxiliary_input,
+                                       type auxt <- unit,
                                         type irt <- commitment,
                                         type ct <- challenge,
                                         type rt <- response,
-                                        op d <- duniform (challenge_set ),
-                                        op allcs <- (challenge_set ).
+                                        op d <- duniform challenge_set,
+                                        op allcs <- challenge_set.
 
     section.
 
@@ -1101,9 +1099,9 @@ end SoundnessTheory.
     declare axiom P_response_ll : islossless P.response.
 
     local module A(P : MaliciousProver) : Adv = {
-      proc init (p : statement, aux : auxiliary_input) : commitment = {
+      proc init (p : statement,x:unit) : commitment = {
         var i : commitment;
-        i <@ P.commitment(p,aux);
+        i <@ P.commitment(p);
         return i;
      }
 
@@ -1124,7 +1122,7 @@ end SoundnessTheory.
                hc_verify p res.`2.`2.`2 res.`2.`1 res.`2.`2.`1  /\
      f (soundness_relation  p (special_soundness_extract p (res.`1.`2.`2, res.`1.`1, res.`1.`2.`1) 
                                             (res.`2.`2.`2, res.`2.`1, res.`2.`2.`1))) ] 
-     = Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+     = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                 valid_transcript_pair p res.`1 res.`2 /\
                  f  (soundness_relation  p (special_soundness_extract p res.`1 res.`2))].
    proof. byequiv;auto.
@@ -1134,21 +1132,21 @@ end SoundnessTheory.
    
 
     local lemma hc_pok' &m p aux deltoid : 
-       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+       Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
                  ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <= deltoid
            =>
 
-      Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+      Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
                   soundness_relation p (special_soundness_extract p res.`1 res.`2)]
         >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
              - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
               - deltoid.
-    proof. rewrite - ex_a_eq_f.
+    proof. rewrite -  (ex_a_eq_f &m p aux).
     move => f. simplify.
      rewrite -  (ex_a_eq_f &m p aux (fun x => x) ).
-    apply (final_eq_step1 (A(P)) _ &m (fun pq (r : challenge * (response * commitment)) => hc_verify (fst pq) r.`2.`2 r.`1 r.`2.`1) (fun (pq :statement * auxiliary_input) (r1 r2 : challenge * (response * commitment)) => soundness_relation (fst pq) (special_soundness_extract (fst pq) (r1.`2.`2, r1.`1, r1.`2.`1) (r2.`2.`2, r2.`1, r2.`2.`1)))
+    apply (final_eq_step1 (A(P)) _ &m (fun pq (r : challenge * (response * commitment)) => hc_verify (fst pq) r.`2.`2 r.`1 r.`2.`1) (fun (pq :statement * unit) (r1 r2 : challenge * (response * commitment)) => soundness_relation (fst pq) (special_soundness_extract (fst pq) (r1.`2.`2, r1.`1, r1.`2.`1) (r2.`2.`2, r2.`1, r2.`2.`1)))
       (p, aux)
      deltoid
     _
@@ -1157,11 +1155,11 @@ end SoundnessTheory.
     qed.
 
 
-    local lemma qqq &m p aux : 
-      Pr[SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+    local lemma qqq &m p : 
+      Pr[SpecialSoundnessAdversary(P).attack(p) @ &m :
            valid_transcript_pair p res.`1 res.`2 /\
            soundness_relation p (special_soundness_extract p res.`1 res.`2)]
-     <=  Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res].
+     <=  Pr[Extractor(P).extract(p) @ &m : soundness_relation p res].
     byequiv. proc. inline*. wp. call (_:true).
     rnd.  simplify. call (_:true). rnd.  call (_:true).
     wp. simplify. wp. skip. progress. smt. smt. 
@@ -1172,7 +1170,7 @@ end SoundnessTheory.
     local lemma www &m p aux: 
       Pr[ InitRun1(A(P)).run(p,aux) @ &m 
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
-     = Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
+     = Pr[Soundness(P, HonestVerifier).run(p) @ &m : res].
     byequiv. proc. inline*. wp. call (_:true).
     wp. rnd.  wp. call (_:true). wp.  
     skip. simplify. progress. auto. auto. 
@@ -1180,54 +1178,54 @@ end SoundnessTheory.
 
 
     (* "copy/include/or move"  to special soundness theory (where the spec. sound. axiom is assumed)  *)
-    lemma computational_PoK &m p aux deltoid: 
-          Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+    lemma computational_PoK &m p deltoid: 
+          Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
              deltoid =>
-      Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
-       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
-       - (1%r/ (size challenge_set)%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+      Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
+       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
+       - (1%r/ (size challenge_set)%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res])
          - deltoid.
     progress.
-    have f : Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+    have f : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
                   soundness_relation p (special_soundness_extract p res.`1 res.`2)]
-        >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
-             - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
+        >= (Pr[ InitRun1(A(P)).run(p,tt) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
+             - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,tt) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
               - deltoid. apply (hc_pok' &m p). auto.
     timeout 20.  
 
-    have g :       Pr[ InitRun1(A(P)).run(p,aux) @ &m 
+    have g :       Pr[ InitRun1(A(P)).run(p,tt) @ &m 
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
-     = Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]. apply www.
+     = Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]. apply www.
 
-     have j :       Pr[SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+     have j :       Pr[SpecialSoundnessAdversary(P).attack(p) @ &m :
            valid_transcript_pair p res.`1 res.`2 /\
            soundness_relation p (special_soundness_extract p res.`1 res.`2)]
-     <=  Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res].
+     <=  Pr[Extractor(P).extract(p) @ &m : soundness_relation p res].
     apply qqq.
 
      smt.
     qed.
 
 
-    lemma statistical_PoK &m p aux:
+    lemma statistical_PoK &m p :
       (! exists t1 t2, valid_transcript_pair p t1 t2 /\ ! soundness_relation p (special_soundness_extract p t1 t2))
 
       =>
 
-      Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
-       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]).
+      Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
+       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]).
     proof.  progress.
       have vte : forall t1 t2, valid_transcript_pair p t1 t2 =>  soundness_relation p (special_soundness_extract p t1 t2). smt.
 
-      have f : Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+      have f : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
-     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m : false]. smt.
-    rewrite Pr[mu_eq]. smt. auto. apply (computational_PoK &m p aux 0%r). rewrite f. auto.
+     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
+    rewrite Pr[mu_eq]. smt. auto. apply (computational_PoK &m p 0%r). rewrite f. auto.
     qed.
           
 
@@ -1241,42 +1239,42 @@ end SoundnessTheory.
     smt. qed.
 
 
-    lemma computational_statistical_soundness &m p aux f epsilon:
+    lemma computational_statistical_soundness &m p f epsilon:
         ! in_language soundness_relation p => 
-      Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] >=
-       f Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+      Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
+       f Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
         => (forall s, f s <= 0%r => s <= epsilon) =>
-        Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+        Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
          <= epsilon.
     proof. progress.
-    have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
-      have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
+    have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
+      have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
       rewrite Pr[mu_false]. auto.
     rewrite Pr[mu_eq]. smt. auto.
     smt. qed. 
 
 
   
-    lemma computational_soundness &m p aux deltoid:
+    lemma computational_soundness &m p  deltoid:
         ! in_language soundness_relation p =>
-       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+       Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
             deltoid =>
-         Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+         Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
          <=  (sqrt deltoid) + (1%r/ (size (challenge_set))%r).
     proof. progress.
-    have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
-      have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
+    have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
+      have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
       rewrite Pr[mu_false]. auto.
     rewrite Pr[mu_eq]. smt. auto.
     have  :   0%r >=
-       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res])
          - deltoid.
      rewrite - f1.
-    apply (computational_PoK &m p aux). auto. 
-    pose a := Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
+    apply (computational_PoK &m p). auto. 
+    pose a := Pr[Soundness(P, HonestVerifier).run(p) @ &m : res].
     pose b := deltoid.
     have f2 : 0%r <= a <= 1%r. smt.
     progress.     
@@ -1296,26 +1294,26 @@ end SoundnessTheory.
 
 
          (*  depending on the size of challenge_set either computational_soundness or computational_soundness_II provide a better bound *)
-    lemma computational_soundness_II &m p aux deltoid:
+    lemma computational_soundness_II &m p deltoid:
         ! in_language soundness_relation p =>
-       Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+       Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
             deltoid =>
-         Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+         Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
          <=  ((size (challenge_set))%r * deltoid) + (1%r/ (size (challenge_set))%r).
     proof. progress.
-    have f1 : Pr[Extractor(P).extract(p, aux) @ &m : soundness_relation p res] = 0%r.
-      have <-: Pr[Extractor(P).extract(p, aux) @ &m : false ] = 0%r.
+    have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
+      have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
       rewrite Pr[mu_false]. auto.
     rewrite Pr[mu_eq]. smt. auto.
     have  :   0%r >=
-       (Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res])
+       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res])
          - deltoid.
      rewrite - f1.
-    apply (computational_PoK &m p aux). auto. 
-    pose a := Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res].
+    apply (computational_PoK &m p). auto. 
+    pose a := Pr[Soundness(P, HonestVerifier).run(p) @ &m : res].
     pose b := deltoid.
     pose c := (size challenge_set)%r.
     have f2 : 0%r <= a <= 1%r. smt.
@@ -1336,20 +1334,20 @@ end SoundnessTheory.
    smt (challenge_set_size). qed.
 
     
-    lemma statistical_soundness &m p aux :
+    lemma statistical_soundness &m p  :
         ! in_language soundness_relation p =>
       (! exists t1 t2, valid_transcript_pair p t1 t2 /\ ! soundness_relation p (special_soundness_extract p t1 t2)) =>
-         Pr[Soundness(P, HonestVerifier).run(p, aux) @ &m : res]
+         Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
          <=  ((1%r/ (size (challenge_set))%r)).
      
      proof. progress. 
        have ->: inv (size challenge_set)%r = sqrt 0%r + inv (size challenge_set)%r. smt.
 
-    apply (computational_soundness &m p aux 0%r H _).
-      have -> : Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m :
+    apply (computational_soundness &m p  0%r H _).
+      have -> : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
-     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p, aux) @ &m : false]. smt.
+     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
     rewrite Pr[mu_eq]. smt. auto.   auto. qed.
 
 
@@ -1362,12 +1360,12 @@ end SoundnessTheory.
     axiom computationally_extractable:
         exists (Extractor <: Extractor),
         exists (ExtractionReduction <: ExtractionReduction),
-        forall statement aux &m,
+        forall statement &m,
         forall (MaliciousProver <: MaliciousProver),
-        let verify_prob = Pr[Soundness(MaliciousProver, HonestVerifier).run(statement, aux) @ &m : res] in
-        let extract_prob = Pr[Extractor(MaliciousProver).extract(statement, aux) @ &m 
+        let verify_prob = Pr[Soundness(MaliciousProver, HonestVerifier).run(statement) @ &m : res] in
+        let extract_prob = Pr[Extractor(MaliciousProver).extract(statement) @ &m 
                  : soundness_relation statement res] in
-        let red_prob = Pr[ExtractionReduction(MaliciousProver).run(statement, aux) @ &m : res] in
+        let red_prob = Pr[ExtractionReduction(MaliciousProver).run(statement) @ &m : res] in
         extract_prob >= computationally_extractable_function statement verify_prob - red_prob. 
     end Example.
 
@@ -1380,10 +1378,10 @@ end SoundnessTheory.
 
     axiom statistically_extractable:
         exists (Extractor <: Extractor),
-        forall statement aux &m,
+        forall statement  &m,
         forall (P <: MaliciousProver),
-        let verify_prob = Pr[Soundness(P, HonestVerifier).run(statement, aux) @ &m : res] in
-        let extract_prob = Pr[Extractor(P).extract(statement, aux) @ &m : soundness_relation statement res] in
+        let verify_prob = Pr[Soundness(P, HonestVerifier).run(statement) @ &m : res] in
+        let extract_prob = Pr[Extractor(P).extract(statement) @ &m : soundness_relation statement res] in
         extract_prob >= extraction_success_function statement verify_prob.
 
     end StatisticalPoK.
@@ -1400,21 +1398,21 @@ end SoundnessTheory.
     op zk_red_function : statement -> real -> real.
 
     module type ZKReduction(V: MaliciousVerifier, D: ZKDistinguisher) = {
-      proc run(statement: statement, witness: witness, aux: auxiliary_input) : bool
+      proc run(statement: statement, witness: witness) : bool
     }.
 
     axiom computational_zk:
         exists (HonestProver <: HonestProver),
         exists (Simulator <: Simulator),
         exists (ZKReduction <: ZKReduction),
-        forall statement witness aux n &m,
+        forall statement witness n &m,
         forall (MaliciousVerifier <: MaliciousVerifier),
         forall (Distinguisher <: ZKDistinguisher),
         zk_relation statement witness
         =>
-        let real_prob = Pr[ZKReal(HonestProver, MaliciousVerifier, Distinguisher).run(statement, witness, aux) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator, MaliciousVerifier, Distinguisher).run(statement, witness, n, aux) @ &m : res] in
-        let red_prob = Pr[ZKReduction(MaliciousVerifier, Distinguisher).run(statement, witness, aux) @ &m : res] in
+        let real_prob = Pr[ZKReal(HonestProver, MaliciousVerifier, Distinguisher).run(statement, witness) @ &m : res] in
+        let ideal_prob = Pr[ZKIdeal(Simulator, MaliciousVerifier, Distinguisher).run(statement, witness, n) @ &m : res] in
+        let red_prob = Pr[ZKReduction(MaliciousVerifier, Distinguisher).run(statement, witness) @ &m : res] in
           `|real_prob - ideal_prob| <= zk_red_function statement red_prob.
 
     end ComputationalZK.
@@ -1429,7 +1427,7 @@ end SoundnessTheory.
                                           type wit <- witness, 
                                           type sbits <- adv_summary, 
                                           type event <- bool, 
-                                          type auxiliary_input <- auxiliary_input,
+
                                           op E <- (fun x => fst x),
                                           op fevent <- false
 
@@ -1437,13 +1435,13 @@ end SoundnessTheory.
 
 
     module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = {
-      proc main(Ny : statement, aux: auxiliary_input, w : witness) = {
+      proc main(Ny : statement, w : witness) = {
         var c,b,r,result,rb;
         c <@ P.commitment(Ny,w);
-        b <@ V.challenge(Ny,c,aux);
+        b <@ V.challenge(Ny,c);
         r <@ P.response(b);
         result <@ V.summitup(Ny,r);
-        rb <@ D.guess(Ny,w,aux,result);
+        rb <@ D.guess(Ny,w,result);
         return rb;
       }
     }.
@@ -1452,10 +1450,10 @@ end SoundnessTheory.
 
      module  Simulator(S : Simulator1)(V : MaliciousVerifier)  = {
        module M = MW.IFB.IM.W(S(V))
-       proc simulate(statement : statement, n : int, aux : auxiliary_input) :
+       proc simulate(statement : statement, n : int) :
          adv_summary = {
             var r;
-            r <@ M.whp(fst, (statement,aux),1,n,(false,witness));
+            r <@ M.whp(fst, (statement),1,n,(false,witness));
             return r.`2;
        }
      }.
@@ -1494,29 +1492,29 @@ end SoundnessTheory.
 
     declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
 
-     lemma computational_statisticalVpoly_zk stat wit ax N p0 negl &m:
+     lemma computational_statisticalVpoly_zk stat wit N p0 negl &m:
         zk_relation stat wit => 
 
-        `|Pr[W0(Sim1(V), D).run(stat, wit, ax) @ &m : fst res.`2 /\ res.`1] /
-             Pr[Sim1(V).run(stat,ax) @ &m : fst res] 
-         - Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ]| <= negl =>
+        `|Pr[W0(Sim1(V), D).run(stat, wit) @ &m : fst res.`2 /\ res.`1] /
+             Pr[Sim1(V).run(stat) @ &m : fst res] 
+         - Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ]| <= negl =>
 
         0 <= N =>
 
-        p0 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1] =>
+        p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
 
-        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
+        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
+        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res] in
           `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
     proof. progress.
     have ->: 
-     `|Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] -
-      Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]|
-      = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
-          - Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]|. smt.
-    have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
-     = Pr[Iter(Sim1(V), D).run(false,stat,wit,ax,N,fst) @ &m : res.`1].
-    byequiv (_:  E{2} = fst /\ aux{1} = aux{2} /\ n{1} = ea{2} /\ fevent{2} = false  /\
+     `|Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] -
+      Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]|
+      = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]
+          - Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|. smt.
+    have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]
+     = Pr[Iter(Sim1(V), D).run(false,stat,wit,N,fst) @ &m : res.`1].
+    byequiv (_:  E{2} = fst  /\ n{1} = ea{2} /\ fevent{2} = false  /\
       statement{1} = Ny{2} /\ witness{1} = w{2} /\
         ={glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto.  proc.
     inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
@@ -1527,21 +1525,21 @@ end SoundnessTheory.
 
     call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
     progress.
-    have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]
-      = Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ].
+    have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]
+      = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
  
-     byequiv (_:   arg{2} = (stat, ax, wit) /\ ={glob V, glob HonestProver}
+     byequiv (_:   arg{2} = (stat, wit) /\ ={glob V, glob HonestProver}
  /\
   (glob V){2} = (glob V){m} /\
   (glob HonestProver){2} = (glob HonestProver){m} /\
-  arg{1} = (stat, wit, ax) /\
+  arg{1} = (stat, wit) /\
  
   (glob V){1} = (glob V){m} /\
   (glob HonestProver){1} = (glob HonestProver){m} ==> _).
-  proc. seq  4 4 : (={glob V} /\ (statement{1}, witness{1}, aux{1}, summary{1}) =
-  (Ny{2}, w{2}, aux{2}, result{2})). sim. call D_guess_prop. skip. auto. auto. auto.
+  proc. seq  4 4 : (={glob V} /\ (statement{1}, witness{1}, summary{1}) =
+  (Ny{2}, w{2}, result{2})). sim. call D_guess_prop. skip. auto. auto. auto.
     apply (one_to_many_zk  (Sim1(V)) D _  _ _ _ &m  stat wit p0 negl N
-       Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _).  
+       Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _).  
     apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll. 
     apply sim1_rew_ph. apply D_guess_ll. 
     auto. auto. auto. auto.
@@ -1581,7 +1579,7 @@ end SoundnessTheory.
 
    
     declare axiom qqq &m (p : statement) (w : witness) 
-     (aux : auxiliary_input) (D <: ZKDistinguisher) 
+      (D <: ZKDistinguisher) 
          (V <: MaliciousVerifier{-D, -HonestProver}): 
        islossless D.guess =>
        islossless V.summitup =>
@@ -1599,42 +1597,42 @@ end SoundnessTheory.
 
 
        zk_relation p w =>  
-        `|Pr[W0(Sim1(V), D).run(p, w, aux) @ &m : fst res.`2 /\ res.`1] /
-             Pr[Sim1(V).run(p,aux) @ &m : fst res] 
-                  - Pr[ ZKD(HonestProver,V,D).main(p,aux,w) @ &m : res ]| <= negl.
+        `|Pr[W0(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
+             Pr[Sim1(V).run(p) @ &m : fst res] 
+                  - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= negl.
 
 
     axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
     
-     lemma statistical_zk stat wit ax N p0 &m:
+     lemma statistical_zk stat wit N p0 &m:
         zk_relation stat wit => 0 <= N =>
-        p0 <= Pr[Sim1(V).run(stat, ax) @ &m : res.`1] =>
-        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
+        p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
+        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
+        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res] in
           `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
     proof. progress.
     have ->: 
-     `|Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] -
-      Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]|
-      = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
-          - Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]|. smt.
-    have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res]
-     = Pr[Iter(Sim1(V), D).run(false,stat,wit,ax,N,fst) @ &m : res.`1].
-    byequiv (_:  E{2} = fst /\ aux{1} = aux{2} /\ n{1} = ea{2} /\ fevent{2} = false  /\
+     `|Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] -
+      Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]|
+      = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]
+          - Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|. smt.
+    have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]
+     = Pr[Iter(Sim1(V), D).run(false,stat,wit,N,fst) @ &m : res.`1].
+    byequiv (_:  E{2} = fst /\ n{1} = ea{2} /\ fevent{2} = false  /\
       statement{1} = Ny{2} /\ witness{1} = w{2} /\
         ={glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto. proc.
     inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
     call D_guess_prop.  simplify. inline Simulator(Sim1,V).simulate. wp. sp. 
     call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
-    have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res]
-      = Pr[ ZKD(HonestProver,V,D).main(stat,ax,wit) @ &m : res ].
-byequiv(_: arg{2} = (stat, ax, wit) /\   arg{1} = (stat, wit, ax) /\  ={glob V, glob HonestProver} ==> _).
+    have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]
+      = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
+byequiv(_: arg{2} = (stat,  wit) /\   arg{1} = (stat, wit) /\  ={glob V, glob HonestProver} ==> _).
 proc. call D_guess_prop. sim. auto. auto.
     apply (one_to_many_zk (Sim1(V)) D _ _ _ _ &m stat wit p0 negl N
-    Pr[ZKD(HonestProver, V, D).main(stat, ax, wit) @ &m : res] ax _ _ _
+    Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _
   ) .
   apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.  
-    apply (qqq &m stat wit ax D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. auto.
+    apply (qqq &m stat wit  D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. auto.
     qed.
    end section.
    end StatisticalZKDeriv.

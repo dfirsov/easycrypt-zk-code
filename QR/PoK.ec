@@ -13,14 +13,14 @@ declare module P <: MaliciousProver {-HonestVerifier}.
 
 declare axiom P_response_ll : islossless P.response.
 
-lemma qr_computational_PoK &m  s aux: 
-  Pr[Extractor(P).extract(s, aux) @ &m : IsSqRoot s res /\ unit s] >=
-   (Pr[Soundness(P, HonestVerifier).run(s, aux) @ &m : res]^2
-     - (1%r/2%r) * Pr[Soundness(P, HonestVerifier).run(s, aux) @ &m : res]).
+lemma qr_computational_PoK &m  s: 
+  Pr[Extractor(P).extract(s) @ &m : IsSqRoot s res /\ unit s] >=
+   (Pr[Soundness(P, HonestVerifier).run(s) @ &m : res]^2
+     - (1%r/2%r) * Pr[Soundness(P, HonestVerifier).run(s) @ &m : res]).
 
 
 
-apply (statistical_PoK P  _ &m s aux _ ).  apply P_response_ll. 
+apply (statistical_PoK P  _ &m s _ ).  apply P_response_ll. 
 smt (perfect_special_soundness).
 qed.
 

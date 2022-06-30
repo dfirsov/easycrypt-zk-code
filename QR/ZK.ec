@@ -37,27 +37,25 @@ declare axiom rewindable_V_plus :
 
 
 
-lemma qr_statistical_zk stat wit ax N &m:
+lemma qr_statistical_zk stat wit N &m:
         IsSqRoot stat  wit  => unit stat =>
         0 <= N =>
-        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit, ax) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N, ax) @ &m : res] in
+        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
+        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res] in
           `|real_prob - ideal_prob| <= 2%r * (1%r / 2%r) ^ N.
 proof.
 progress.
-apply (statistical_zk HonestProver Sim1  V D _ _ _ _ _ _ _ stat wit ax N
+apply (statistical_zk HonestProver Sim1  V D _ _ _ _ _ _ _ stat wit  N
   (1%r/2%r) &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
 apply rewindable_V_plus. 
-
-print sim1_rew_ph.
 
 apply (sim1_rew_ph V). 
  apply V_summitup_ll. apply V_challenge_ll.  apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress. 
-rewrite (sim1_prop V D _ _  _ _ _  p w aux _ ).  apply (rewindable_A_plus V).
+rewrite (sim1_prop V D _ _  _ _ _  p w  _ ).  apply (rewindable_A_plus V).
  exists f. split. auto. auto.
 auto. auto.   auto.  auto. auto.   auto. auto. 
-rewrite (sim1assc V D _ _ _ _ &m stat ax wit). apply (rewindable_A_plus V).
+rewrite (sim1assc V D _ _ _ _ &m stat  wit). apply (rewindable_A_plus V).
 apply rewindable_V_plus.
 apply V_summitup_ll.
 apply V_challenge_ll. apply D_guess_ll. auto.  auto. 

@@ -20,11 +20,11 @@ module Sim1(V : MaliciousVerifier)  = {
     return (bb,(rr * if bb then (inv y) else one),r);
   }
 
-  proc run(Ny : qr_prob, aux : auxiliary_input) : bool * adv_summary  = {
+  proc run(Ny : qr_prob) : bool * adv_summary  = {
     var r,z,b',b,result, vstat;
     vstat <@ V.getState();
     (b',z,r) <@ sinit(Ny);
-    b  <@ V.challenge(Ny,z,aux);
+    b  <@ V.challenge(Ny,z);
     result <@ V.summitup(Ny,r);
     if(b <> b'){
       V.setState(vstat);
@@ -133,26 +133,26 @@ local module Sim1'  = {
     return (bb,rr,r);
   }
     
-  proc run(Ny : qr_prob, w : qr_wit, aux : auxiliary_input) : bool * bool  = {
+  proc run(Ny : qr_prob, w : qr_wit) : bool * bool  = {
     var z,r,b',b,ryb,result, rd;
     (b',z,r) <@ sinit();
-    b  <@ V.challenge(Ny,z,aux);
+    b  <@ V.challenge(Ny,z);
     ryb  <- (r * if b then w else one);
     result <@ V.summitup(Ny,ryb);
-    rd <@ D.guess(Ny, w, aux, result);    
+    rd <@ D.guess(Ny, w, result);    
     return (b = b', rd);
   }
 
- proc allinone(Ny : qr_prob, w : qr_wit, aux : auxiliary_input) = {
+ proc allinone(Ny : qr_prob, w : qr_wit) = {
     var z,r,bb,rr,b',b,ryb,result, rd;
     (r,rr)  <$ ZNS_dist;    
     bb <$ {0,1};
     b' <- bb;
     z <- rr ;
-    b  <@ V.challenge(Ny,z,aux);
+    b  <@ V.challenge(Ny,z);
     ryb  <- (r * if b then w else one);
     result <@ V.summitup(Ny,ryb);
-    rd <@ D.guess(Ny, w, aux, result);
+    rd <@ D.guess(Ny, w, result);
     return (b = b', rd);
   }
 }.
@@ -161,9 +161,9 @@ local module Sim1'  = {
 
 axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
 
-local lemma qrp_zk2_eq ya wa ax : IsSqRoot ya wa =>
+local lemma qrp_zk2_eq ya wa  : IsSqRoot ya wa =>
   equiv [ZKReal(HonestProver, V, D).run ~ Sim1'.run
-         : ={arg, glob V} /\ arg{1} = (ya, wa, ax)
+         : ={arg, glob V} /\ arg{1} = (ya, wa)
           ==> res{1} = res{2}.`2 ].
 move => isqr. proc.
 call jk.
@@ -262,9 +262,8 @@ local lemma qkok ya wa P : IsSqRoot  ya wa /\ unit ya =>
        ==>  (fst res{1}.`2) /\ P res{1}.`1 <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => [isqr invrtbl]. proc.
 inline W0(Sim1(V), D).Sim1.run. sp.
-seq 2 1 : (={glob V,b',z, aux,Ny,w} 
-         /\ aux0{1} = aux{2}
-         /\ aux0{1} = aux{1}
+seq 2 1 : (={glob V,b',z, Ny,w} 
+
          /\ Ny{1} = a{1}
          /\ (b'{1} = true => z{1} = r0{1} * r0{1} * (inv ya)
                      /\ r0{1} * (inv wa) = r{2} )
@@ -277,8 +276,6 @@ exists* (glob V){1}. elim*. progress.
 call {1} (s2 V_L).
 skip. progress. smt.  smt.  
 seq 1 1 : (={glob V,b',z,Ny,w} 
-         /\ aux0{1} = aux{2}
-         /\ aux0{1} = aux{1}
          /\ Ny{1} = a{1}
          /\ b0{1} = b{2}
          /\ (b'{1} = true => z{1} = r0{1} * r0{1} * (inv ya)
@@ -342,10 +339,10 @@ progress. smt.
 qed.
 
 
-local lemma sim1'not &m ya wa ax : 
-     Pr[Sim1'.run(ya, wa, ax) @ &m : ! res.`1] = 1%r/2%r.
+local lemma sim1'not &m ya wa  : 
+     Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = 1%r/2%r.
 proof.
-have ->: Pr[Sim1'.run(ya, wa, ax) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m : ! res.`1]. 
+have ->: Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m : ! res.`1]. 
 byequiv. proc. 
 call jk. progress.
 call (_:true). wp.  simplify.
@@ -360,10 +357,10 @@ rnd. skip. progress. smt.
 exfalso. auto. auto.  auto. auto.
 qed.
 
-local lemma sim1'notnot &m ya wa ax : 
-     Pr[Sim1'.run(ya, wa, ax) @ &m :  res.`1] = 1%r/2%r.
+local lemma sim1'notnot &m ya wa: 
+     Pr[Sim1'.run(ya, wa) @ &m :  res.`1] = 1%r/2%r.
 proof.
-have ->: Pr[Sim1'.run(ya, wa, ax) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa, ax) @ &m :  res.`1].
+have ->: Pr[Sim1'.run(ya, wa) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m :  res.`1].
 byequiv. proc.
 call jk. progress.
 call (_:true). wp.  simplify.
@@ -382,24 +379,24 @@ qed.
 
 
 
-lemma simnres ya wa ax : IsSqRoot ya wa /\ unit ya =>
-  phoare[ W0(Sim1(V),D).run : arg = (ya, wa, ax) ==> ! (fst res.`2) ] = (1%r/2%r).
+lemma simnres ya wa : IsSqRoot ya wa /\ unit ya =>
+  phoare[ W0(Sim1(V),D).run : arg = (ya, wa) ==> ! (fst res.`2) ] = (1%r/2%r).
 move => ii.
 bypr. progress.
 rewrite H. clear H.
-have <-: Pr[Sim1'.run(ya,wa,ax) @ &m : ! res.`1] = inv 2%r.
+have <-: Pr[Sim1'.run(ya,wa) @ &m : ! res.`1] = inv 2%r.
 apply sim1'not.
 byequiv (_: _ ==> (fst res.`2){1} = res.`1{2}). 
 conseq (ssim ya wa ii). auto. auto. auto. 
 smt.  auto. smt.
 qed.
 
-lemma simnresnotnot ya wa ax : IsSqRoot ya wa /\ unit ya =>
-  phoare[ W0(Sim1(V),D).run : arg = (ya, wa, ax) ==>  (fst res.`2) ] = (1%r/2%r).
+lemma simnresnotnot ya wa : IsSqRoot ya wa /\ unit ya =>
+  phoare[ W0(Sim1(V),D).run : arg = (ya, wa) ==>  (fst res.`2) ] = (1%r/2%r).
 move => ii.
 bypr. progress.
 rewrite H. clear H.
-have <-: Pr[Sim1'.run(ya,wa,ax) @ &m :  res.`1] = inv 2%r.
+have <-: Pr[Sim1'.run(ya,wa) @ &m :  res.`1] = inv 2%r.
 apply sim1'notnot.
 byequiv (_: _ ==> (fst res.`2){1} = res.`1{2}). 
 conseq (ssim ya wa ii). auto. auto. auto. 
@@ -408,21 +405,21 @@ qed.
 
   
     
-local lemma qrp_zk2_pr_l &m ya wa ax : IsSqRoot ya wa =>
-    Pr[ZKReal(HonestProver, V,D).run((ya),wa,ax) @ &m : res  ] = Pr[ Sim1'.run(ya,wa,ax) @ &m : res.`2  ].
+local lemma qrp_zk2_pr_l &m ya wa : IsSqRoot ya wa =>
+    Pr[ZKReal(HonestProver, V,D).run(ya,wa) @ &m : res  ] = Pr[ Sim1'.run(ya,wa) @ &m : res.`2  ].
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
-conseq (qrp_zk2_eq ya wa ax _). auto. auto. auto. auto.
+conseq (qrp_zk2_eq ya wa  _). auto. auto. auto. auto.
 smt. auto. auto. auto.
 qed.
 
 
 
-local lemma sd &m ya wa ax : 
-     Pr[ Sim1'.run(ya,wa,ax) @ &m : res.`1 /\ res.`2 ]
-    = (1%r/2%r) * Pr[ Sim1'.run(ya,wa,ax) @ &m : res.`2 ].
-have : Pr[ Sim1'.run(ya,wa,ax) @ &m : res.`1 /\ res.`2 ]
- = Pr[ Sim1'.run(ya,wa,ax) @ &m : !res.`1 /\ res.`2 ].
+local lemma sd &m ya wa  : 
+     Pr[ Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2 ]
+    = (1%r/2%r) * Pr[ Sim1'.run(ya,wa) @ &m : res.`2 ].
+have : Pr[ Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2 ]
+ = Pr[ Sim1'.run(ya,wa) @ &m : !res.`1 /\ res.`2 ].
 byequiv (_: ={glob Sim1',arg} ==> _).  
 proc.  inline*.
 call jk. wp. 
@@ -430,14 +427,14 @@ call (_:true). wp.
 call (_:true). wp. 
 rnd (fun x => !x). rnd. wp. skip. progress.
 smt. smt. auto. auto.
-have ->: Pr[Sim1'.run(ya, wa,ax) @ &m : res.`2] =
- Pr[Sim1'.run(ya, wa,ax) @ &m : res.`1 /\ res.`2] +
-   Pr[Sim1'.run(ya, wa, ax) @ &m : ! res.`1 /\ res.`2].
+have ->: Pr[Sim1'.run(ya, wa) @ &m : res.`2] =
+ Pr[Sim1'.run(ya, wa) @ &m : res.`1 /\ res.`2] +
+   Pr[Sim1'.run(ya, wa) @ &m : ! res.`1 /\ res.`2].
 rewrite Pr[mu_split res.`1]. 
-have ->: Pr[Sim1'.run(ya, wa, ax) @ &m : res.`2 /\ res.`1]
- = Pr[Sim1'.run(ya, wa, ax) @ &m : res.`1 /\ res.`2]. smt.
-have ->: Pr[Sim1'.run(ya, wa, ax) @ &m : res.`2 /\ !res.`1]
- = Pr[Sim1'.run(ya, wa, ax) @ &m : !res.`1 /\ res.`2]. smt.
+have ->: Pr[Sim1'.run(ya, wa) @ &m : res.`2 /\ res.`1]
+ = Pr[Sim1'.run(ya, wa) @ &m : res.`1 /\ res.`2]. smt.
+have ->: Pr[Sim1'.run(ya, wa) @ &m : res.`2 /\ !res.`1]
+ = Pr[Sim1'.run(ya, wa) @ &m : !res.`1 /\ res.`2]. smt.
 auto.
 move => q.
 rewrite - q. smt.
@@ -445,14 +442,14 @@ qed.
  
 
 
-lemma sim1zk &m ya wa ax :
+lemma sim1zk &m ya wa :
   IsSqRoot ya wa /\ unit ya =>
-    Pr[W0(Sim1(V), D).run(ya, wa, ax) @ &m : fst res.`2 /\ res.`1]
-     = Pr[ZKReal(HonestProver, V, D).run(ya, wa, ax) @ &m : res] / 2%r.
+    Pr[W0(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
+     = Pr[ZKReal(HonestProver, V, D).run(ya, wa) @ &m : res] / 2%r.
 proof.     
 move => ii.
-have ->:     Pr[W0(Sim1(V), D).run(ya, wa, ax) @ &m : fst res.`2 /\ res.`1]
- = Pr[Sim1'.run(ya,wa,ax) @ &m : res.`1 /\ res.`2].
+have ->:     Pr[W0(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
+ = Pr[Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2].
 byequiv. 
 conseq (qkok ya wa (fun x => x) _). progress;smt. auto. auto.
 auto. rewrite (sd &m ya wa).
@@ -460,36 +457,35 @@ rewrite (qrp_zk2_pr_l &m ya wa). smt. auto.
 qed.
     
 
-lemma sim1assc &m stat ax (w : qr_wit) : 
+lemma sim1assc &m stat (w : qr_wit) : 
  IsSqRoot stat w /\ unit stat =>
- Pr[Sim1(V).run(stat, ax) @ &m : res.`1] = 1%r/2%r.
+ Pr[Sim1(V).run(stat) @ &m : res.`1] = 1%r/2%r.
 proof. progress.
-have ->: Pr[Sim1(V).run(stat, ax) @ &m : res.`1] 
-  = Pr[W0(Sim1(V), D).run(stat, w, ax) @ &m : (fst res.`2) ].
+have ->: Pr[Sim1(V).run(stat) @ &m : res.`1] 
+  = Pr[W0(Sim1(V), D).run(stat, w) @ &m : (fst res.`2) ].
 byequiv (_: _ ==> (fst res{1} = fst res.`2{2})).
 proc. simplify.
  inline*. 
 call {2} D_guess_ll. wp. simplify.
 sim. auto.  smt.   smt. smt.
-byphoare (_: arg = (stat, w, ax) ==> _). 
-conseq (simnresnotnot stat w ax _). auto. auto.  auto.
+byphoare (_: arg = (stat, w) ==> _). 
+conseq (simnresnotnot stat w  _). auto. auto.  auto.
 qed.
 
-lemma sim1_prop &m (p : qr_prob) (w : qr_wit) 
- (ax : auxiliary_input) : 
+lemma sim1_prop &m (p : qr_prob) (w : qr_wit) :
    IsSqRoot p w /\ unit p =>  
-    `|Pr[W0(Sim1(V), D).run(p, w, ax) @ &m : fst res.`2 /\ res.`1] /
-         Pr[Sim1(V).run(p,ax) @ &m : fst res] 
-              - Pr[ ZKD(HonestProver,V,D).main(p,ax,w) @ &m : res ]| = 0%r. 
+    `|Pr[W0(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
+         Pr[Sim1(V).run(p) @ &m : fst res] 
+              - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| = 0%r. 
 progress.
 rewrite sim1zk.  auto.
-rewrite (sim1assc &m p ax w). auto.
+rewrite (sim1assc &m p w). auto.
 simplify.
-have ->: Pr[ZKReal(HonestProver, V, D).run(p, w, ax) @ &m : res] * 2%r / 2%r
- = Pr[ZKReal(HonestProver, V, D).run(p, w, ax) @ &m : res].
+have ->: Pr[ZKReal(HonestProver, V, D).run(p, w) @ &m : res] * 2%r / 2%r
+ = Pr[ZKReal(HonestProver, V, D).run(p, w) @ &m : res].
 smt.
-have : Pr[ZKReal(HonestProver, V, D).run(p, w, ax) @ &m : res] =
-  Pr[ZKD(HonestProver, V, D).main(p, ax, w) @ &m : res] .
+have : Pr[ZKReal(HonestProver, V, D).run(p, w) @ &m : res] =
+  Pr[ZKD(HonestProver, V, D).main(p, w) @ &m : res] .
 byequiv. proc. call jk. sim. smt. smt.  auto. smt.
 qed.
 
