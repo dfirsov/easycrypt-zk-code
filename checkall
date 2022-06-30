@@ -4,7 +4,7 @@ timeout=35
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./program_logic -timeout $timeout $1 2>/dev/null;
+  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./program_logic -I ./memory_props -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;

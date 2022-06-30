@@ -1,6 +1,6 @@
 pragma Goals:printall.
 require import AllCore.
-require import Aux Permutation Basics.
+require import Aux Permutation Basics List.
 
 require import SpecialSoundness.
 clone import PoK.
@@ -18,7 +18,9 @@ lemma qr_computational_PoK &m  s aux:
    (Pr[Soundness(P, HonestVerifier).run(s, aux) @ &m : res]^2
      - (1%r/2%r) * Pr[Soundness(P, HonestVerifier).run(s, aux) @ &m : res]).
 
-apply (statistical_PoK P  _ &m).  apply P_response_ll. 
+
+
+apply (statistical_PoK P  _ &m s aux _ ).  apply P_response_ll. 
 smt (perfect_special_soundness).
 qed.
 

@@ -331,6 +331,8 @@ lemma d_b3 &m p : p >= Pr[ P(A).init_main12() @ &m : res ]
 admitted.
 
 
+
+
 lemma o_0 &m p: 
        p >=  Pr[ P(A).main1() @ &m : res ]  - 
                Pr[ P(A).main2() @ &m : res ]

@@ -40,7 +40,7 @@ op qr_verify (p : qr_prob) (c : qr_com) (b : bool) (r : qr_resp) : bool =
   else unit c /\ c = r * r.
 
 op verify_transcript = fun p (x : qr_com * bool * qr_resp) => qr_verify p x.`1 x.`2 x.`3.
-op soundness_relation    = fun Ny w => IsSqRoot Ny w.
+op soundness_relation    = fun Ny w => IsSqRoot Ny w /\ unit Ny.
 op completeness_relation = fun Ny w => IsSqRoot Ny w /\ unit Ny.
 op zk_relation           = fun Ny w => IsSqRoot Ny w /\ unit Ny.
 
