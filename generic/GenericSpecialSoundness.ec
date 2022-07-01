@@ -5,6 +5,22 @@ require GenericExtractability.
 clone include GenericExtractability. (* inherit defs. *)
 
 
+module type SpecialSoundnessExtractor = {
+  proc extract(transcript1: transcript, transcript2: transcript) : witness
+}.
+
+module type SpecialSoundnessAdversary = { (* computational *)
+  proc attack(statement:statement) : transcript * transcript
+}.
+
+
+
+op valid_transcript_pair (statement: statement) (transcript1 transcript2: transcript) : bool 
+   = transcript1.`1 = transcript2.`1 
+        /\ transcript1.`2 <> transcript2.`2
+        /\ verify_transcript statement transcript1 
+        /\ verify_transcript statement transcript2.
+
 
 op special_soundness_extract : statement -> transcript -> transcript -> witness.
 

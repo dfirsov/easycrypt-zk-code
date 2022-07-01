@@ -1,39 +1,25 @@
 pragma Goals:printall.
 require import AllCore List Distr.
 
-
-
-type statement, witness, commitment, response, challenge,  adv_summary, sbits.
+type statement, witness, commitment, response, challenge,  sbits.
 type relation = statement -> witness -> bool.
 type transcript = commitment * challenge * response.
 
 op in_language (R:relation) statement : bool = exists witness, R statement witness.
-op challenge_set : challenge list. (* axiomitize that! *)
+
+op challenge_set : challenge list. 
 
 axiom challenge_set_size : 0 < size challenge_set.
+
 op verify_transcript : statement -> transcript -> bool.
 
+
 op completeness_relation : relation.
-
-
-op valid_transcript_pair (statement: statement) (transcript1 transcript2: transcript) : bool 
-   = transcript1.`1 = transcript2.`1 
-        /\ transcript1.`2 <> transcript2.`2
-        /\ verify_transcript statement transcript1 
-        /\ verify_transcript statement transcript2.
 
 
 module type HonestProver = {
   proc commitment(_:statement*witness) : commitment
   proc response(_:challenge) : response
-}.
-
-module type SpecialSoundnessExtractor = {
-  proc extract(transcript1: transcript, transcript2: transcript) : witness
-}.
-
-module type SpecialSoundnessAdversary = { (* computational *)
-  proc attack(statement:statement) : transcript * transcript
 }.
 
 module type HonestVerifier = {
@@ -42,18 +28,18 @@ module type HonestVerifier = {
 }.
 
 
-module HonestVerifier : HonestVerifier = {
+module HV : HonestVerifier = {
   var c : commitment
 
   proc challenge(statement: statement, commitment: commitment) : challenge = {
     var challenge : challenge;
-    challenge <$ duniform (challenge_set );
+    challenge <$ duniform challenge_set;
     c <- commitment;
     return challenge;
   }
 
  proc verify(statement: statement, transcript: transcript) : bool = {
-      return verify_transcript statement transcript /\ HonestVerifier.c = transcript.`1;
+      return verify_transcript statement transcript /\ HV.c = transcript.`1;
   }
 }.
 
@@ -88,15 +74,17 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
 
 theory CompletenessTheory.
 
+op completeness_error : statement -> real.
+
+
+
 require WhileNotBProc.
 clone import WhileNotBProc as WNBP with type rt <- bool,
                                         type iat <- statement * witness.
 
 section.
 
-op completeness_error : statement -> real.
-
-declare module P <: HonestProver{-M, -HonestVerifier}.
+declare module P <: HonestProver{-M, -HV}.
 declare module V <: HonestVerifier{-M, -P}.
 
 declare axiom verify_ll : islossless V.verify.
@@ -104,7 +92,8 @@ declare axiom challenge_ll : islossless V.challenge.
 declare axiom response_ll : islossless P.response.
 declare axiom commitment_ll : islossless P.commitment.
 
-declare axiom statistical_completeness &n statement witness :
+
+declare axiom completeness &n statement witness :
  completeness_relation statement witness  =>
    Pr[Completeness(P,V).run(statement, witness) @ &n : res]
          >= (1%r - completeness_error statement).
@@ -121,7 +110,7 @@ bypr. progress.
 have  ->: Pr[Completeness(P, V).run(s{m0},w{m0}) @ &m0 :
    res] = Pr[Completeness(P, V).run(statement, witness) @ &m0 :
    res]. smt.
-apply statistical_completeness. assumption.
+apply completeness. assumption.
 have ->: Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res]    
  = Pr[ M(Completeness(P,V)).whp((statement,witness), fun x => !x,1,n+1, true) @ &m :  res ].
 byequiv (_: ={glob P, glob V} /\  arg{1} = (statement, witness, n) /\ arg{2} = ((statement,witness), fun x => !x,1,n+1, true)  ==> _).  

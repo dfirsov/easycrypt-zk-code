@@ -4,25 +4,32 @@ require import AllCore List Distr.
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
+type adv_summary.
+
 op zk_relation : relation.
+
+module type RewMaliciousVerifier = {
+  proc challenge(_:statement * commitment) : challenge
+  proc summitup(statement: statement, response: response): adv_summary
+  proc getState() : sbits
+  proc * setState(b : sbits) : unit 
+}.
 
 module type MaliciousVerifier = {
   proc challenge(_:statement * commitment) : challenge
   proc summitup(statement: statement, response: response) : adv_summary
-
-  proc getState() : sbits
-  proc * setState(b : sbits) : unit 
 }.
+
 
 module type ZKDistinguisher = {
   proc guess(statement: statement, witness: witness, summary: adv_summary) : bool
 }.
 
-module type Simulator(V: MaliciousVerifier) = {
+module type Simulator(V: RewMaliciousVerifier) = {
   proc * simulate(statement: statement, n : int) : adv_summary
 }.
 
-module type Simulator1(V: MaliciousVerifier) = {
+module type Simulator1(V: RewMaliciousVerifier) = {
   proc run(statement: statement) : bool * adv_summary
 }.
 
@@ -41,7 +48,7 @@ module ZKReal(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
 }.
 
 
-module ZKIdeal(S: Simulator, V: MaliciousVerifier, D: ZKDistinguisher) = {
+module ZKIdeal(S: Simulator, V: RewMaliciousVerifier, D: ZKDistinguisher) = {
   proc run(statement: statement, witness: witness, n : int) = {
     var summary, guess;
     summary <@ S(V).simulate(statement, n);
@@ -66,10 +73,7 @@ require Hybrid.
 clone import Hybrid as Hyb with type input <- unit,
                                 type output <- adv_summary,
                                 type outputA <- bool,
-                                op q <- n.
-
-
-
+                                op q <- n+1.
 
 
 module Ad(D : ZKDistinguisher, Ob : Orclb, O : Orcl) = {
@@ -87,7 +91,7 @@ module Ad(D : ZKDistinguisher, Ob : Orclb, O : Orcl) = {
 }.
 
 
-module Obb(P : HonestProver, V : MaliciousVerifier, Sim : Simulator) = {
+module Obb(P : HonestProver, V : RewMaliciousVerifier, Sim : Simulator) = {
   proc leaks(x:inleaks) : outleaks = {
     return witness;
   }
@@ -107,18 +111,19 @@ module Obb(P : HonestProver, V : MaliciousVerifier, Sim : Simulator) = {
 }.
 
 require import MemoryProps.
-section.
 
+
+section.
 
 
 declare module Q <: HonestProver.
 declare module P <: HonestProver{-Q, -HybOrcl, -Count}.
 declare module Sim <: Simulator{-Q, -HybOrcl, -P, -Count}.
-declare module V <: MaliciousVerifier {-Q, -HybOrcl, -P, -Sim, -Count}.
+declare module V <: RewMaliciousVerifier {-Q, -HybOrcl, -P, -Sim, -Count}.
 declare module D <: ZKDistinguisher{-Q, - Count}. 
 
 
-declare axiom sim_run_ll : forall (V0 <: MaliciousVerifier),  
+declare axiom sim_run_ll : forall (V0 <: RewMaliciousVerifier),  
      islossless V0.challenge => islossless V0.summitup => islossless Sim(V0).simulate.
 declare axiom V_summitup_ll  : islossless V.summitup.
 declare axiom V_challenge_ll : islossless V.challenge.
@@ -126,7 +131,7 @@ declare axiom P_response_ll : islossless P.response.
 declare axiom P_commitment_ll : islossless P.commitment.
 declare axiom D_guess_ll     : islossless D.guess.
 
-declare axiom q_ge1 : 1 <= n. 
+declare axiom q_ge1 : 0 <= n. 
 
 declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
 
@@ -138,7 +143,7 @@ module A = Ad(D).
 module Y = {
   proc main() = {
    var summary, guess;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 n];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -156,7 +161,7 @@ module Y = {
 module Z = {
   proc main() = {
    var summary, guess;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 (n )];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -174,7 +179,7 @@ module Z = {
 module Z2 = {
   proc main() = {
    var summary, guess;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 (n )];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -196,7 +201,7 @@ module Z2 = {
 module Y2 = {
   proc main() = {
    var summary, guess;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 (n )];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -218,7 +223,7 @@ module Y2 = {
 module Z3 = {
   proc main() = {
     var commit, challenge, response, summary, guess;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 (n )];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -241,7 +246,7 @@ module Z3 = {
 module Y3 = {
   proc main() = {
     var commit, challenge, response, summary, guess;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 (n )];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -269,10 +274,10 @@ lemma y &m :
 byequiv(_: ={glob D, glob V, glob P, glob Sim, glob HybOrcl} ==> _).
 proc.
 seq 6 10 : (={summary, glob V}).
-seq 4 4 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l0{2} = HybOrcl.l{2} /\ HybOrcl.l0{2} < n
+seq 4 4 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l0{2} = HybOrcl.l{2} /\ HybOrcl.l0{2} < n + 1
  /\ HybOrcl.l{2} <= n
    ).
-while (={glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l{2} <= HybOrcl.l0{2}  /\ HybOrcl.l0{2} < n ). inline*.
+while (={glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l{2} <= HybOrcl.l0{2}  /\ HybOrcl.l0{2} < n + 1 ). inline*.
 sp.
 rcondf {1} 1 . progress. skip. smt.
 rcondf {1} 1 . progress. skip. smt.    
@@ -282,7 +287,7 @@ call (_:true). skip. progress. smt.
 wp. rnd. skip. progress.  smt. smt. smt. smt.
 rcondt {1} 1. progress. 
 seq 1 5 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
-  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n /\ HybOrcl.l{2} <= n).
+  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n + 1 /\ HybOrcl.l{2} <= n + 1).
 inline HybOrcl(Ob, R(Ob)).orcl. sp. 
 rcondf {1} 1. progress. 
 rcondt {1} 1. progress. 
@@ -291,7 +296,7 @@ sp. wp.
 call (_:true). call (_:true).
 call (_:true). call (_:true). skip. progress. smt.  smt.
 while (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
-  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n).
+  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n+1).
 inline*. sp.
 rcondt {1} 1. progress. 
 sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt. 
@@ -305,10 +310,10 @@ lemma w &m :
 byequiv(_: ={glob D, glob V, glob P, glob Sim, glob HybOrcl} ==> _).
 proc.
 seq 6 7 : (={summary, glob V}).
-seq 4 4 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l0{2} = HybOrcl.l{2} /\ HybOrcl.l0{2} < n
+seq 4 4 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l0{2} = HybOrcl.l{2} /\ HybOrcl.l0{2} < n + 1
  /\ HybOrcl.l{2} <= n
    ).
-while (={glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l{2} <= HybOrcl.l0{2}  /\ HybOrcl.l0{2} < n ). inline*.
+while (={glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l{2} <= HybOrcl.l0{2}  /\ HybOrcl.l0{2} < n + 1 ). inline*.
 sp.
 rcondf {1} 1 . progress. skip. smt.
 rcondf {1} 1 . progress. skip. smt.    
@@ -318,7 +323,7 @@ call (_:true). skip. progress. smt.
 wp. rnd. skip. progress.  smt. smt. smt. smt.
 rcondt {1} 1. progress. 
 seq 1 2 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
-  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n /\ HybOrcl.l{2} <= n).
+  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n + 1 /\ HybOrcl.l{2} <= n+1).
 inline HybOrcl(Ob, L(Ob)).orcl. sp. 
 rcondf {1} 1. progress. 
 rcondt {1} 1. progress. 
@@ -326,7 +331,7 @@ inline*.
 sp. wp.  
 call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt. smt.
 while (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
-  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n).
+  HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n+1).
 inline*. sp.
 rcondt {1} 1. progress. 
 sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt. 
@@ -434,10 +439,15 @@ qed.
 lemma qq &m:
         Pr[Ln(Ob,A).main() @ &m : res]
       - Pr[Rn(Ob,A).main() @ &m : res]
-    = n%r *(Pr[HybGame(A,Ob,L(Ob)).main() @ &m : res]
+    = (n+1)%r *(Pr[HybGame(A,Ob,L(Ob)).main() @ &m : res]
             - Pr[HybGame(A,Ob,R(Ob)).main() @ &m : res]).
 apply (Hybrid_restr Ob A _ _ _ _ _ &m (fun _ _ _ r => r)).
-admit. proc. skip. auto. proc.
+progress. proc. inline*.
+wp.  call (_:true). 
+while (Count.c = i /\ i <= n+1) . wp. 
+call (_:true). wp.  skip.  progress. smt.
+wp.  skip.  progress. smt.
+proc. skip. auto. proc.
 call (sim_run_ll V). apply V_challenge_ll.
 apply V_summitup_ll. skip. auto.
 proc. call V_summitup_ll. call P_response_ll.
@@ -450,13 +460,14 @@ progress. skip. progress. smt.
 qed.
 
 
+
 module Ob1 = Obb(P,V,Sim).
 module A1 = Ad(D).
 
 module Amem : IR1R2 = {
   proc init() = {
    var commit, challenge, response, summary;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
+   HybOrcl.l0 <$ [0..max 0 (n )];
    HybOrcl.l <- 0;
    summary <- witness;
    while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
@@ -508,7 +519,6 @@ module Dstar : ZKDistinguisher = {
 }.
 
 
-  (* semi-main goal *)
 lemma lll &m deltoid : 
    (forall &n N, 0 <= N =>
    Pr[ZKIdeal(Sim, V, Dstar).run(s, w, N) @ &n : res]
@@ -580,7 +590,7 @@ module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
 }.
 
 
-module SimAmp(S: Simulator, V : MaliciousVerifier) = { 
+module SimAmp(S: Simulator, V : RewMaliciousVerifier) = { 
   proc simulate(statement:statement,N : int) = { 
    var summary, i; 
    i <- 0;
@@ -602,7 +612,7 @@ lemma final &m deltoid :
 
    Pr[ZKIdeal(SimAmp(Sim), V, D).run(s, w, n) @ &m : res]
         - Pr[ZKRealAmp(P, V, D).run(s, w) @ &m : res]
-          < n%r * deltoid.
+          < (n+1)%r * deltoid.
 move => zk_ass.
 have -> : Pr[ZKIdeal(SimAmp(Sim), V, D).run(s, w, n) @ &m : res]
  = Pr[Ln(Ob,A).main() @ &m : res].
@@ -629,70 +639,6 @@ apply lll. smt. smt.
 qed.
 
 
-
-
-
-
-module V0(V : MaliciousVerifier) : MaliciousVerifier = {
-  proc challenge (stat:statement, c: commitment) : challenge = {
-   var commit, challenge, response, summary;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
-   HybOrcl.l <- 0;
-   summary <- witness;
-     challenge <@ V.challenge(s, c);
-     response <@ P.response(challenge);
-     summary <@ V.summitup(s, response);
-     HybOrcl.l <- HybOrcl.l + 1;
-   while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
-     commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit);
-     response <@ P.response(challenge);
-     summary <@ V.summitup(s, response);
-     HybOrcl.l <- HybOrcl.l + 1;
-    }
-   commit <@ P.commitment(s, w);
-   challenge <@ V.challenge(s, commit);
-    
-   return challenge;
- } 
-  proc summitup(s:statement, r:response)  : adv_summary = {
-    var summary;
-    summary <@ V.summitup(s,r);
-   return summary;
-  }
-  proc getState() : sbits = { 
-   var state;
-   state <@ V.getState();
-   return state;
-  }
-  proc setState(s:sbits) : unit = { 
-     V.setState(s);
-  }
-}.
-
-
-module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
-   module S = Sim(V)
-   proc simulate(ss:statement, nn:int) = {
-
-   var commit, challenge, response, summary;
-   HybOrcl.l0 <$ [0..max 0 (n - 1)];
-   HybOrcl.l <- 0;
-   summary <- witness;
-   while (HybOrcl.l <= n && HybOrcl.l < HybOrcl.l0) {
-     commit <@ P.commitment(s, w);
-     challenge <@ V.challenge(s, commit);
-     response <@ P.response(challenge);
-     summary <@ V.summitup(s, response);
-     HybOrcl.l <- HybOrcl.l + 1;
-   }
-
-   summary <@ S.simulate(s,n);
-   return summary;
-     
-   }
-}.
-
 end section.
 
 end ZeroKnowledgeTheory.
@@ -704,10 +650,10 @@ abstract theory OneShotSimulator.
 
 
     require OneToManyZK.
-    clone import OneToManyZK as OMZK with type prob <- statement, 
-                                          type wit <- witness, 
-                                          type sbits <- adv_summary, 
-                                          type event <- bool, 
+    clone import OneToManyZK as OMZK with type prob <- statement,
+                                          type wit <- witness,
+                                          type sbits <- adv_summary,
+                                          type event <- bool,
 
                                           op E <- (fun x => fst x),
                                           op fevent <- false
@@ -729,7 +675,7 @@ abstract theory OneShotSimulator.
 
 
 
-     module  Simulator(S : Simulator1)(V : MaliciousVerifier)  = {
+     module  Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
        module M = MW.IFB.IM.W(S(V))
        proc simulate(statement : statement, n : int) :
          adv_summary = {
@@ -747,11 +693,11 @@ abstract theory OneShotSimulator.
 
     declare module HonestProver <: HonestProver.
     declare module Sim1 <: Simulator1 {-MW.IFB.IM.W, -MW.IFB.DW}.
-    declare module V <: MaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
-    declare module D <: ZKDistinguisher. 
+    declare module V <: RewMaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
+    declare module D <: ZKDistinguisher.
 
 
-    declare axiom sim1_run_ll : forall (V0 <: MaliciousVerifier),  
+    declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier),
          islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
     declare axiom V_summitup_ll  : islossless V.summitup.
     declare axiom V_challenge_ll : islossless V.challenge.
@@ -774,10 +720,10 @@ abstract theory OneShotSimulator.
     declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
 
      lemma computational_statisticalVpoly_zk stat wit N p0 negl &m:
-        zk_relation stat wit => 
+        zk_relation stat wit =>
 
         `|Pr[W0(Sim1(V), D).run(stat, wit) @ &m : fst res.`2 /\ res.`1] /
-             Pr[Sim1(V).run(stat) @ &m : fst res] 
+             Pr[Sim1(V).run(stat) @ &m : fst res]
          - Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ]| <= negl =>
 
         0 <= N =>
@@ -788,7 +734,7 @@ abstract theory OneShotSimulator.
         let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res] in
           `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
     proof. progress.
-    have ->: 
+    have ->:
      `|Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] -
       Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]|
       = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]
@@ -820,9 +766,9 @@ abstract theory OneShotSimulator.
   proc. seq  4 4 : (={glob V} /\ (statement{1}, witness{1}, summary{1}) =
   (Ny{2}, w{2}, result{2})). sim. call D_guess_prop. skip. auto. auto. auto.
     apply (one_to_many_zk  (Sim1(V)) D _  _ _ _ &m  stat wit p0 negl N
-       Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _).  
-    apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll. 
-    apply sim1_rew_ph. apply D_guess_ll. 
+       Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _).
+    apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll.
+    apply sim1_rew_ph. apply D_guess_ll.
     auto. auto. auto. auto.
     qed.
     end section.
@@ -837,10 +783,10 @@ abstract theory OneShotSimulator.
     section.
     declare module HonestProver <: HonestProver.
     declare module Sim1 <: Simulator1 {-MW.IFB.IM.W, -MW.IFB.DW}.
-    declare module V <: MaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
-    declare module D <: ZKDistinguisher. 
+    declare module V <: RewMaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
+    declare module D <: ZKDistinguisher.
 
-    declare axiom sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge 
+    declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge
                                   => islossless V0.summitup => islossless Sim1(V0).run.
     declare axiom V_summitup_ll  : islossless V.summitup.
     declare axiom V_challenge_ll : islossless V.challenge.
@@ -855,14 +801,14 @@ abstract theory OneShotSimulator.
          islossless V.setState).
 
 
-    declare axiom sim1_rew_ph : 
+    declare axiom sim1_rew_ph :
          forall (x : (glob Sim1(V))),
                   phoare[ Sim1(V).run : (glob Sim1(V)) = x ==> !fst res => (glob Sim1(V)) = x] = 1%r.
 
    
-    declare axiom qqq &m (p : statement) (w : witness) 
-      (D <: ZKDistinguisher) 
-         (V <: MaliciousVerifier{-D, -HonestProver}): 
+    declare axiom qqq &m (p : statement) (w : witness)
+      (D <: ZKDistinguisher)
+         (V <: RewMaliciousVerifier{-D, -HonestProver}):
        islossless D.guess =>
        islossless V.summitup =>
        islossless V.challenge =>
@@ -873,13 +819,13 @@ abstract theory OneShotSimulator.
          (forall &m b (x: glob V), b = f x =>
            Pr[V.setState(b) @ &m : glob V = x] = 1%r) /\
          islossless V.setState) =>
-       zk_relation p w =>  
+       zk_relation p w =>
         `|Pr[W0(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
-             Pr[Sim1(V).run(p) @ &m : fst res] 
+             Pr[Sim1(V).run(p) @ &m : fst res]
                   - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= negl.
 
 
-    axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
+    declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
     
      lemma statistical_zk stat wit N p0 &m:
         zk_relation stat wit => 0 <= N =>
@@ -888,7 +834,7 @@ abstract theory OneShotSimulator.
         let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res] in
           `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^N.
     proof. progress.
-    have ->: 
+    have ->:
      `|Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] -
       Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]|
       = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res]
@@ -899,7 +845,7 @@ abstract theory OneShotSimulator.
       statement{1} = Ny{2} /\ witness{1} = w{2} /\
         ={glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto. proc.
     inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
-    call D_guess_prop.  simplify. inline Simulator(Sim1,V).simulate. wp. sp. 
+    call D_guess_prop.  simplify. inline Simulator(Sim1,V).simulate. wp. sp.
     call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
     have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]
       = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
@@ -908,7 +854,7 @@ proc. call D_guess_prop. sim. auto. auto.
     apply (one_to_many_zk (Sim1(V)) D _ _ _ _ &m stat wit p0 negl N
     Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _
   ) .
-  apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.  
+  apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.
     apply (qqq &m stat wit  D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. auto.
     qed.
    end section.

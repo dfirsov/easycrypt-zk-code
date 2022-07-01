@@ -10,20 +10,21 @@ module type Extractor(P: MaliciousProver) = {
 }.
 
 
-
 theory ExtractabilityTheory.
 
 section.
 
 declare module Extractor <: Extractor.  
-declare module P <: MaliciousProver{-HonestVerifier}.
+declare module V <: HonestVerifier.
+declare module P <: MaliciousProver{-HV}.
+
 
 lemma computational_statistical_soundness &m p f epsilon:
     ! in_language soundness_relation p => 
   Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
-   f Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+   f Pr[Soundness(P, V).run(p) @ &m : res]
     => (forall s, f s <= 0%r => s <= epsilon) =>
-    Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+    Pr[Soundness(P, V).run(p) @ &m : res]
      <= epsilon.
 proof. progress.
 have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
