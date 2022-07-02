@@ -8,17 +8,22 @@ op E : event * sbits -> bool.
 
 require WhileCycle.
 clone import WhileCycle as MW with type irt    <- prob,
-                                    type rrt   <- event * sbits,
-                                    type sbits <- sbits,
-                                    op MyPred <- E.
+                                   type rrt   <- event * sbits,
+                                   type sbits <- sbits,
+                                   type dt <- prob * wit * sbits,
+                                   type de <- wit,
+                                   op MyPred <- E,
+                                   op df <- (fun (x : prob) (y: (event * sbits)) (w: wit) => (x, w,y.`2)).
+                           
 import MW.IFB.
 import MW.IFB.IM.
 
+module W0 = W0.
 
 
-module type Dist = {
-  proc guess(_:prob * wit * sbits) : bool
-}.
+(* module type Dist = { *)
+(*   proc guess(_:prob * wit * sbits) : bool *)
+(* }. *)
 
 
 module type Simulator1 = {
@@ -26,26 +31,26 @@ module type Simulator1 = {
 }.
 
 
-module W0(Sim1:Simulator1,  D : Dist) = {
-  module Sim1 = Sim1
-  proc run(a : prob, w : wit) = {
-      var r, b;
-      r <@ Sim1.run(a);
-      b <@ D.guess(a,w,r.`2);
-      return (b, r);
-  }
-}.
+(* module W0(Sim1:Simulator1,  D : Dist) = { *)
+(*   module Sim1 = Sim1 *)
+(*   proc run(a : prob, w : wit) = { *)
+(*       var r, b; *)
+(*       r <@ Sim1.run(a); *)
+(*       b <@ D.guess(a,w,r.`2); *)
+(*       return (b, r); *)
+(*   } *)
+(* }. *)
 
 
-module W1(Sim1:Simulator1,  D : Dist) = {
-  module M = W(Sim1)
-  proc run(a : (event * sbits -> bool) * (prob ) * int * int * (event * sbits), w : wit) = {
-      var r, b;
-      r <@ M.whp(a);
-      b <@ D.guess(a.`2,w, r.`2);
-      return (b, r);
-  }
-}.
+(* module W1(Sim1:Simulator1,  D : Dist) = { *)
+(*   module M = W(Sim1) *)
+(*   proc run(a : (event * sbits -> bool) * prob * int * int * (event * sbits), w : wit) = { *)
+(*       var r, b; *)
+(*       r <@ M.whp(a); *)
+(*       b <@ D.guess(a.`2,w, r.`2); *)
+(*       return (b, r); *)
+(*   } *)
+(* }. *)
 
 
 
@@ -62,11 +67,13 @@ module Iter(Sim1 : Simulator1,  D : Dist)  = {
 
 
 
-
 section.
 (* declare module V : MaliciousVerifier{DW,W}. *)
 declare module Sim1 <: Simulator1{-DW, -W}.
-declare module D <: Dist.
+declare module D <: Dist {-DW, -W}.
+
+
+declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob Sim1, arg} ==> ={res}  ].
 
 declare axiom Sim1_ll : islossless Sim1.run.
 
@@ -104,14 +111,22 @@ apply oip3;auto.
 qed.
 
 
-local lemma zk_step2 &m E p ea w  :
+local lemma zk_step2 &m  p ea w  :
   Pr[ W1(Sim1,D).run((E,(p),1,ea,(fevent,witness)),w) 
            @ &m : E res.`2 /\ res.`1 ]  
      = big predT
         (fun i => Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2] ^ i 
          * Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\  res.`1] )
         (range 0 ea). 
-admitted.
+have ->: Pr[W0(Sim1, D).run(p, w) @ &m : ! E res.`2]
+  = Pr[Sim1.run(p) @ &m : ! E res]. 
+byequiv. proc*.
+inline*. wp. call {1} D_ll. sp. call (_:true). skip. progress. auto. auto.
+apply (whp_cap_fin_sum Sim1  D _ _ _ _ &m p ea (fevent, witness) w _).
+apply Sim1_ll. apply Sim1_rew_ph. 
+apply whp_axp. apply D_ll.
+apply Estart.
+qed.
 
 
 local lemma zk_step3 &m p eps ea coeff zkp (w : wit):
@@ -236,18 +251,17 @@ seq 1 1 :   (a0{2} = a{2} /\
   ea0{1} = ea{1} /\
   E0{1} = E{1} /\
   (a{2}, w{2}) = ((Top.E, (p), 1, ea, (Top.fevent, witness)), w) /\
-  (glob D){2} = (glob D){m} /\
-  (glob Sim1){2} = (glob Sim1){m} /\
+
   (fevent{1}, Ny{1}, w{1},  ea{1}, E{1}) =
   (Top.fevent, p, w,  ea, Top.E) /\
-  (glob D){1} = (glob D){m} /\ (glob Sim1){1} = (glob Sim1){m} /\ r1{1} = r0{2}).
-admit. wp. call (_:true). skip. progress. smt. auto. auto.
+   (glob Sim1){1} = (glob Sim1){2} /\ r1{1} = r0{2}).
 
 
+call (_: ={glob Sim1}). simplify. sim.
+skip. progress.  smt.
+wp. call whp_axp.
+skip. progress. auto. auto.
 
-
-(* call (_: ={glob Sim1, glob D}). simplify. sim.   *)
-(* skip. smt. auto. auto. *)
 have : coeff <= 1%r. 
 rewrite H4.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
@@ -285,6 +299,7 @@ local lemma zk_almost_final &m p w eps ea coeff zkp :
         / Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] 
         - zkp| <= eps
   => 0%r < Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] 
+  => 0%r <= zkp <= 1%r
   => coeff = big predT
                (fun i => Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2] ^ i 
                          * Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2])
@@ -293,12 +308,33 @@ local lemma zk_almost_final &m p w eps ea coeff zkp :
            @ &m : E res.`2 /\ res.`1 ]  
          - zkp| <= eps + (1%r - coeff).
 proof.
-move => H1 H2 H3.
+move => H1 H2 h3 H3.
 have ie1 : `|Pr[ Iter(Sim1, D).run(fevent, p,w,ea,E) 
            @ &m : E res.`2 /\  res.`1 ]  
          - coeff * zkp| <= eps.
 apply (zk_non_final &m p eps ea coeff zkp);auto. smt.
-apply ots. admit. admit.
+apply ots. assumption. 
+rewrite H3. 
+split.
+have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
+  = 1%r - Pr[W0(Sim1,D).run(p,w) @ &m :  E res.`2].
+  have ->: 1%r = Pr[W0(Sim1,D).run(p,w) @ &m :  true].
+  byphoare. 
+proc. call D_ll. call Sim1_ll.  auto. auto. auto.
+  have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]
+   + Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2]. rewrite Pr[mu_split E res.`2]. 
+  simplify. smt. smt.
+  apply (big_geq0  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). smt.
+progress.  
+have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
+  = 1%r - Pr[W0(Sim1,D).run(p,w) @ &m :  E res.`2].
+  have ->: 1%r = Pr[W0(Sim1,D).run(p,w) @ &m :  true].
+  byphoare. 
+proc. call D_ll. call Sim1_ll.  auto. auto. auto.
+  have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]
+   + Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2]. rewrite Pr[mu_split E res.`2]. 
+  simplify. smt. smt.
+apply big_leq1. smt.
 auto.
 qed.
 
@@ -308,6 +344,7 @@ local lemma zk_final &m p w eps ea zkp:
         / Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] 
         - zkp| <= eps
   => 0 <= ea
+  => 0%r <= zkp <= 1%r
   => `|Pr[ Iter(Sim1, D).run(fevent,p,w,ea,E) 
            @ &m : E res.`2 /\ res.`1 ]  
          - zkp| 
@@ -336,7 +373,7 @@ proc.  call D_ll. call Sim1_ll. auto. auto. auto.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
  + Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]. rewrite Pr[mu_split ! E res.`2].
 simplify. smt. smt.
-apply (zk_almost_final &m);auto.
+apply (zk_almost_final &m);auto. 
 qed.
 
 
@@ -344,6 +381,7 @@ local lemma zk_final_le &m p w p0 eps ea zkp:
    `|Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1] 
         / Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] - zkp| <= eps
   => 0 <= ea
+  => 0%r <= zkp <= 1%r
   => Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] >= p0
   => `|Pr[ Iter(Sim1, D).run(fevent,p,w,ea,E) 
            @ &m : E res.`2 /\ res.`1 ] - zkp| 
@@ -373,6 +411,7 @@ local lemma zk_final_clean' &m p w p0 eps ea zkp:
      `| Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1 ]
            / Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2 ] - zkp | <= eps
   => 0  <= ea
+  => 0%r <= zkp <= 1%r
   => p0 <= Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2 ]
   => `| Pr[Iter(Sim1, D).run(fevent,p,w,ea,E) @ &m : res.`1] - zkp |
               <= eps + 2%r * (1%r-p0) ^ ea.
@@ -425,6 +464,7 @@ lemma one_to_many_zk &m p w p0 eps ea zkp:
      `| Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1 ]
            / Pr[Sim1.run(p) @ &m : E res]  - zkp | <= eps
   => 0  <= ea
+  => 0%r <= zkp <= 1%r
   => p0 <= Pr[Sim1.run(p) @ &m :  E res] 
   => `| Pr[Iter(Sim1, D).run(fevent,p,w,ea,E) @ &m : res.`1] - zkp |
               <= eps + 2%r * (1%r-p0) ^ ea.
@@ -433,7 +473,7 @@ have ->: Pr[Sim1.run(p) @ &m : E res]
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).
   skip. progress. auto. auto. auto.
 progress.
-smt. auto.  auto. apply (zk_final_clean' &m p w p0 eps ea zkp);auto.
+smt. auto.  auto. apply (zk_final_clean' &m p w p0 eps ea zkp).
 qed.
 end section.
 

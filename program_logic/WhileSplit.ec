@@ -9,9 +9,6 @@ module type HasRun = {
 
 module W(A : HasRun) = {
   var c : int
-
-
-
   proc whp(p : rrt -> bool, i : irt, s : int, e : int, r : rrt) = {
     c <- s;
     while(c <= e /\ !p r){

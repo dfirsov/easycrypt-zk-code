@@ -65,7 +65,7 @@ abstract theory SpecialSoundnessTheory.
 
     section.
 
-    declare module P <: MaliciousProver{-HonestVerifier}.
+    declare module P <: MaliciousProver{-HV}.
     
     declare axiom P_response_ll : islossless P.response.
 
@@ -141,7 +141,7 @@ abstract theory SpecialSoundnessTheory.
     local lemma www &m p aux: 
       Pr[ InitRun1(A(P)).run(p,aux) @ &m 
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
-     = Pr[Soundness(P, HonestVerifier).run(p) @ &m : res].
+     = Pr[Soundness(P, HV).run(p) @ &m : res].
     byequiv. proc. inline*. wp. call (_:true).
     wp. rnd.  wp. call (_:true). wp.  
     skip. simplify. progress. auto. auto. 
@@ -155,8 +155,8 @@ abstract theory SpecialSoundnessTheory.
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
              deltoid =>
       Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
-       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
-       - (1%r/ (size challenge_set)%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res])
+       (Pr[Soundness(P, HV).run(p) @ &m : res]^2
+       - (1%r/ (size challenge_set)%r) * Pr[Soundness(P, HV).run(p) @ &m : res])
          - deltoid.
     progress.
     have f : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
@@ -169,7 +169,7 @@ abstract theory SpecialSoundnessTheory.
 
     have g :       Pr[ InitRun1(A(P)).run(p,tt) @ &m 
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
-     = Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]. apply www.
+     = Pr[Soundness(P, HV).run(p) @ &m : res]. apply www.
 
      have j :       Pr[SpecialSoundnessAdversary(P).attack(p) @ &m :
            valid_transcript_pair p res.`1 res.`2 /\
@@ -187,8 +187,8 @@ abstract theory SpecialSoundnessTheory.
       =>
 
       Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
-       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]).
+       (Pr[Soundness(P, HV).run(p) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HV).run(p) @ &m : res]).
     proof.  progress.
       have vte : forall t1 t2, valid_transcript_pair p t1 t2 =>  soundness_relation p (special_soundness_extract p t1 t2). smt.
 
@@ -213,9 +213,9 @@ abstract theory SpecialSoundnessTheory.
     lemma computational_statistical_soundness &m p f epsilon:
         ! in_language soundness_relation p => 
       Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
-       f Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+       f Pr[Soundness(P, HV).run(p) @ &m : res]
         => (forall s, f s <= 0%r => s <= epsilon) =>
-        Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+        Pr[Soundness(P, HV).run(p) @ &m : res]
          <= epsilon.
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
@@ -232,7 +232,7 @@ abstract theory SpecialSoundnessTheory.
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
             deltoid =>
-         Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+         Pr[Soundness(P, HV).run(p) @ &m : res]
          <=  (sqrt deltoid) + (1%r/ (size (challenge_set))%r).
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
@@ -240,12 +240,12 @@ abstract theory SpecialSoundnessTheory.
       rewrite Pr[mu_false]. auto.
     rewrite Pr[mu_eq]. smt. auto.
     have  :   0%r >=
-       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res])
+       (Pr[Soundness(P, HV).run(p) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HV).run(p) @ &m : res])
          - deltoid.
      rewrite - f1.
     apply (computational_PoK &m p). auto. 
-    pose a := Pr[Soundness(P, HonestVerifier).run(p) @ &m : res].
+    pose a := Pr[Soundness(P, HV).run(p) @ &m : res].
     pose b := deltoid.
     have f2 : 0%r <= a <= 1%r. smt.
     progress.     
@@ -271,7 +271,7 @@ abstract theory SpecialSoundnessTheory.
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
             deltoid =>
-         Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+         Pr[Soundness(P, HV).run(p) @ &m : res]
          <=  ((size (challenge_set))%r * deltoid) + (1%r/ (size (challenge_set))%r).
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
@@ -279,12 +279,12 @@ abstract theory SpecialSoundnessTheory.
       rewrite Pr[mu_false]. auto.
     rewrite Pr[mu_eq]. smt. auto.
     have  :   0%r >=
-       (Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HonestVerifier).run(p) @ &m : res])
+       (Pr[Soundness(P, HV).run(p) @ &m : res]^2
+       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HV).run(p) @ &m : res])
          - deltoid.
      rewrite - f1.
     apply (computational_PoK &m p). auto. 
-    pose a := Pr[Soundness(P, HonestVerifier).run(p) @ &m : res].
+    pose a := Pr[Soundness(P, HV).run(p) @ &m : res].
     pose b := deltoid.
     pose c := (size challenge_set)%r.
     have f2 : 0%r <= a <= 1%r. smt.
@@ -308,7 +308,7 @@ abstract theory SpecialSoundnessTheory.
     lemma statistical_soundness &m p  :
         ! in_language soundness_relation p =>
       (! exists t1 t2, valid_transcript_pair p t1 t2 /\ ! soundness_relation p (special_soundness_extract p t1 t2)) =>
-         Pr[Soundness(P, HonestVerifier).run(p) @ &m : res]
+         Pr[Soundness(P, HV).run(p) @ &m : res]
          <=  ((1%r/ (size (challenge_set))%r)).
      
      proof. progress. 

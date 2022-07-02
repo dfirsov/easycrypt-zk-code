@@ -13,7 +13,7 @@ clone import ReflComp with type at1 <- unit,
 
 section.
 declare module A <: RewEx1Ex2.
-axiom A_run_ll : islossless A.ex1.    
+declare axiom A_run_ll : islossless A.ex1.    
 lemma  qq &m : phoare[ A.ex1 :  (glob A) = (glob A){m} ==> exists &n, (glob A) = (glob A){n} ]=  1%r.
 proc*.
 seq 1 : true. auto.
@@ -33,8 +33,8 @@ qed.
 
 require import RandomFacts RealSeries List.
 
-axiom ler_trans1 (a b c : real) : a < b => b <= c => a < c.
-
+lemma ler_trans1 (a b c : real) : a < b => b <= c => a < c. by smt.
+qed.
 
 
 

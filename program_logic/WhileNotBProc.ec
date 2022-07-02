@@ -119,8 +119,9 @@ rcondf 1. skip. smt.
 sp. 
 rcondt 1. skip. progress. smt.
 swap 1 1.  
-have f : phoare[ A.run : arg = ia ==> ! MyPa res] = (p^1). admit.
-call f. sp. skip. auto.
+have f : phoare[ A.run : arg = ia ==> ! MyPa res] = (p^1). 
+simplify.  conseq iipr. smt.
+ call f. sp. skip. auto.
   simplify.
 progress. proc.
   have phf: phoare[ M(A).whp : arg = (ia, MyPa, 1, n+1, r) ==> !MyPa res] = (p ^(n+1)).
@@ -152,7 +153,10 @@ rcondf 1. skip. smt.
 sp. 
 rcondt 1. skip. progress. smt.
 swap 1 1.  
-have f : phoare[ A.run : arg = ia ==> ! MyPa res] <= (p^1). admit.
+have f : phoare[ A.run : arg = ia ==> ! MyPa res] <= (p^1). 
+conseq iipr. smt.
+
+
 call f. sp. skip. auto.
   simplify.
 progress. proc.
@@ -185,7 +189,9 @@ rcondf 1. skip. smt.
 sp. 
 rcondt 1. skip. progress. smt.
 swap 1 1.  
-have f : phoare[ A.run : arg = ia ==> ! MyPa res] >= (p^1). admit.
+have f : phoare[ A.run : arg = ia ==> ! MyPa res] >= (p^1). 
+conseq iipr. smt.
+
 call f. sp. skip. auto.
   simplify.
 progress. proc.

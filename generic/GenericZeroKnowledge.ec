@@ -694,7 +694,7 @@ abstract theory OneShotSimulator.
     declare module HonestProver <: HonestProver.
     declare module Sim1 <: Simulator1 {-MW.IFB.IM.W, -MW.IFB.DW}.
     declare module V <: RewMaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
-    declare module D <: ZKDistinguisher.
+    declare module D <: ZKDistinguisher{ -MW.IFB.DW, -MW.IFB.IM.W} .
 
 
     declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier),
@@ -765,11 +765,14 @@ abstract theory OneShotSimulator.
   (glob HonestProver){1} = (glob HonestProver){m} ==> _).
   proc. seq  4 4 : (={glob V} /\ (statement{1}, witness{1}, summary{1}) =
   (Ny{2}, w{2}, result{2})). sim. call D_guess_prop. skip. auto. auto. auto.
-    apply (one_to_many_zk  (Sim1(V)) D _  _ _ _ &m  stat wit p0 negl N
+    apply (one_to_many_zk  (Sim1(V)) D _  _ _ _ _ &m  stat wit p0 negl N
        Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _).
+
+    conseq D_guess_prop. auto.
+
     apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll.
     apply sim1_rew_ph. apply D_guess_ll.
-    auto. auto. auto. auto.
+    auto. auto. auto. smt. auto.
     qed.
     end section.
    end ComputationalZK.
@@ -784,7 +787,7 @@ abstract theory OneShotSimulator.
     declare module HonestProver <: HonestProver.
     declare module Sim1 <: Simulator1 {-MW.IFB.IM.W, -MW.IFB.DW}.
     declare module V <: RewMaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
-    declare module D <: ZKDistinguisher.
+    declare module D <: ZKDistinguisher{-MW.IFB.IM.W,  -MW.IFB.DW}.
 
     declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge
                                   => islossless V0.summitup => islossless Sim1(V0).run.
@@ -851,12 +854,14 @@ abstract theory OneShotSimulator.
       = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
 byequiv(_: arg{2} = (stat,  wit) /\   arg{1} = (stat, wit) /\  ={glob V, glob HonestProver} ==> _).
 proc. call D_guess_prop. sim. auto. auto.
-    apply (one_to_many_zk (Sim1(V)) D _ _ _ _ &m stat wit p0 negl N
-    Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _
-  ) .
+    apply (one_to_many_zk (Sim1(V)) D _ _ _ _ _ &m stat wit p0 negl N
+    Pr[ZKD(HonestProver, V, D).main(stat, wit) @
+ &m : res]  _ _ _
+  ) . conseq D_guess_prop. auto.
   apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.
-    apply (qqq &m stat wit  D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. auto.
+    apply (qqq &m stat wit  D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply H0. smt.  auto.
     qed.
    end section.
    end StatisticalZK.
 end OneShotSimulator.
+

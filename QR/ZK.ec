@@ -16,7 +16,7 @@ clone import RewBasics as Rew with type sbits <- sbits.
 section.
 
 declare module V <: MaliciousVerifier{-HonestProver, -OMZK.MW.IFB.IM.W, -OMZK.MW.IFB.DW}.
-declare module D <: ZKDistinguisher.
+declare module D <: ZKDistinguisher{-OMZK.MW.IFB.IM.W, -OMZK.MW.IFB.DW}.
 
 
 declare axiom Sim1_run_ll : forall (V0 <: MaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.

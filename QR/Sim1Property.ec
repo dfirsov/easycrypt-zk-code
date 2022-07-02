@@ -261,7 +261,7 @@ local lemma qkok ya wa P : IsSqRoot  ya wa /\ unit ya =>
    :   ={glob V,arg} /\  (ya,wa) = (Ny{2},w{2})
        ==>  (fst res{1}.`2) /\ P res{1}.`1 <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => [isqr invrtbl]. proc.
-inline W0(Sim1(V), D).Sim1.run. sp.
+inline Sim1(V).run. sp.
 seq 2 1 : (={glob V,b',z, Ny,w} 
 
          /\ Ny{1} = a{1}
@@ -296,9 +296,13 @@ call (_:true). skip. progress. smt.
 rcondt {1} 2. progress. call (_:true). skip. auto.
 conseq (_: b0{1} <> b'{1} ==> true ). smt. smt.
 elim rewindable_V_plus2.
-move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  auto.
+move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  
 call {1} s7.
-call (_:true). skip. smt.
+call {1} summitup_ll.
+call {2} summitup_ll. skip. auto.
+
+
+
 conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
 call {1} (_: true ==> true). apply D_guess_ll.
 wp. 
