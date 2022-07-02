@@ -5,6 +5,8 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
 
+require import Averaging.
+
 require import RealExp.
 
 require import AllpairsProp.
@@ -17,7 +19,7 @@ axiom duni : is_uniform d.
 
 op allcs : ct list.
 axiom allcs_uniq : uniq allcs.
-
+axiom allcs_all x : mu1 d x <> 0%r => x \in allcs.
 axiom ss c : mu1 d c = 1%r/(size allcs)%r.
 
 require BigPr.
@@ -80,7 +82,7 @@ local module C2 : Comp = {
 
 
 local module C1 = {
-  proc rest(p : pt * auxt, c1 : ct) : rt * irt = {
+  proc main(c1 : ct, p : pt * auxt) : rt * irt = {
     var r1,i;
     i  <@ A.init(p);
     r1 <@ A.run(i,c1);
@@ -88,21 +90,53 @@ local module C1 = {
   }
 }.
 
+local module C1' = {
+  proc main(c1 : ct, p : pt * auxt) : (ct * (rt * irt)) = {
+    var r1,i;
+    i  <@ A.init(p);
+    r1 <@ A.run(i,c1);
+    return (c1,(r1,i));
+  }
+}.
+
+
 local module X1 = {
   proc run(p : pt * auxt) = {
     var c,r;
     c <$ d;
-    r <@ C1.rest(p,c);
+    r <@ C1.main(c,p);
     return (c,r);
   }
 }.
 
 
-(* averging  *)
+(* averaging  *)
+search sum.
+clone import Avg as A with type at <- ct,
+                      type at2 <- pt * auxt,
+                      type rt <- ct * (rt * irt).
+
 local lemma x0 &m M p : 
-  big predT (fun (c : ct) => mu1 d c * Pr[C1.rest(p, c) @ &m : M p (c, res)]) allcs =
+  big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) allcs =
      Pr[X1.run(p) @ &m : M p (res.`1, res.`2)].
-admitted.
+have ->: Pr[X1.run(p) @ &m : M p (res.`1, res.`2)]
+ = Pr[WorkAvg(C1').main(d,p) @ &m : M p res.`1].
+byequiv. proc. sp. 
+inline*. wp. 
+call (_:true).  call (_:true). 
+wp. 
+rnd. skip. progress. auto. auto.
+rewrite (averaging C1' &m (M p) p d).
+rewrite - sumE_fin. smt. 
+smt.
+have ->: 
+  (fun (c : ct) => mu1 d c * Pr[C1.main(c, p) @ &m : M p (c, res)]) =
+  (fun (x : ct) => mu1 d x * Pr[C1'.main(x, p) @ &m : M p res]).
+apply fun_ext. move => x.
+have ->: Pr[C1.main(x, p) @ &m : M p (x, res)] = Pr[C1'.main(x, p) @ &m : M p res].
+byequiv. proc. call (_:true). call (_:true). skip.
+progress. auto. auto. auto. auto.
+qed.
 
 
 (* c1c2 <$ d * d ~ c1 <$ d ; c2 <$ d  *)
@@ -134,7 +168,7 @@ qed.
 
 local lemma avr_lemma_7_app &m M p c: 
  Pr[ C2.rest(p,(c,c)) @ &m :  M p (c, res.`1) /\ M p (c, res.`2) ]
-  <= Pr[ C1.rest(p,c) @ &m :  M p (c, res) ].
+  <= Pr[ C1.main(c,p) @ &m :  M p (c, res) ].
 byequiv.
 proc.
 seq 2 2 : (={glob A,i,r1}).
@@ -150,7 +184,7 @@ local lemma avr_lemma_8_app &m M p :
      >= Pr[ Xseq(C2).run(p) @ &m  : M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2)  ] 
      - big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) => 
                   ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
-                   Pr[ C1.rest(p,c1c2.`1) @ &m :  M p (c1c2.`1, res) ]) 
+                   Pr[ C1.main(c1c2.`1,p) @ &m :  M p (c1c2.`1, res) ]) 
                    (cartprod2 allcs).
 rewrite (avr_lemma_6_app &m (fun p (r :  (ct * ct) * ((rt * irt) * (rt * irt))) =>   M p (r.`1.`1, r.`2.`1) /\ M p (r.`1.`2, r.`2.`2))).
 simplify.
@@ -162,10 +196,10 @@ have f2 :  big (fun (r : ct * ct) => r.`1 = r.`2)
   big (fun (r : ct * ct) => r.`1 = r.`2)
   (fun (c1c2 : ct * ct) =>
      mu1 d c1c2.`1 * mu1 d c1c2.`2 *
-     Pr[C1.rest(p, c1c2.`1) @ &m : M p (c1c2.`1, res)]) (cartprod2 allcs).
+     Pr[C1.main(c1c2.`1,p) @ &m : M p (c1c2.`1, res)]) (cartprod2 allcs).
 apply ler_sum. progress. 
    have : Pr[C2.rest(p, a) @ &m : M p (a.`1, res.`1) /\ M p (a.`2, res.`2)] <=
-            Pr[C1.rest(p, a.`1) @ &m : M p (a.`1, res)].
+            Pr[C1.main(a.`1,p) @ &m : M p (a.`1, res)].
     rewrite H.
       have ->: a = (a.`1,a.`1).  smt. simplify.
       apply (avr_lemma_7_app &m M p ). 
@@ -180,39 +214,39 @@ qed.
 local lemma avr_lemma_9_app &m M p : 
      big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) => 
                   ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
-                    Pr[ C1.rest(p,c1c2.`1) @ &m :  M p (c1c2.`1, res) ]) 
+                    Pr[ C1.main(c1c2.`1,p) @ &m :  M p (c1c2.`1, res) ]) 
                     (cartprod2 allcs)
      = (1%r/(size allcs)%r) * Pr[ X1.run(p) @ &m :  M p (res.`1, res.`2) ].
 have ->: big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) => 
                   ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
-                   Pr[ C1.rest(p,c1c2.`1) @ &m :  M p (c1c2.`1, res) ]) 
+                   Pr[ C1.main(c1c2.`1,p) @ &m :  M p (c1c2.`1, res) ]) 
                    (cartprod2 allcs)
       = big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) => 
                   (1%r/(size allcs)%r) * ((mu1 d c1c2.`1) * 
-                   Pr[ C1.rest(p,c1c2.`1) @ &m :  M p (c1c2.`1, res) ])) 
+                   Pr[ C1.main(c1c2.`1,p) @ &m :  M p (c1c2.`1, res) ])) 
                    (cartprod2 allcs).
 apply eq_big. auto. 
 progress.
 rewrite ss. rewrite ss. simplify. auto. simplify. 
 have ->: big (fun (r : ct * ct) => r.`1 = r.`2)
   (fun (c1c2 : ct * ct) =>
-     (1%r/(size allcs)%r) * (mu1 d c1c2.`1 * Pr[C1.rest(p, c1c2.`1) @ &m : M p (c1c2.`1, res)]))
+     (1%r/(size allcs)%r) * (mu1 d c1c2.`1 * Pr[C1.main(c1c2.`1,p) @ &m : M p (c1c2.`1, res)]))
   (cartprod2 allcs)
  = (1%r/(size allcs)%r) * big (fun (r : ct * ct) => r.`1 = r.`2)
   (fun (c1c2 : ct * ct) =>
-      (mu1 d c1c2.`1 * Pr[C1.rest(p, c1c2.`1) @ &m : M p (c1c2.`1, res)]))
+      (mu1 d c1c2.`1 * Pr[C1.main(c1c2.`1,p) @ &m : M p (c1c2.`1, res)]))
   (cartprod2 allcs).
 rewrite mulr_sumr. auto.
 auto.
 have ->: big (fun (r : ct * ct) => r.`1 = r.`2)
   (fun (c1c2 : ct * ct) =>
-     mu1 d c1c2.`1 * Pr[C1.rest(p, c1c2.`1) @ &m : M p (c1c2.`1, res)])
+     mu1 d c1c2.`1 * Pr[C1.main(c1c2.`1,p) @ &m : M p (c1c2.`1, res)])
   (cartprod2 allcs)
    = big predT
       (fun (c : ct) =>
-         mu1 d c * Pr[C1.rest(p, c) @ &m : M p (c, res)])
+         mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)])
           allcs.
-have ->: big predT (fun (c : ct) => mu1 d c * Pr[C1.rest(p, c) @ &m : M p (c, res)]) allcs = big predT (fun (c : ct) => mu1 d c * Pr[C1.rest(p, c) @ &m : M p (c, res)]) 
+have ->: big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) allcs = big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) 
     (map fst (filter (fun x => fst x = snd x) (cartprod2 allcs))). rewrite cart2_diag_unzip1. smt. auto.
 rewrite big_mapT. 
 rewrite - big_filter. rewrite  /(\o). auto.
