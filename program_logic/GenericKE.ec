@@ -5,7 +5,7 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
 
-require import Averaging DProd.
+require import Averaging DProd RewWithInit.
 
 
 
@@ -30,6 +30,9 @@ clone import BigPr as BP with type ct  <- ct,
                               type rt  <- (rt * irt) * (rt * irt),
                               op    d  <- d,
                               op allcs <- allcs.
+
+
+(* clone import RWI with  *)
 
 module type Adv = {
   proc init(p : pt, aux : auxt) : irt
