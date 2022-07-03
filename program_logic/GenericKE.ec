@@ -14,7 +14,7 @@ require import RealExp.
 require import AllpairsProp.
 
 
-type ct, pt, rt, irt, auxt.
+type ct, pt, rt, irt, auxt, sbits.
 
 op d : ct distr.
 axiom duni : is_uniform d.
@@ -32,24 +32,31 @@ clone import BigPr as BP with type ct  <- ct,
                               op allcs <- allcs.
 
 
-(* clone import RWI with  *)
+clone import RWI with type sbits <- sbits,
+                      type iat <- pt * auxt,
+                      type irt <- irt,
+                      type rrt <- ct * rt .
 
 module type Adv = {
   proc init(p : pt, aux : auxt) : irt
   proc run(i : irt, c : ct)  : rt
+  proc getState() : sbits
+  proc * setState(b : sbits) : unit
 }.
 
 
 
 module InitRun2(A : Adv) = {
   proc run(a : pt, aux : auxt) = {
-    var i, c1, c2, r1, r2;
+    var i, c1, c2, r1, r2, pstate;
     i <@ A.init(a,aux);
     
     c1 <$ d;
+    pstate <@ A.getState();
     r1 <@ A.run(i,c1);
 
     c2 <$ d;
+    A.setState(pstate);
     r2 <@ A.run(i,c2);
 
     return ((c1,(r1,i)),(c2,(r2,i)));
@@ -75,11 +82,27 @@ declare module A <: Adv.
 
 declare axiom A_ll : islossless A.run.
 
+axiom rewindable_A_plus : 
+  exists (f : glob A -> sbits),
+  injective f /\
+  (forall (x : glob A),
+    phoare[ A.getState : (glob A) = x ==> (glob A) = x  /\ res = f x ] = 1%r) /\
+  (forall (x : glob A),
+    hoare[ A.getState : (glob A) = x ==> (glob A) = x  /\ res = f x ]) /\
+  islossless A.getState /\
+  (forall (x: glob A),
+    phoare[A.setState: b = f x ==> glob A = x] = 1%r) /\
+  (forall (x: glob A),
+    hoare[A.setState: b = f x ==> glob A = x]) /\
+  islossless A.setState.
+
 local module C2 : Comp = {
   proc rest(p : pt * auxt, c1c2 : ct * ct) : (rt * irt) * (rt * irt) = {
-    var r1, r2,i;
+    var r1, r2,i, pstate;
     i  <@ A.init(p);
+    pstate <@ A.getState();
     r1 <@ A.run(i,c1c2.`1);
+    A.setState(pstate);
     r2 <@ A.run(i,c1c2.`2);
     return ((r1,i),(r2,i));
   }
@@ -114,9 +137,19 @@ local module X1 = {
   }
 }.
 
+local module A' = {
+  proc run(i: irt) = {
+     var c, r;
+     c <$ d;
+     r <@ A.run(i,c);   
+     return (c,r);
+  }
+  proc init = A.init
+  proc getState = A.getState
+  proc setState = A.setState
+}.
 
 (* averaging  *)
-search sum.
 clone import Avg as A with type at <- ct,
                       type at2 <- pt * auxt,
                       type rt <- ct * (rt * irt).
@@ -156,7 +189,21 @@ qed.
 local lemma x2 &m M p:
   Pr[X1.run(p) @ &m : M p (res.`1, res.`2)] ^ 2 <=
   Pr[Xseq(C2).run(p) @ &m : M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2)].
-admitted.
+have ->: Pr[X1.run(p) @ &m : M p (res.`1, res.`2)]
+ = Pr[ QQ(A',A').main_run(p) @ &m : M p (res.`2.`1, (res.`2.`2, res.`1)) ].
+byequiv. proc. inline*. swap {2} 3 -2. wp.
+call (_:true). wp.  call (_:true). wp. rnd. skip. 
+progress. auto. auto.
+have ->: 
+  Pr[Xseq(C2).run(p) @ &m :
+   M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2)]
+ =    Pr[ QQ(A',A').main(p) @ &m : M p (res.`1.`2.`1, (res.`1.`2.`2, res.`1.`1)) /\ M p  (res.`2.`2.`1, (res.`2.`2.`2, res.`2.`1)) ] .
+byequiv. proc. inline*. swap {2} 4 -3. swap {2} 9 -7. wp.
+call (_:true). wp.  call (_:true). wp.  call (_:true).
+wp. call (_:true). call (_:true). wp. rnd. rnd. skip. progress.
+auto. auto.
+apply (rew_with_init A' A' &m (fun (r :  irt * (ct * rt)) => M p (r.`2.`1, (r.`2.`2, r.`1)) )).
+qed.
    
 
 local lemma avr_lemma_6_app &m M p : 
@@ -177,10 +224,17 @@ local lemma avr_lemma_7_app &m M p c:
   <= Pr[ C1.main(c,p) @ &m :  M p (c, res) ].
 byequiv.
 proc.
-seq 2 2 : (={glob A,i,r1}).
-call (_:true). call (_:true). skip. progress.
-call {1} (_: true ==> true). apply A_ll. skip. progress. auto.
-auto.
+elim rewindable_A_plus.
+move => fA [s1 [s2 [s2h [s2ll [s3 [s3h ]]]] ]] s3ll.
+seq 1 1 : ((c1{2}, p{2}) = (c, p) /\
+  (p{1}, c1c2{1}) = (p, (c, c)) /\ (glob A){1} = (glob A){2} /\ ={i}).
+call (_:true). skip. progress.
+seq 2 1 : (={glob A,i,r1}).
+exists* (glob A){2}. elim*. progress.
+call (_:true). 
+call {1} (s2 A_R). skip. progress.
+call {1} (_: true ==> true). apply A_ll. call {1} s3ll.
+auto. auto.  auto.
 qed.
 
 
@@ -296,20 +350,27 @@ proof.
             /\ M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2) ] 
     = Pr[ InitRun2(A).run(p) @ &m 
           : res.`1.`1 <> res.`2.`1 /\ M p res.`1 /\ M p res.`2 ].
-byequiv. proc.  simplify.
+byequiv. proc.  
+simplify.
+elim rewindable_A_plus.
+move => fA [s1 [s2 [s2h [s2ll [s3 [s3h ]]]] ]] s3ll.
 swap {2} 2 -1.
-swap {2} 4 -2.
+swap {2} 5 -3.
 inline*. wp. 
 call (_:true).
 call (_:true).
-call (_:true). wp.  simplify.
+call (_:true). 
+call (_:true). 
+call (_:true). 
+wp.  
+simplify.
 rnd. rnd.
 skip. progress. auto.  auto.
- have <-: Pr[ X1.run(p) @ &m :  M p (res.`1, res.`2) ] 
+ have <-: Pr[ X1.run(p) @ &m :  M p (res.`1, res.`2) ]
     = Pr[ InitRun1(A).run(p) @ &m : M p res ].
-byequiv. proc. inline*. swap {2} 2 -1. wp. 
-simplify.   call (_:true).  call (_:true). wp. rnd. 
-skip. progress. auto.  auto. 
+byequiv. proc. inline*. swap {2} 2 -1. wp.
+simplify.   call (_:true).  call (_:true). wp. rnd.
+skip. progress. auto.  auto.
 apply avr_lemma_11_app.
 qed.
 
