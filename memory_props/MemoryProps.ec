@@ -3,10 +3,12 @@ require import AllCore Distr DBool.
 
 
 require import Reflection ReflectionComp.
+require WholeMsg.
 
 clone import ReflComp with type at1 <- unit,
                            type at2 <- unit,
-                           type rt1 <- unit.
+                           type rt1 <- unit,
+                           type rt2 <- bool.
 
 
 
@@ -14,17 +16,17 @@ clone import ReflComp with type at1 <- unit,
 section.
 declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
-lemma  qq &m : phoare[ A.ex1 :  (glob A) = (glob A){m} ==> exists &n, (glob A) = (glob A){n} ]=  1%r.
-proc*.
-seq 1 : true. auto.
-call A_run_ll. auto. skip.
-progress. exists &hr. auto.
-hoare. auto. auto.   
-qed.
+(* lemma  qq &m : phoare[ A.ex1 :  (glob A) = (glob A){m} ==> exists &n, (glob A) = (glob A){n} ]=  1%r. *)
+(* proc*. *)
+(* seq 1 : true. auto. *)
+(* call A_run_ll. auto. skip. *)
+(* progress. exists &hr. auto. *)
+(* hoare. auto. auto.    *)
+(* qed. *)
 
-lemma rl  &m : Pr[ A.ex1() @ &m : exists &n, (glob A) = (glob A){n} ] =  1%r.
-byphoare (_: (glob A) = (glob A){m} ==> _). apply (qq &m). auto. auto.
-qed.
+(* lemma rl  &m : Pr[ A.ex1() @ &m : exists &n, (glob A) = (glob A){n} ] =  1%r. *)
+(* byphoare (_: (glob A) = (glob A){m} ==> _). apply (qq &m). auto. auto. *)
+(* qed. *)
 
 
 
@@ -285,7 +287,7 @@ module P(A : IR1R2) = {
      r <@ A.run1();
    }else{
      r' <@ A.run2();
-     r  <- !r;
+     r  <- !r';
    }
    return r;
   }
@@ -298,7 +300,7 @@ module P(A : IR1R2) = {
      r <@ A.run1();
    }else{
      r' <@ A.run2();
-     r  <- !r;
+     r  <- !r';
    }
    return r;
   }
@@ -311,6 +313,9 @@ end section.
 section.
 
 declare module A <: IR1R2.
+
+axiom A_init_ll : islossless A.init.
+axiom A_run2_ll : islossless A.run2.
 
 op f (x : real) : real = 1%r/2%r * (1%r + x).
 op fop (x : real) : real = 2%r * x - 1%r.
@@ -343,18 +348,113 @@ qed.
 
 
 
-lemma d_b1 &m : Pr[ P(A).init_main12() @ &m : res ] 
-  = f (Pr[ P(A).main1() @ &m : res ] - Pr[ P(A).main2() @ &m : res ]) .
-admitted.
+local module T = {
+  proc main(b:bool, t:unit) = {
+   var r', r : bool;
 
-lemma d_b2 &m : Pr[ P(A).main12() @ &m : res ] 
-  = f (Pr[ A.run1() @ &m : res ] - Pr[ A.run2() @ &m : res ]) .
-admitted.
+   A.init();   
+   if(b){
+     r <@ A.run1();
+   }else{
+     r' <@ A.run2();
+     r  <- !r';
+   }
+   return r;
+  }
+}.
+
+local module T2 = {
+  proc main(b:bool, t:unit) = {
+   var r', r : bool;
+
+   if(b){
+     r <@ A.run1();
+   }else{
+     r' <@ A.run2();
+     r  <- !r';
+   }
+   return r;
+  }
+}.
+
+
 
 
 lemma d_b3 &m p : p <= Pr[ P(A).init_main12() @ &m : res ] 
    => exists &n, p <= Pr[ P(A).main12() @ &n : res ].
 admitted.
+
+
+
+clone import WholeMsg as WM with type message <- bool,
+                            op m1 <- false,
+                            op m2 <- true,
+                            type ain <- unit.
+
+
+
+lemma d_b1 &m : Pr[ P(A).init_main12() @ &m : res ] 
+  = f (Pr[ P(A).main1() @ &m : res ] - Pr[ P(A).main2() @ &m : res ]) .
+have ->: Pr[ P(A).init_main12() @ &m : res ] 
+ = Pr[ W(T).main() @ &m : res ].
+byequiv (_: ={glob A} ==> _). proc. inline*. swap {1} 2 -1. sim. 
+rnd. skip. smt. auto. auto.
+rewrite (splitcases T).
+have ->: Pr[T.main(false, tt) @ &m : res] 
+ = Pr[ P(A).main2() @ &m : !res ].
+byequiv. proc. rcondf {1} 2. progress. call (_:true).
+skip.  smt.
+wp.   sim. auto. auto.
+have ->: Pr[T.main(true, tt) @ &m : res] 
+ = Pr[ P(A).main1() @ &m : res ].
+byequiv. proc. rcondt {1} 2. progress. call (_:true).
+skip.  smt.
+wp.   sim. auto. auto.
+rewrite /f.
+have -> : (1%r + (Pr[P(A).main1() @ &m : res] - Pr[P(A).main2() @ &m : res]))
+ = Pr[P(A).main1() @ &m : res] + (1%r - Pr[P(A).main2() @ &m : res]).
+smt.
+have ->: (1%r - Pr[P(A).main2() @ &m : res]) = Pr[P(A).main2() @ &m : !res].
+   have -> : 1%r = Pr[P(A).main2() @ &m : true].
+ byphoare. proc. call A_run2_ll. call A_init_ll. skip.  auto. auto. auto.
+rewrite Pr[mu_split res]. simplify. smt.
+smt.
+qed.
+
+
+
+
+lemma d_b2 &m : Pr[ P(A).main12() @ &m : res ] 
+  = f (Pr[ A.run1() @ &m : res ] - Pr[ A.run2() @ &m : res ]) .
+have ->: Pr[ P(A).main12() @ &m : res ] 
+ = Pr[ W(T2).main() @ &m : res ].
+byequiv (_: ={glob A} ==> _). proc. inline*. sim. 
+rnd. skip. smt. auto. auto.
+rewrite (splitcases T2).
+have ->: Pr[T2.main(false, tt) @ &m : res] 
+ = Pr[ A.run2() @ &m : !res ].
+byequiv. proc*. inline*. rcondf {1} 3. progress. wp. 
+skip.  smt.
+wp.   sim. auto. auto.
+have ->: Pr[T2.main(true, tt) @ &m : res] 
+ = Pr[ A.run1() @ &m : res ].
+byequiv. proc*. inline*. rcondt {1} 3. progress. wp. 
+skip.  smt.
+wp.   sim. auto. auto.
+rewrite /f. 
+have -> : (1%r + (Pr[A.run1() @ &m : res] - Pr[A.run2() @ &m : res]))
+ = Pr[A.run1() @ &m : res] + (1%r - Pr[A.run2() @ &m : res]).
+smt.
+have ->: (1%r - Pr[A.run2() @ &m : res]) = Pr[A.run2() @ &m : !res].
+   have -> : 1%r = Pr[A.run2() @ &m : true].
+ byphoare.  conseq A_run2_ll.   auto. auto. 
+rewrite Pr[mu_split res]. simplify. smt.
+smt.
+qed.
+
+
+
+
 
 
 lemma o_o &m p: 
