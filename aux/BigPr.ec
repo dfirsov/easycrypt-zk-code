@@ -4,6 +4,8 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IterOp Bigint Bigreal Bigreal.BRA.
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
+require import DProd.
+
 
 
 
@@ -19,6 +21,12 @@ Note: we use following lemmas:
 type ct,rt,pt.
 
 op d : ct distr.
+
+
+clone import ProdSampling with type t1 <- ct,
+                               type t2 <- ct.
+
+
 
 op allcs : ct list.
 axiom allcs_uniq : uniq allcs.
@@ -60,14 +68,52 @@ axiom avr &m M  p:  forall (C <: Comp),
 
 
 section.
+
+
+local module X'(C : Comp) = {
+  proc run(p : pt) = {
+    var c1c2, r;
+    c1c2 <@ S.sample(d,d);
+    r <@ C.rest(p,c1c2);
+    return (c1c2,r);
+  }
+}.
+
+
+local module Xseq'(C : Comp) = {
+  proc run(p : pt) = {
+    var c1,c2, r;
+    (c1,c2) <@ S.sample2(d,d);
+    r <@ C.rest(p,(c1,c2));
+    return ((c1,c2),r);
+  }
+}.
+
+
+
 declare module C <: Comp.
+
+
+lemma x_xseq &m M p: 
+   Pr[X(C).run(p) @ &m : M p res] = Pr[Xseq(C).run(p) @ &m : M p res].
+have ->: Pr[X(C).run(p) @ &m : M p res] 
+    = Pr[X'(C).run(p) @ &m : M p res]. byequiv. proc.  inline*.
+sp.  call (_:true). wp.  rnd.  skip. progress. auto. auto. 
+have ->: Pr[Xseq(C).run(p) @ &m : M p res] 
+    = Pr[Xseq'(C).run(p) @ &m : M p res]. byequiv. proc.  inline*.
+sp.  call (_:true). wp.  rnd.  rnd. skip. progress. auto. auto. 
+byequiv. proc. 
+seq 1 1 : (={glob C,p} /\ (c1c2{1} = (c1,c2){2})). 
+call sample_sample2. skip.  progress. smt.
+call (_:true). skip. progress. auto.  auto.
+qed.
 
     
 local lemma avr_lemma_1 &m M p : 
   Pr[ X(C).run(p) @ &m  : M res ] 
      = big predT (fun c1c2 => 
         (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs) .
-proof. rewrite -  sumE_fin. admit.
+proof. rewrite -  sumE_fin. smt. 
 progress. 
 apply allpairsP. exists x. progress.
 admit. admit. smt.

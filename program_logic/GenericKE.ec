@@ -5,7 +5,9 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
 
-require import Averaging.
+require import Averaging DProd.
+
+
 
 require import RealExp.
 
@@ -142,7 +144,8 @@ qed.
 (* c1c2 <$ d * d ~ c1 <$ d ; c2 <$ d  *)
 local lemma x1 &m M p: 
    Pr[X(C2).run(p) @ &m : M p res] = Pr[Xseq(C2).run(p) @ &m : M p res].
-admitted.
+apply (x_xseq C2).
+qed.
 
 
    
