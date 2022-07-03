@@ -5,7 +5,16 @@ require GenericZeroKnowledge.
 clone include GenericZeroKnowledge. (* inherit defs. *)
 
 
-module type Extractor(P: MaliciousProver) = {
+
+module type RewMaliciousProver = {
+  proc commitment(s : statement) : commitment 
+  proc response(challenge : challenge) : response 
+  proc getState() : sbits
+  proc * setState(b : sbits) : unit 
+}.
+
+
+module type Extractor(P: RewMaliciousProver) = {
     proc extract(statement: statement) : witness
 }.
 
@@ -16,7 +25,7 @@ section.
 
 declare module Extractor <: Extractor.  
 declare module V <: HonestVerifier.
-declare module P <: MaliciousProver{-HV}.
+declare module P <: RewMaliciousProver{-HV}.
 
 
 lemma computational_statistical_soundness &m p f epsilon:

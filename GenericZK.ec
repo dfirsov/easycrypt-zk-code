@@ -51,6 +51,17 @@ module type MaliciousProver = {
   proc response(challenge: challenge) : response
 }.
 
+
+
+module type RewMaliciousProver = {
+  proc commitment(s : statement) : commitment 
+  proc response(challenge : challenge) : response 
+  proc getState() : sbits
+  proc * setState(b : sbits) : unit 
+}.
+
+
+
 module type MaliciousVerifier = {
   proc challenge(_:statement * commitment) : challenge
   proc summitup(statement: statement, response: response) : adv_summary
@@ -1045,7 +1056,7 @@ end SoundnessTheory.
   (* Proof of knowledge *)
   abstract theory PoK.
 
-  module type Extractor(P: MaliciousProver) = {
+  module type Extractor(P: RewMaliciousProver) = {
     proc extract(statement: statement) : witness
   }.
 
@@ -1060,28 +1071,33 @@ end SoundnessTheory.
       proc run(statement: statement) : bool
     }.
 
-    module SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdversary = {
-      proc attack(statement : statement) : transcript * transcript = {
-        var i,c1,c2,r1,r2;
-        i <@ P.commitment(statement);
 
-        c1 <$ duniform challenge_set;
-        r1 <@ P.response(c1);
+module SpecialSoundnessAdversary(P : RewMaliciousProver) : SpecialSoundnessAdversary = {
+  proc attack(statement : statement) : transcript * transcript = {
+    var i,c1,c2,r1,r2, pstate;
+    i <@ P.commitment(statement);
 
-        c2 <$ duniform challenge_set;
-        r2 <@ P.response(c2);
-        return ((i,c1,r1), (i,c2,r2));
-      }
-    }.
 
-    module (Extractor : Extractor)(P : MaliciousProver) = {  
-      module SA = SpecialSoundnessAdversary(P)
-      proc extract(p : statement) : witness = {
-        var t1,t2;
-        (t1,t2) <@ SA.attack(p);
-        return special_soundness_extract p t1 t2;
-     }
-    }.
+    c1 <$ duniform challenge_set;
+    pstate <@ P.getState();
+    r1 <@ P.response(c1);
+
+    c2 <$ duniform challenge_set;
+    P.setState(pstate);
+    r2 <@ P.response(c2);
+    return ((i,c1,r1), (i,c2,r2));
+  }
+}.
+
+    
+module (Extractor : Extractor)(P : RewMaliciousProver) = {  
+  module SA = SpecialSoundnessAdversary(P)
+  proc extract(p : statement) : witness = {
+    var t1,t2;
+    (t1,t2) <@ SA.attack(p);
+    return special_soundness_extract p t1 t2;
+ }
+}.
 
     require GenericKE.
     clone import GenericKE as GKE with type pt <- statement,
@@ -1089,16 +1105,17 @@ end SoundnessTheory.
                                         type irt <- commitment,
                                         type ct <- challenge,
                                         type rt <- response,
+                                        type sbits <- sbits,
                                         op d <- duniform challenge_set,
                                         op allcs <- challenge_set.
 
     section.
 
-    declare module P <: MaliciousProver{-HonestVerifier}.
+    declare module P <: RewMaliciousProver{-HonestVerifier}.
     
     declare axiom P_response_ll : islossless P.response.
 
-    local module A(P : MaliciousProver) : Adv = {
+    local module A(P : RewMaliciousProver) : Adv = {
       proc init (p : statement,x:unit) : commitment = {
         var i : commitment;
         i <@ P.commitment(p);
@@ -1110,12 +1127,14 @@ end SoundnessTheory.
        r <@ P.response(hcc);
        return r;
      }
+     proc getState = P.getState
+     proc setState = P.setState
     }.
 
 
    op hc_verify = fun s cm ch rs => verify_transcript s (cm , ch, rs). (* TODO: remove later *)
 
-   local lemma ex_a_eq_f &m p aux f : 
+      local lemma ex_a_eq_f &m p aux f : 
     Pr[ InitRun2(A(P)).run(p,aux) @ &m 
              : res.`1.`1 <> res.`2.`1  /\
                hc_verify p res.`1.`2.`2 res.`1.`1 res.`1.`2.`1  /\
@@ -1126,8 +1145,9 @@ end SoundnessTheory.
                 valid_transcript_pair p res.`1 res.`2 /\
                  f  (soundness_relation  p (special_soundness_extract p res.`1 res.`2))].
    proof. byequiv;auto.
-   proc. simplify. inline*. wp.  call (_:true).  wp. rnd. wp. call (_:true). wp. rnd. 
-   wp.  call (_:true). wp.  skip. progress;smt.
+   proc. simplify. inline*. wp.  call (_:true).  wp.  call (_:true). rnd. wp.
+     call (_:true). wp.  call (_:true). rnd. wp. call (_:true). wp.  skip. progress.
+   smt.  smt. smt. smt. smt. smt.
    qed.
    
 
@@ -1160,9 +1180,9 @@ end SoundnessTheory.
            valid_transcript_pair p res.`1 res.`2 /\
            soundness_relation p (special_soundness_extract p res.`1 res.`2)]
      <=  Pr[Extractor(P).extract(p) @ &m : soundness_relation p res].
-    byequiv. proc. inline*. wp. call (_:true).
-    rnd.  simplify. call (_:true). rnd.  call (_:true).
-    wp. simplify. wp. skip. progress. smt. smt. 
+    byequiv. proc.  inline*. wp. call (_:true).
+      call (_:true).  rnd. call (_:true). call (_:true).
+    rnd. call (_:true). wp.  skip. progress. auto. auto.
     qed.
 
 
@@ -1175,6 +1195,7 @@ end SoundnessTheory.
     wp. rnd.  wp. call (_:true). wp.  
     skip. simplify. progress. auto. auto. 
     qed.
+
 
 
     (* "copy/include/or move"  to special soundness theory (where the spec. sound. axiom is assumed)  *)
@@ -1361,7 +1382,7 @@ end SoundnessTheory.
         exists (Extractor <: Extractor),
         exists (ExtractionReduction <: ExtractionReduction),
         forall statement &m,
-        forall (MaliciousProver <: MaliciousProver),
+        forall (MaliciousProver <: RewMaliciousProver),
         let verify_prob = Pr[Soundness(MaliciousProver, HonestVerifier).run(statement) @ &m : res] in
         let extract_prob = Pr[Extractor(MaliciousProver).extract(statement) @ &m 
                  : soundness_relation statement res] in
@@ -1379,7 +1400,7 @@ end SoundnessTheory.
     axiom statistically_extractable:
         exists (Extractor <: Extractor),
         forall statement  &m,
-        forall (P <: MaliciousProver),
+        forall (P <: RewMaliciousProver),
         let verify_prob = Pr[Soundness(P, HonestVerifier).run(statement) @ &m : res] in
         let extract_prob = Pr[Extractor(P).extract(statement) @ &m : soundness_relation statement res] in
         extract_prob >= extraction_success_function statement verify_prob.

@@ -9,7 +9,7 @@ clone import ComputationalPoK with op special_soundness_extract <- special_sound
 
 
 section.
-declare module P <: MaliciousProver {-HonestVerifier}.
+declare module P <: RewMaliciousProver {-HonestVerifier}.
 
 declare axiom P_response_ll : islossless P.response.
 

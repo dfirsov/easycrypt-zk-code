@@ -15,6 +15,7 @@ module type SpecialSoundnessAdversary = { (* computational *)
 
 
 
+
 op valid_transcript_pair (statement: statement) (transcript1 transcript2: transcript) : bool 
    = transcript1.`1 = transcript2.`1 
         /\ transcript1.`2 <> transcript2.`2
@@ -24,22 +25,25 @@ op valid_transcript_pair (statement: statement) (transcript1 transcript2: transc
 
 op special_soundness_extract : statement -> transcript -> transcript -> witness.
 
-module SpecialSoundnessAdversary(P : MaliciousProver) : SpecialSoundnessAdversary = {
+module SpecialSoundnessAdversary(P : RewMaliciousProver) : SpecialSoundnessAdversary = {
   proc attack(statement : statement) : transcript * transcript = {
-    var i,c1,c2,r1,r2;
+    var i,c1,c2,r1,r2, pstate;
     i <@ P.commitment(statement);
 
+
     c1 <$ duniform challenge_set;
+    pstate <@ P.getState();
     r1 <@ P.response(c1);
 
     c2 <$ duniform challenge_set;
+    P.setState(pstate);
     r2 <@ P.response(c2);
     return ((i,c1,r1), (i,c2,r2));
   }
 }.
 
 
-module (Extractor : Extractor)(P : MaliciousProver) = {  
+module (Extractor : Extractor)(P : RewMaliciousProver) = {  
   module SA = SpecialSoundnessAdversary(P)
   proc extract(p : statement) : witness = {
     var t1,t2;
@@ -60,16 +64,17 @@ abstract theory SpecialSoundnessTheory.
                                         type irt <- commitment,
                                         type ct <- challenge,
                                         type rt <- response,
+                                        type sbits <- sbits,
                                         op d <- duniform challenge_set,
                                         op allcs <- challenge_set.
 
     section.
 
-    declare module P <: MaliciousProver{-HV}.
+    declare module P <: RewMaliciousProver{-HV}.
     
     declare axiom P_response_ll : islossless P.response.
 
-    local module A(P : MaliciousProver) : Adv = {
+    local module A(P : RewMaliciousProver) : Adv = {
       proc init (p : statement,x:unit) : commitment = {
         var i : commitment;
         i <@ P.commitment(p);
@@ -81,6 +86,8 @@ abstract theory SpecialSoundnessTheory.
        r <@ P.response(hcc);
        return r;
      }
+     proc getState = P.getState
+     proc setState = P.setState
     }.
 
 
@@ -97,8 +104,9 @@ abstract theory SpecialSoundnessTheory.
                 valid_transcript_pair p res.`1 res.`2 /\
                  f  (soundness_relation  p (special_soundness_extract p res.`1 res.`2))].
    proof. byequiv;auto.
-   proc. simplify. inline*. wp.  call (_:true).  wp. rnd. wp. call (_:true). wp. rnd. 
-   wp.  call (_:true). wp.  skip. progress;smt.
+   proc. simplify. inline*. wp.  call (_:true).  wp.  call (_:true). rnd. wp.
+     call (_:true). wp.  call (_:true). rnd. wp. call (_:true). wp.  skip. progress.
+   smt.  smt. smt. smt. smt. smt.
    qed.
    
 
@@ -131,9 +139,9 @@ abstract theory SpecialSoundnessTheory.
            valid_transcript_pair p res.`1 res.`2 /\
            soundness_relation p (special_soundness_extract p res.`1 res.`2)]
      <=  Pr[Extractor(P).extract(p) @ &m : soundness_relation p res].
-    byequiv. proc. inline*. wp. call (_:true).
-    rnd.  simplify. call (_:true). rnd.  call (_:true).
-    wp. simplify. wp. skip. progress. smt. smt. 
+    byequiv. proc.  inline*. wp. call (_:true).
+      call (_:true).  rnd. call (_:true). call (_:true).
+    rnd. call (_:true). wp.  skip. progress. auto. auto.
     qed.
 
 
@@ -328,3 +336,4 @@ abstract theory SpecialSoundnessTheory.
     end ComputationalSpecialSoundness.
 
 end SpecialSoundnessTheory.
+\
