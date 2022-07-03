@@ -93,7 +93,9 @@ local lemma le7main &m (d : at distr) i2 :
                        @ &m : ! (res.`2 \in (pmap J (range 0 N))) ] < epsilon).
 proof.
 have : summable (mass d).
-admit.
+  have ->: mass d = mu1 d. 
+   apply fun_ext. move => x. smt.
+  apply summable_mu1.
 move => sd.
 have :   exists (J : int -> at option) ,
   enumerate J (support (mass d)).
@@ -133,7 +135,7 @@ rewrite mu_and. timeout 30. smt.
 smt.
 qed.
 
-
+search big.
 local lemma oks' &m P d i2: 
   summable (fun r => (mu1 d r) * Pr[ A.main(r,i2) @ &m : P res ]).
 simplify summable. exists 1%r.
@@ -142,7 +144,9 @@ have oks : big predT (fun (i : at) => `|mu1 d i|) J <= 1%r.
 have oks' : (fun (i : at) => `|mu1 d i|) = (fun (i : at) => mass d i).
 apply fun_ext. move => i. smt.
 rewrite oks'.
-admit.
+have ->: (fun (i : at) => mass d i) 
+  = (fun (i : at) => mu1 d i). apply fun_ext. move => i. smt.
+rewrite -  mu_mem_uniq. auto. smt.
 have : big predT (fun i => `|mu1 d i * Pr[A.main(i,i2) @ &m : P res]|) J 
        <= big predT (fun i => `|mu1 d i|) J.
 apply ler_sum_seq .
