@@ -30,6 +30,7 @@ clone import ProdSampling with type t1 <- ct,
 
 op allcs : ct list.
 axiom allcs_uniq : uniq allcs.
+axiom allcs_all x : mu1 d x <> 0%r => x \in  allcs.
 
 module type Comp = {
   proc rest (p : pt, c1c2 : ct * ct) : rt
@@ -116,7 +117,11 @@ local lemma avr_lemma_1 &m M p :
 proof. rewrite -  sumE_fin. smt. 
 progress. 
 apply allpairsP. exists x. progress.
-admit. admit. smt.
+
+have : mu1 d x.`1 <> 0%r.  smt.
+apply allcs_all. 
+apply allcs_all.  smt.
+smt.
 apply (avr _ _ _ C).
 qed.
 
