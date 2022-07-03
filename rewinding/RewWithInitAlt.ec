@@ -33,53 +33,53 @@ module QQ(A : RewRun, B : Initializer) = {
 
     proc main51(i:iat) = {
       var rb,s;
-      rb <- B.init(i);
-      s <- A.getState();
+      rb <@ B.init(i);
+      s <@ A.getState();
       return (rb, s);
     }
 
     proc main52(i : irt) = {
       var r;
-      r <- G.main(i);
+      r <@ G.main(i);
       return r;
     }
     
     proc main5(i:iat) = {
       var s, r;
-      s <- main51(i);
-      r <- main52(s.`1);
+      s <@ main51(i);
+      r <@ main52(s.`1);
       return (r,s);
     }
 
     proc main6(i:iat) = {
       var s, r;
-      s <- main51(i);
-      r <- A.run(s.`1);
+      s <@ main51(i);
+      r <@ A.run(s.`1);
       return ((s.`1, r),s);
     }
 
     proc main(i:iat) = {
       var s, r0, r1, r2;
-      r0 <- B.init(i);
-      s <- A.getState();
-      r1 <- A.run(r0);
+      r0 <@ B.init(i);
+      s <@ A.getState();
+      r1 <@ A.run(r0);
       A.setState(s);
-      r2 <- A.run(r0);
+      r2 <@ A.run(r0);
       return ((r0,r1), (r0, r2));
     }
 
     proc main_run'(i:iat) = {
       var s, r, r0;
-      r0 <- B.init(i);
-      s <- A.getState();
-      r <- A.run(r0);
+      r0 <@ B.init(i);
+      s <@ A.getState();
+      r <@ A.run(r0);
       return (r0, r);
     }
 
     proc main_run(i:iat) = {
       var r, r0;
-      r0 <- B.init(i);
-      r <- A.run(r0);
+      r0 <@ B.init(i);
+      r <@ A.run(r0);
       return (r0, r);
     }
 }.
@@ -87,8 +87,8 @@ module QQ(A : RewRun, B : Initializer) = {
 
 section.
 
-declare module A : RewRun.
-declare module B : Initializer.
+declare module A <: RewRun.
+declare module B <: Initializer.
 
 clone import FiniteApproximation.FinApprox as FA with type at <- iat,
                                                               type rt <- irt * sbits.
@@ -98,8 +98,8 @@ local module RunMe = {
   module QQ = QQ(A,B)
   proc main(i:iat) : irt * sbits = {
       var s, r;
-      s <- QQ.main51(i);
-      r <- A.run(s.`1);
+      s <@ QQ.main51(i);
+      r <@ A.run(s.`1);
       return s;    
   }
 }.

@@ -18,8 +18,8 @@ axiom unct_ct x : unct (ct_sbits x) = x.
 
 section.
 
-declare module A : Rew.
-declare module B : Rew{A}.
+declare module A <: Rew.
+declare module B <: Rew{-A}.
 
 axiom RewProp_A :
   exists (f : glob A -> sbits),
@@ -47,8 +47,8 @@ local module T(A : Rew, B : Rew) : Rew = {
     
   proc getState(): sbits = {
     var stateA, stateB : sbits;
-    stateA <- A.getState();
-    stateB <- B.getState();
+    stateA <@ A.getState();
+    stateB <@ B.getState();
     return pair_sbits (ct_sbits(x),pair_sbits(stateA, stateB));      
   }
   proc setState(state: sbits): unit = {

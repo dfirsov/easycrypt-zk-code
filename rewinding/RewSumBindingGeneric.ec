@@ -94,9 +94,9 @@ have : forall &m,
       Pr[QQ(SBB(A), B).main(i) @ &m : (fun (x : irt * rrt) => P x.`2) res.`1 /\ (fun (x : irt * rrt) => P x.`2)  res.`2 ].
 move => &m0.
 apply (rew_with_init (SBB(A)) B).  
-elim (rewindable_A A RewProp). move => fA [s1 [s2 [s3]]] s4. simplify. apply Bsens''.
+elim (rewindable_A A RewProp). move => fA [s1 [s2 [s3]]] s4. simplify. (* apply Bsens''. *)
 simplify.
-apply Bsens'''.
+(* apply Bsens'''. *)
 elim RewProp. progress.
 (* exists f. progress. *)
 (* rewrite - (H0 &m1). byequiv. proc*.  inline*. wp. call (_:true). *)

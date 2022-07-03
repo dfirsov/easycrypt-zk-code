@@ -15,8 +15,8 @@ module type RewEx1Ex2 = {
 module GetExec1Set(A : RewEx1Ex2) = {
   proc main(x1 : ex1at) = {
     var s , r;
-    s <- A.getState();
-    r <- A.ex1(x1);
+    s <@ A.getState();
+    r <@ A.ex1(x1);
     A.setState(s);
     return r;
   }
@@ -29,8 +29,8 @@ module GetExec1SetExec2Conj(A : RewEx1Ex2) = {
     var  r1, r2, x11, x22;
     x11 <- x1; (* PAPER: cannot prove x{hr} = x{hr} *)
     x22 <- x2;
-    r1 <- GRS.main(x11);
-    r2 <- A.ex2(x22);
+    r1 <@ GRS.main(x11);
+    r2 <@ A.ex2(x22);
     return (r1, r2); 
   }
 }.
@@ -39,14 +39,14 @@ module GetExec1SetExec2Conj(A : RewEx1Ex2) = {
 module MultTriv(A : RewRun, B : RewRun) = {
   proc main(x : iat2, y : iat2) = {
      var r1, r2;
-     r1 <- A.run(x);
-     r2 <- B.run(y);
+     r1 <@ A.run(x);
+     r2 <@ B.run(y);
      return (r1, r2);
   }
 }.
 
 
-lemma rew_mult_simple : forall (P <: RewRun) (Q <: RewRun{P}) &m M1 M2  i1 i2,
+lemma rew_mult_simple : forall (P <: RewRun) (Q <: RewRun{-P}) &m M1 M2  i1 i2,
     islossless P.run => islossless Q.run =>
     Pr[ MultTriv(P,Q).main(i1,i2) @ &m : M1 res.`1 /\ M2 res.`2 ]
     = Pr[ P.run(i1) @ &m : M1 res ] * Pr[ Q.run(i2) @ &m : M2 res ].
@@ -71,7 +71,7 @@ qed.
 
 
 section.
-declare module A : RewEx1Ex2.
+declare module A <: RewEx1Ex2.
 
 
 (* getState lossless follows from rewindable_A, 

@@ -8,6 +8,8 @@ require (*--*) FinType.
 require import Logic.
 
 
+search dlet.
+
 (* "sum" interpretation of dlet *)
 lemma dlet_mu_main ['a, 'b]:
   forall (d : 'a distr) (f : 'a -> 'b distr) M,
@@ -17,17 +19,17 @@ have dletE_swap' :
     mu (dlet d f) P = 
     sum (fun (a : 'a) => (mass d a) * 
                           sum (fun (b : 'b) => if P b then  mass (f a) b else 0%r)).
-move => d f P. rewrite dletE_swap.
+move => d f P. rewrite  dlet_muE_swap.
 have qq : (fun (a : 'a) =>
-     sum (fun (b : 'b) => if P b then mass d a * mass (f a) b else 0%r)) 
+     sum (fun (b : 'b) => if P b then mu1 d a * mu1 (f a) b else 0%r)) 
  =  (fun (a : 'a) =>
       sum (fun (b : 'b) => mass d a  * (if P b then mass (f a) b else 0%r))).
 apply fun_ext. move => a. 
-have aux2 : (fun (b : 'b) => if P b then mass d a * mass (f a) b else 0%r)  
+have aux2 : (fun (b : 'b) => if P b then mu1 d a * mu1 (f a) b else 0%r)  
  = (fun (b : 'b) => mass d a * if P b then mass (f a) b else 0%r). 
 apply fun_ext. move => b. smt.
 rewrite aux2. auto.
-rewrite qq.
+rewrite  qq.
 have aux3 : (fun (a : 'a) =>
      sum (fun (b : 'b) => mass d a * if P b then mass (f a) b else 0%r)) = 
       (fun (a : 'a) =>
@@ -40,22 +42,19 @@ have qqq : (fun (a : 'a) => mu1 d a * mu (f a) M) = (fun (a : 'a) => (mass d a) 
          sum (fun (b : 'b) => if M b then  mass (f a) b else 0%r)).
 apply fun_ext. move => a.
 have ooo : mu (f a) M = sum (fun (b0 : 'b) => if M b0 then mass (f a) b0 else 0%r).
-apply muE.
+rewrite muE.
 smt.
-rewrite qqq.
-rewrite (dletE_swap' d f M). auto.
+smt.
+rewrite  (dletE_swap' d f M). rewrite qqq. auto.
 qed.
 
 
 lemma all_distr_countable (X : 'a distr) : countable (support X). 
 proof. rewrite /support.  
-  have ->: (fun (x : 'a) => 0%r < mu1 X x) 
-         = (fun (x : 'a) => 0%r < mass X x).
-   apply fun_ext.  move=> x. rewrite massE. auto.
-  have ->: (fun (x : 'a) => 0%r < mass X x)
-         = (fun (x : 'a) => mass X x <> 0%r).
+  have ->: (fun (x : 'a) => 0%r < mu1 X x)
+         = (fun (x : 'a) => mu1 X x <> 0%r).
     apply fun_ext.  move => x. smt.
-apply (countable_mass X).
+apply (countable_mu1 X).
 qed.
 
 
@@ -187,7 +186,7 @@ move => l1 l2.
 apply (qq x N (i+1)). smt.
 apply Np. auto. auto.
 move => alt alt2.
-have : x = a. smt.
+have : x = a. timeout 20. smt.
 move => xa. rewrite xa.
 have : i  \in (range 0 (i+1)). smt. smt.
 move => anid.
