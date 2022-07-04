@@ -230,7 +230,7 @@ module Obb(P : HonestProver, V : MaliciousVerifier, Sim : Simulator) = {
   }
 }.
 
-require import MemoryProps.
+require import MemoryPropsLE.
 section.
 
 
@@ -642,7 +642,7 @@ lemma lll &m deltoid :
                - Pr[HybGame(A1,Ob1,R(Ob1)).main() @ &m : res] < deltoid.
 move => zk_ass.
 have ->: Pr[HybGame(A1,Ob1,L(Ob1)).main() @ &m : res] =
-         Pr[MemoryProps.P(Amem).main1() @ &m : res].
+         Pr[MemoryPropsLE.P(Amem).main1() @ &m : res].
 rewrite www. rewrite ww. rewrite w.
 byequiv. proc. 
 inline Amem.run1. inline Amem.init.
@@ -650,18 +650,18 @@ wp.  seq 7 7 : (={summary, glob V}). sim. smt.
 call D_guess_prop. skip. auto.
 auto. auto.
 have ->: Pr[HybGame(A1,Ob1,R(Ob1)).main() @ &m : res] =
-         Pr[MemoryProps.P(Amem).main2() @ &m : res].
+         Pr[MemoryPropsLE.P(Amem).main2() @ &m : res].
 rewrite yyy. rewrite yy. rewrite y.
 byequiv. proc. 
 inline Amem.run2. inline Amem.init.
 wp. seq 10 10 : (={summary, glob V}). sim. smt. 
 call D_guess_prop. skip. auto.
 auto. auto.
-case (Pr[MemoryProps.P(Amem).main1() @ &m : res] -
-Pr[MemoryProps.P(Amem).main2() @ &m : res] < deltoid). auto.
+case (Pr[MemoryPropsLE.P(Amem).main1() @ &m : res] -
+Pr[MemoryPropsLE.P(Amem).main2() @ &m : res] < deltoid). auto.
 move => q.
-have zz : Pr[MemoryProps.P(Amem).main1() @ &m : res] -
-  Pr[MemoryProps.P(Amem).main2() @ &m : res] >= deltoid. 
+have zz : Pr[MemoryPropsLE.P(Amem).main1() @ &m : res] -
+  Pr[MemoryPropsLE.P(Amem).main2() @ &m : res] >= deltoid. 
 smt. clear q.
 have ko : exists &n, deltoid <= Pr[Amem.run1() @ &n : res] - Pr[Amem.run2() @ &n : res].
 apply (o_o Amem &m).  auto.
@@ -826,7 +826,7 @@ module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
 (*    Pr[HybGame(A1,Ob1,L(Ob1)).main() @ &m : res] *)
 (*                - Pr[HybGame(A1,Ob1,R(Ob1)).main() @ &m : res] < deltoid. *)
 (* have ->: Pr[HybGame(A1,Ob1,L(Ob1)).main() @ &m : res] = *)
-(*          Pr[MemoryProps.P(Amem).main1() @ &m : res]. *)
+(*          Pr[MemoryPropsLE.P(Amem).main1() @ &m : res]. *)
 (* rewrite www. rewrite ww. rewrite w. *)
 (* byequiv. proc.  *)
 (* inline Amem.run1. inline Amem.init. *)
@@ -834,7 +834,7 @@ module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
 (* call D_guess_prop. skip. auto. *)
 (* auto. auto. *)
 (* have ->: Pr[HybGame(A1,Ob1,R(Ob1)).main() @ &m : res] = *)
-(*          Pr[MemoryProps.P(Amem).main2() @ &m : res]. *)
+(*          Pr[MemoryPropsLE.P(Amem).main2() @ &m : res]. *)
 (* rewrite yyy. rewrite yy. rewrite y. *)
 (* byequiv. proc.  *)
 (* inline Amem.run2. inline Amem.init. *)
@@ -842,7 +842,7 @@ module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
 (* call D_guess_prop. skip. auto. *)
 (* auto. auto. *)
 (* progress. *)
-(* have ->: Pr[MemoryProps.P(Amem).main1() @ &m : res]  *)
+(* have ->: Pr[MemoryPropsLE.P(Amem).main1() @ &m : res]  *)
 (*   = Pr[ZKIdeal(Sim0(Sim), V, Dstar).run(s, w, N, aux) @ &m : res]. *)
 (* byequiv (_:   (statement{2}, witness{2}, n{2}, aux{2}) = (s, w, N, ZKTheory.aux) /\ *)
 (*   (glob V){2} = (glob V){m} /\ *)
@@ -853,7 +853,7 @@ module Sim0(Sim:Simulator)(V:MaliciousVerifier) = {
 (* wp. *)
 (* seq 7 15 : (={glob V} /\ summary{1} = summary1{2}). sim.  *)
 (* call D_guess_prop. auto. auto. auto. *)
-(* have ->: Pr[MemoryProps.P(Amem).main2() @ &m : res]  *)
+(* have ->: Pr[MemoryPropsLE.P(Amem).main2() @ &m : res]  *)
 (*   = Pr[ZKReal(P, V0(V), Dstar).run(s, w, aux) @ &m : res] . *)
 (* byequiv (_: ={glob P, glob V} /\ arg{2} = (s,w,aux) ==> _). proc. *)
 (* inline {1} Amem.init. inline V0(V).challenge. swap {2} 5 -4. *)

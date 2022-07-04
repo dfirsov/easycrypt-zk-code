@@ -34,9 +34,9 @@ axiom map_ip ['a, 'b] p (f : 'a -> 'b)  (l : 'a list)
    : map f (ip p l) = ip p (map f l).
 
 
-lemma zip_pi ['a 'b] p (l1: 'a list) (l2 : 'b list)
+axiom zip_pi ['a 'b] p (l1: 'a list) (l2 : 'b list)
    :  pi p (zip l1 l2) = zip (pi p l1) (pi p l2).
-admitted.
+
 
 axiom zip_ip ['a 'b] p (l1: 'a list) (l2 : 'b list)
    : ip p (zip l1 l2) = zip (ip p l1) (ip p l2).
