@@ -23,6 +23,10 @@ op valid_transcript_pair (statement: statement) (transcript1 transcript2: transc
         /\ verify_transcript statement transcript2.
 
 
+
+
+abstract theory SpecialSoundnessTheory.
+
 op special_soundness_extract : statement -> transcript -> transcript -> witness.
 
 module SpecialSoundnessAdversary(P : RewMaliciousProver) : SpecialSoundnessAdversary = {
@@ -54,9 +58,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 
 
 
-abstract theory SpecialSoundnessTheory.
-
-    abstract theory ComputationalSpecialSoundness.   
 
     require GenericKE.
     clone import GenericKE as GKE with type pt <- statement,
@@ -333,7 +334,7 @@ abstract theory SpecialSoundnessTheory.
 
     end section.
 
-    end ComputationalSpecialSoundness.
+
 
 end SpecialSoundnessTheory.
-\
+

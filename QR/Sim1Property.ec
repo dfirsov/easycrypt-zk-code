@@ -2,16 +2,14 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Aux RealExp.
 require import Basics.
 
+clone import OneShotSimulator as OSS with op zk_error <= (fun x z => 0%r).
 
-clone import ZK.
-
-clone import StatisticalZK as QR_SZK.
-import OMZK.
 
 
 (* one-time simulator  *)
 
-module Sim1(V : MaliciousVerifier)  = {
+
+module Sim1(V : RewMaliciousVerifier)  = {
 
   proc sinit(y : qr_prob) : bool * zmod * zmod = {
     var r,rr,bb;
@@ -36,7 +34,7 @@ module Sim1(V : MaliciousVerifier)  = {
 
 section.
 
-declare module V <: MaliciousVerifier {-HonestProver}.
+declare module V <: RewMaliciousVerifier {-HP}.
 
 
 declare axiom V_summitup_ll : islossless V.summitup.
@@ -99,7 +97,7 @@ end section.
 
 section.
 
-declare module V <: MaliciousVerifier {-HonestProver}.
+declare module V <: RewMaliciousVerifier {-HP}.
 declare module D <: ZKDistinguisher.
 
 declare axiom rewindable_V_plus2 : 
@@ -162,7 +160,7 @@ local module Sim1'  = {
 axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
 
 local lemma qrp_zk2_eq ya wa  : IsSqRoot ya wa =>
-  equiv [ZKReal(HonestProver, V, D).run ~ Sim1'.run
+  equiv [ZKReal(HP, V, D).run ~ Sim1'.run
          : ={arg, glob V} /\ arg{1} = (ya, wa)
           ==> res{1} = res{2}.`2 ].
 move => isqr. proc.
@@ -256,6 +254,8 @@ smt.
 smt.
 qed.
 
+import OMZK.
+
 local lemma qkok ya wa P : IsSqRoot  ya wa /\ unit ya =>
   equiv [ W0(Sim1(V),D).run ~ Sim1'.run
    :   ={glob V,arg} /\  (ya,wa) = (Ny{2},w{2})
@@ -300,9 +300,6 @@ move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 call {1} s7.
 call {1} summitup_ll.
 call {2} summitup_ll. skip. auto.
-
-
-
 conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
 call {1} (_: true ==> true). apply D_guess_ll.
 wp. 
@@ -410,7 +407,7 @@ qed.
   
     
 local lemma qrp_zk2_pr_l &m ya wa : IsSqRoot ya wa =>
-    Pr[ZKReal(HonestProver, V,D).run(ya,wa) @ &m : res  ] = Pr[ Sim1'.run(ya,wa) @ &m : res.`2  ].
+    Pr[ZKReal(HP, V,D).run(ya,wa) @ &m : res  ] = Pr[ Sim1'.run(ya,wa) @ &m : res.`2  ].
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
 conseq (qrp_zk2_eq ya wa  _). auto. auto. auto. auto.
@@ -449,7 +446,7 @@ qed.
 lemma sim1zk &m ya wa :
   IsSqRoot ya wa /\ unit ya =>
     Pr[W0(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
-     = Pr[ZKReal(HonestProver, V, D).run(ya, wa) @ &m : res] / 2%r.
+     = Pr[ZKReal(HP, V, D).run(ya, wa) @ &m : res] / 2%r.
 proof.     
 move => ii.
 have ->:     Pr[W0(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
@@ -480,16 +477,16 @@ lemma sim1_prop &m (p : qr_prob) (w : qr_wit) :
    IsSqRoot p w /\ unit p =>  
     `|Pr[W0(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1(V).run(p) @ &m : fst res] 
-              - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| = 0%r. 
+              - Pr[ ZKD(HP,V,D).main(p,w) @ &m : res ]| = 0%r. 
 progress.
 rewrite sim1zk.  auto.
 rewrite (sim1assc &m p w). auto.
 simplify.
-have ->: Pr[ZKReal(HonestProver, V, D).run(p, w) @ &m : res] * 2%r / 2%r
- = Pr[ZKReal(HonestProver, V, D).run(p, w) @ &m : res].
+have ->: Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] * 2%r / 2%r
+ = Pr[ZKReal(HP, V, D).run(p, w) @ &m : res].
 smt.
-have : Pr[ZKReal(HonestProver, V, D).run(p, w) @ &m : res] =
-  Pr[ZKD(HonestProver, V, D).main(p, w) @ &m : res] .
+have : Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] =
+  Pr[ZKD(HP, V, D).main(p, w) @ &m : res] .
 byequiv. proc. call jk. sim. smt. smt.  auto. smt.
 qed.
 

@@ -1,7 +1,7 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Aux.
 
-require import GenericZK.
+require  GenericSigmaProtocol.
 
 
 require import ZModP.
@@ -44,21 +44,22 @@ op soundness_relation    = fun Ny w => IsSqRoot Ny w /\ unit Ny.
 op completeness_relation = fun Ny w => IsSqRoot Ny w /\ unit Ny.
 op zk_relation           = fun Ny w => IsSqRoot Ny w /\ unit Ny.
 
-clone include ZKProtocol with 
+clone export GenericSigmaProtocol as FiatShamir with 
   type statement       <- qr_prob,
   type commitment      <- qr_com,  
   type witness         <- qr_wit,
   type response        <- qr_resp,
   type challenge       <- bool,
-  op challenge_set     <-  (false :: true :: []),
+  op challenge_set     <=  (false :: true :: []),
   op verify_transcript <- verify_transcript,
   op soundness_relation    <- soundness_relation,
   op completeness_relation <- completeness_relation,
   op zk_relation           <- zk_relation.
 
 
+
 (* Honest Prover  *)
-module HonestProver : HonestProver = {
+module HP : HonestProver = {
   var r,rr, y, w : zmod
 
   proc commitment(Ny1 : qr_prob, w1 : qr_wit) : zmod = {  

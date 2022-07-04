@@ -5,8 +5,8 @@ require import Basics.
 
 section.
 
-local lemma qr_complete_h ya wa : IsSqRoot ya wa /\ unit ya
-   => hoare [ Completeness(HonestProver,HonestVerifier).run : arg = (ya,wa) ==> res ].
+local lemma qr_complete_h ya wa : completeness_relation ya wa
+   => hoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ].
 move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
@@ -24,8 +24,8 @@ qed.
 
 
 
-local lemma qr_complete_ph ya wa : IsSqRoot ya wa /\ unit ya
-   => phoare [ Completeness(HonestProver,HonestVerifier).run : arg = (ya,wa) ==> res ] = 1%r.
+local lemma qr_complete_ph ya wa : completeness_relation ya wa 
+   => phoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ] = 1%r.
 move => [qra invrtbl].
 proc*.
 seq 1 : true 1%r 1%r 1%r 0%r r.
@@ -38,10 +38,9 @@ progress. apply d_prop5. auto. auto. auto.
 qed.
 
 
-lemma qr_completeness: forall (statement : qr_prob) (witness : qr_wit) &m,
+lemma qr_completeness: forall (statement:qr_prob) (witness:qr_wit) &m,
         IsSqRoot statement witness /\ unit statement =>
-     Pr[Completeness(HonestProver, HonestVerifier).run(statement, witness) 
-            @ &m : res] = 1%r.
+     Pr[Completeness(HP,HV).run(statement, witness) @ &m : res] = 1%r.
 progress. byphoare (_: arg = (statement, witness) ==> _);auto.
 conseq (qr_complete_ph statement witness _). auto. 
 qed.

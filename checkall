@@ -4,7 +4,7 @@ timeout=35
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./program_logic -I ./memory_props -timeout $timeout $1;
+  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./program_logic -I ./memory_props -I ./generic -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;
@@ -25,7 +25,12 @@ check program_logic/WhileCycle.ec
 
 
 ## Generic ZK results
-check GenericZK.ec
+check generic/GenericSigmaProtocol.ec
+check generic/GenericCompleteness.ec
+check generic/GenericSoundness.ec
+check generic/GenericZeroKnowledge.ec
+check generic/GenericExtractability.ec
+check generic/GenericSpecialSoundness.ec
 
 # ## Hamilton-Blum protocol
 # check HC/Basics.ec
