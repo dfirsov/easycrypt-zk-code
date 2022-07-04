@@ -24,22 +24,23 @@ module type HonestProver = {
 
 module type HonestVerifier = {
   proc challenge(_:statement*commitment) : challenge
-  proc verify(_:statement * transcript) : bool
+  proc verify(_:response) : bool
 }.
 
 
 module HV : HonestVerifier = {
   var c : commitment
-
+  var s : statement
+  var ch : challenge
   proc challenge(statement: statement, commitment: commitment) : challenge = {
-    var challenge : challenge;
-    challenge <$ duniform challenge_set;
+    ch <$ duniform challenge_set;
     c <- commitment;
-    return challenge;
+    s <- statement;
+    return ch;
   }
 
- proc verify(statement: statement, transcript: transcript) : bool = {
-      return verify_transcript statement transcript /\ HV.c = transcript.`1;
+ proc verify(r:response) : bool = {
+      return verify_transcript s (c,ch,r);
   }
 }.
 
@@ -49,7 +50,7 @@ module Completeness(P: HonestProver, V: HonestVerifier) = {
     commit    <@ P.commitment(s,w);
     challenge <@ V.challenge(s,commit);
     response  <@ P.response(challenge);
-    accept    <@ V.verify(s, (commit, challenge, response));
+    accept    <@ V.verify(response);
     return accept;
   }
 }.

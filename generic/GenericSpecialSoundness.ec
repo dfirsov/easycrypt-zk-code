@@ -153,7 +153,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
      = Pr[Soundness(P, HV).run(p) @ &m : res].
     byequiv. proc. inline*. wp. call (_:true).
     wp. rnd.  wp. call (_:true). wp.  
-    skip. simplify. progress. auto. auto. 
+    skip. simplify. progress. smt. auto. 
     qed.
 
 
@@ -264,11 +264,9 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
     case (a < 1%r / (size challenge_set)%r). smt. progress.
    have f51:  (a >= 1%r / (size challenge_set)%r). smt.
    have f52:  (a - 1%r / (size challenge_set)%r) <= a. smt.
-
    have f54 :  0%r <= a. smt.
    have f53:  (a - 1%r / (size challenge_set)%r) * (a - 1%r / (size challenge_set)%r) <= a * (a - 1%r / (size challenge_set)%r). 
    smt.
-
     have f5 : (a - 1%r / (size challenge_set)%r)^2  <= b.  smt.
    smt. qed.
 

@@ -17,7 +17,7 @@ module Soundness(P: MaliciousProver, V: HonestVerifier) = {
     commit <@ P.commitment(statement);
     challenge <@ V.challenge(statement,commit);
     response <@ P.response(challenge);
-    accept <@ V.verify(statement, (commit, challenge, response));
+    accept <@ V.verify(response);
     return accept;
   }
 }.
