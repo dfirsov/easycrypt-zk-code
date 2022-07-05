@@ -12,7 +12,7 @@ proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
 skip. progress.   apply (d_prop4 rrr.`1 rrr.`2). smt. 
 have -> : s{hr}  = (w{hr} * w{hr}).
-apply qra.
+apply qra. 
 have ->: ch. smt. 
 simplify.
 have -> : rrr.`2 = rrr.`1 * rrr.`1.  smt(d_prop1).

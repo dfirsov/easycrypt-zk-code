@@ -7,6 +7,8 @@ require  GenericSigmaProtocol.
 require import ZModP.
 clone include ZModRing.         (* must use ring since in ZModField QR is efficiently computable *)
 
+abbrev invertible = unit.           (* more intuitive synonym *)
+
 type qr_prob = zmod.
 type qr_wit  = zmod.
 type qr_com  = zmod.
@@ -14,7 +16,7 @@ type qr_resp = zmod.
 
 
 op IsSqRoot (Ny : qr_prob) (w : qr_wit) = Ny  = (w * w).
-op IsQR (Ny : qr_prob) = exists w, IsSqRoot Ny w /\ unit Ny.
+op IsQR (Ny : qr_prob) = exists w, IsSqRoot Ny w /\ invertible Ny.
 
 
 op ZNS_dist :  (zmod * zmod) distr.
@@ -40,9 +42,9 @@ op qr_verify (p : qr_prob) (c : qr_com) (b : bool) (r : qr_resp) : bool =
   else unit c /\ c = r * r.
 
 op verify_transcript = fun p (x : qr_com * bool * qr_resp) => qr_verify p x.`1 x.`2 x.`3.
-op soundness_relation    = fun Ny w => IsSqRoot Ny w /\ unit Ny.
-op completeness_relation = fun Ny w => IsSqRoot Ny w /\ unit Ny.
-op zk_relation           = fun Ny w => IsSqRoot Ny w /\ unit Ny.
+op soundness_relation    = fun Ny w => IsSqRoot Ny w /\ invertible Ny.
+op completeness_relation = fun Ny w => IsSqRoot Ny w /\ invertible Ny.
+op zk_relation           = fun Ny w => IsSqRoot Ny w /\ invertible Ny.
 
 clone export GenericSigmaProtocol as FiatShamir with 
   type statement       <- qr_prob,
@@ -55,7 +57,6 @@ clone export GenericSigmaProtocol as FiatShamir with
   op soundness_relation    <- soundness_relation,
   op completeness_relation <- completeness_relation,
   op zk_relation           <- zk_relation.
-
 
 
 (* Honest Prover  *)

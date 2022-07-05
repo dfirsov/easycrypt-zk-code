@@ -29,7 +29,6 @@ rewrite /IsSqRoot.
 have -> : statement
    = ((inv  transcript1.`1))  * (transcript1.`3) * (transcript1.`3 ). smt.
 rewrite H1.
-rewrite H6.
+rewrite H6. smt. 
 smt.   
-timeout 20. smt. (* same as above but derived automatically  *)
 qed.

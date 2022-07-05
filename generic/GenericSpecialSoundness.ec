@@ -27,7 +27,7 @@ op valid_transcript_pair (statement: statement) (transcript1 transcript2: transc
 
 abstract theory SpecialSoundnessTheory.
 
-op special_soundness_extract : statement -> transcript -> transcript -> witness.
+op special_soundness_extract (s:statement)(t1 t2:transcript):witness.
 
 module SpecialSoundnessAdversary(P : RewMaliciousProver) : SpecialSoundnessAdversary = {
   proc attack(statement : statement) : transcript * transcript = {
