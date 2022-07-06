@@ -66,7 +66,7 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
     var i : int;
     i <- 0;
     accept <- true; 
-    while(i <= N /\ accept) {  
+    while(i < N /\ accept) {  
       accept <@ Completeness(P,V).run(stat,wit);
       i <- i + 1;
     } 
@@ -75,12 +75,9 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
 }. 
 
 
-
+(* completeness for sequentially composed sigma protocol *)
 theory CompletenessTheory.
-
 op completeness_error : statement -> real.
-
-
 
 require WhileNotBProc.
 clone import WhileNotBProc as WNBP with type rt <- bool,
@@ -104,35 +101,35 @@ declare axiom completeness &n statement witness :
 
 lemma completeness_seq &m statement witness n:
     completeness_relation statement witness  =>
-     0 <= n =>
+     1 <= n =>
      Pr[CompletenessAmp(P, V).run(statement, witness,n) @ &m : res]
-     >= (1%r - completeness_error statement) ^ (n + 1).                                        
+     >= (1%r - completeness_error statement) ^ n. 
 proof. 
-move => nil nz .
+move => nil nz.
 have phs : phoare[ Completeness(P,V).run : arg = (statement,witness) ==> res ] >= (1%r - completeness_error statement).
 bypr. progress. 
 have  ->: Pr[Completeness(P, V).run(s{m0},w{m0}) @ &m0 :
    res] = Pr[Completeness(P, V).run(statement, witness) @ &m0 :
    res]. smt.
-apply completeness. assumption.
+apply completeness.  auto.
 have ->: Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res]    
- = Pr[ M(Completeness(P,V)).whp((statement,witness), fun x => !x,1,n+1, true) @ &m :  res ].
-byequiv (_: ={glob P, glob V} /\  arg{1} = (statement, witness, n) /\ arg{2} = ((statement,witness), fun x => !x,1,n+1, true)  ==> _).  
+ = Pr[ M(Completeness(P,V)).whp((statement,witness), fun x => !x,1,n, true) @ &m :  res ].
+byequiv (_: ={glob P, glob V} /\  arg{1} = (statement, witness, n) /\ arg{2} = ((statement,witness), fun x => !x,1,n, true)  ==> _).  
 proc.   sp.
-while (i{1} + 1 = M.c{2} /\ N{1} + 1 = e{2} /\ accept{1} = !MyP{2} r{2} /\ ={glob P, glob V}
+while (i{1} + 1 = M.c{2} /\ N{1}  = e{2} /\ accept{1} = !MyP{2} r{2} /\ ={glob P, glob V}
   /\ (i{2}, MyP{2}, s{2}, e{2}) =
-  ((stat{1}, wit{1}), fun (x : bool) => !x, 1, N{1}+1)  ).
+  ((stat{1}, wit{1}), fun (x : bool) => !x, 1, N{1})  ).
 wp.  call (_: ={glob P, glob V}).
 sim. skip. progress. smt. smt.
 skip. progress.  smt. smt.
 auto.  auto.
 byphoare (_: arg = ((statement, witness), fun (x : bool) => !x,
-                                       1, n + 1, true) ==> _).
+                                       1, (n-1) + 1 , true) ==> _).
 apply (asdsadq_ge (Completeness(P,V))). 
 proc.
 call verify_ll. call response_ll. call challenge_ll. call commitment_ll. skip. auto.
-apply phs. auto. 
-auto. auto. auto.
+apply phs. auto. smt. 
+auto. auto. 
 qed.  
 
 end section.
@@ -140,3 +137,7 @@ end section.
 end CompletenessTheory.
 
 
+
+
+
+   
