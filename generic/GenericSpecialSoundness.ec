@@ -10,7 +10,6 @@ module type SpecialSoundnessAdversary = {
 }.
 
 
-
 op valid_transcript_pair (statement: statement) (transcript1 transcript2: transcript) : bool 
    = transcript1.`1 = transcript2.`1 
         /\ transcript1.`2 <> transcript2.`2
@@ -307,7 +306,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
      have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
     rewrite Pr[mu_eq]. smt. auto.   auto. qed.
-
 
     end section.
 
