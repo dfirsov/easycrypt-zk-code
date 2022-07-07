@@ -38,15 +38,14 @@ declare axiom rewindable_V_plus :
 
 
 
-lemma qr_statistical_zk stat wit N &m:
+lemma qr_statistical_zk stat wit &m:
         IsSqRoot stat  wit  => unit stat =>
-        0 <= N =>
         let real_prob = Pr[ZKReal(HP, V, D).run(stat, wit) @ &m : res] in
-        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit, N) @ &m : res] in
-          `|real_prob - ideal_prob| <= 2%r * (1%r / 2%r) ^ N.
+        let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res] in
+          `|real_prob - ideal_prob| <= 2%r * (1%r / 2%r) ^ n.
 proof.
 progress.
-apply (statistical_zk HP Sim1  V D _ _ _ _ _ _ _ _ stat wit  N
+apply (statistical_zk HP Sim1  V D _ _ _ _ _ _ _ _ stat wit  
   (1%r/2%r) &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply D_guess_ll.
 apply rewindable_V_plus. 
 
