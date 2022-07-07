@@ -4,7 +4,7 @@ require import AllCore List Distr.
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
-type adv_summary.
+type adv_summary, sbits.
 
 op zk_relation : relation.
 
