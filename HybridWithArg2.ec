@@ -10,7 +10,10 @@ type outleaks.
 type outputA.
 
 
-op q : { int | 0 <= q } as q_ge0.
+op q : int.
+
+
+
 
 (* This file provides a theory for hybrid arguments. The main lemmas are
   named: Hybrid[_restr][_div] where the "restr" suffix denotes the variant
@@ -179,6 +182,7 @@ qed.
 (* Prove that it is equivalent to consider n or 1 calls to the oracle *)
 section.
 
+  declare axiom q_ge0 : 0<= q .
   declare module Ob <: Orclb   {-Count,-HybOrcl}.
   declare module A <: AdvOrclb {-Count,-HybOrcl,-Ob}.
 
@@ -482,6 +486,7 @@ end section.
 (* -------------------------------------------------------------------- *)
 (* Simplified variant: Assume that A calls the oracle at most q times. *)
 section.
+declare axiom q_ge0 : 0<= q .
   declare module Ob <: Orclb   {-Count,-HybOrcl}.
   declare module A <: AdvOrclb {-Count,-HybOrcl,-Ob}.
 
@@ -617,7 +622,7 @@ section.
     + exact/(A_call (<: R(Ob))).
     by sim.
   rewrite (Pr_Bl &m p) (Pr_Br &m p).
-  have /= H := Hybrid Ob A losslessL losslessOb1 losslessOb2 losslessA &m p.
+  have /= H := Hybrid q_ge0 Ob A losslessL losslessOb1 losslessOb2 losslessA &m p.
   rewrite /p' H.
   congr; congr.
   + byequiv (: ={glob A, glob Ob,arg} ==> ={glob A, glob Ob, glob HybOrcl, res} /\ Count.c{2} <= 1)=> //.
