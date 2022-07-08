@@ -193,9 +193,3 @@ theory SequentialCompositionCompleteness.
 end SequentialCompositionCompleteness.
 
 (* print SequentialCompositionCompleteness. *)
-
-
-
-
-
-   
