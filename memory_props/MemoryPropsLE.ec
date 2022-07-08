@@ -509,9 +509,6 @@ qed.
 
 
 
-
-
-
 lemma o_o ii1 ii2 &m p: 
        p <=  Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 
                Pr[ P(A).main2(ii1,ii2) @ &m : res ]
@@ -529,8 +526,64 @@ elim f4. progress.
 exists &n.
 smt.
 qed.
-  
-
 
    
+end section.
+
+section.
+
+declare module A <: IR1R2.
+
+axiom A_init_ll1 : islossless A.init.
+axiom A_run2_ll1 : islossless A.run2.
+
+
+local module A' = {
+  proc init = A.init
+  
+  proc run1(i2 : at2) : bool  = {
+     var r;
+     r <@ A.run2(i2);
+     return r;
+  }
+  
+  proc run2(i2 : at2) : bool  = {
+     var r;
+     r <@ A.run1(i2);
+     return r;
+  }
+}.
+
+
+lemma oo_oo ii1 ii2 &m p: 
+       p <=  `|Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 
+               Pr[ P(A).main2(ii1,ii2) @ &m : res ]|
+   => exists &n, p <= `|Pr[ A.run1(ii2) @ &n : res ] - Pr[ A.run2(ii2) @ &n : res ]|.
+proof. 
+case (Pr[ P(A).main1(ii1,ii2) @ &m : res ] >=
+               Pr[ P(A).main2(ii1,ii2) @ &m : res ]).
+progress.
+have f : exists &n, p <= Pr[ A.run1(ii2) @ &n : res ] - Pr[ A.run2(ii2) @ &n : res ]. apply (o_o A ii1 ii2 &m). 
+smt.
+smt.
+have ->: Pr[P(A).main2(ii1, ii2) @ &m : res]
+ = Pr[P(A').main1(ii1, ii2) @ &m : res]. byequiv.
+proc. inline*. wp.  sim. auto. auto.
+have ->: Pr[P(A).main1(ii1, ii2) @ &m : res]
+ = Pr[P(A').main2(ii1, ii2) @ &m : res]. byequiv.
+proc. inline*. wp.  sim. auto. auto.
+progress.
+have g : Pr[P(A').main2(ii1, ii2) @ &m : res] <= Pr[P(A').main1(ii1, ii2) @ &m : res]. smt.
+have f : exists &n, p <= Pr[ A'.run1(ii2) @ &n : res ] - Pr[ A'.run2(ii2) @ &n : res ]. apply (o_o A' ii1 ii2 &m). 
+smt.
+elim f. progress. exists &n.
+have ->: Pr[A.run1(ii2) @ &n : res]
+ = Pr[A'.run2(ii2) @ &n : res]. byequiv.
+proc*. inline*. sim. auto. auto.
+have ->: Pr[A.run2(ii2) @ &n : res]
+ = Pr[A'.run1(ii2) @ &n : res]. byequiv.
+proc*. inline*. sim. auto. auto.
+smt.
+qed.    
+         
 end section.
