@@ -23,13 +23,19 @@ module type Run = {
   proc run(i:irt) : rrt
 }.                                  
 
+
+op pair_sbits : sbits * sbits -> sbits.
+op unpair: sbits -> sbits * sbits.
+
 require WhileNoSuccess.
 clone import WhileNoSuccess as IFB with 
   type rrt <- rrt,
   type irt <- irt,
   type iat <- (rrt -> bool) * irt * int * int * rrt,
   type sbits <- sbits,
-  op  MyPred <- MyPred.
+  op  MyPred <- MyPred,
+  op pair_sbits <- pair_sbits,
+  op unpair <- unpair.
   (* op pair_sbits <- pair_sbits, *)
   (* op unpair <- unpair *)
 
@@ -47,7 +53,18 @@ declare module D <: Dist {-W, -DW}.
 
 declare axiom A_ll : islossless A.run.
 declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] = 1%r.
-axiom A_rew_hoare x : hoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] .
+lemma A_rew_hoare x : hoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] .
+proof.  hoare. 
+bypr. progress.
+have  : 1%r = Pr[A.run(arg{m}) @ &m : true ].
+byphoare. conseq A_ll. auto. auto.
+rewrite Pr[mu_split (! MyPred res => (glob A) = (glob A){m})].
+progress.
+have f : Pr[A.run(arg{m}) @ &m : ! MyPred res => (glob A) = (glob A){m}] = 1%r.
+byphoare (: (glob A) = (glob A){m} ==> _).
+proc*. call (A_rew_ph (glob A){m}).
+skip.  auto. auto. auto. smt.
+qed.
 
 declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob A, arg} ==> ={res}  ].
 

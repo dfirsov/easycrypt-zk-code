@@ -4,13 +4,18 @@ require import AllCore List Distr.
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
-type adv_summary, sbits.
+type sbits.
+type adv_summary = sbits.
+
 require OneToManyZK.
 
 
-
-
 op zk_relation : relation.
+
+op pair_sbits : sbits * sbits -> sbits.
+op unpair: sbits -> sbits * sbits.
+axiom ips: injective pair_sbits. 
+axiom unpair_pair x : unpair (pair_sbits x) = x.
 
 
 module type RewMaliciousVerifier = {
@@ -699,65 +704,8 @@ end SequentialCompositionZK.
 
 abstract theory OneShotSimulator.
 
-
-
-
-op zk_error : statement -> int -> real.
 op n : int.
 axiom n_pos : 0 <= n.
-
-op N : int.
-axiom N_pos : 1 <= N.
-
-module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = {
-  proc main(Ny : statement, w : witness) = {
-    var c,b,r,result,rb;
-    c <@ P.commitment(Ny,w);
-    b <@ V.challenge(Ny,c);
-    r <@ P.response(b);
-    result <@ V.summitup(Ny,r);
-    rb <@ D.guess(Ny,w,result);
-    return rb;
-  }
-}.
-
-
-   theory ComputationalZK.
-
-   section.
-
-   declare module HonestProver <: HonestProver.
-   declare module Sim1 <: Simulator1.
-   declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
-   declare module D <: ZKDistinguisher{-HonestProver} .
-
-
-local clone import OneToManyZK as OMZK with type prob <- statement,
-                                      type wit <- witness,
-                                      type sbits <- adv_summary,
-                                      type event <- bool,
-                                      op E <- fst,
-                                      op fevent <- false
-rename "Simulator1" as "Simulator1NP"
-proof*.
-realize MW.IFB.ips. by admit. qed.
-realize MW.IFB.unpair_pair. by admit. qed.
-realize MW.IFB.RW.ips. by admit. qed.
-realize MW.IFB.RW.unpair_pair. by admit. qed.
-realize MW.A_rew_hoare. by admit. qed.
-
-
-
-
-local module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
-  module M = MW.IFB.IM.W(S(V))
-  proc simulate(statement : statement) :
-    adv_summary = {
-       var r;
-       r <@ M.whp(fst,statement,1,n,(false,witness));
-       return r.`2;
-  }
-}.
 
 
 module Simulator'(S : Simulator1)(V : RewMaliciousVerifier)  = {
@@ -790,6 +738,66 @@ module RD(A : ZKRun, D0 : ZKDistinguisher) = {
   }
 }.
 
+
+
+
+op zk_error : statement -> int -> real.
+
+op N : int.
+axiom N_pos : 1 <= N.
+
+module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = {
+  proc main(Ny : statement, w : witness) = {
+    var c,b,r,result,rb;
+    c <@ P.commitment(Ny,w);
+    b <@ V.challenge(Ny,c);
+    r <@ P.response(b);
+    result <@ V.summitup(Ny,r);
+    rb <@ D.guess(Ny,w,result);
+    return rb;
+  }
+}.
+
+
+   theory ComputationalZK.
+
+   section.
+
+   declare module HonestProver <: HonestProver.
+   declare module Sim1 <: Simulator1.
+   declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
+   declare module D <: ZKDistinguisher{-HonestProver} .
+
+
+local clone import OneToManyZK as OMZK with type prob <- statement,
+                                      type wit <- witness,
+                                      type sbits <- adv_summary,
+                                      type event <- bool,
+                                      op E <- fst,
+                                      op fevent <- false,
+                                      op pair_sbits <- pair_sbits,
+                                      op unpair <- unpair
+rename "Simulator1" as "Simulator1NP"
+proof*.
+realize MW.IFB.ips. apply ips. qed.
+realize MW.IFB.unpair_pair. apply unpair_pair. qed.
+realize MW.IFB.RW.ips. apply ips. qed.
+realize MW.IFB.RW.unpair_pair. apply unpair_pair. qed.
+
+
+
+
+local module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
+  module M = MW.IFB.IM.W(S(V))
+  proc simulate(statement : statement) :
+    adv_summary = {
+       var r;
+       r <@ M.whp(fst,statement,1,n,(false,witness));
+       return r.`2;
+  }
+}.
+
+
    
    declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier),
         islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
@@ -812,7 +820,6 @@ module RD(A : ZKRun, D0 : ZKDistinguisher) = {
 
 
    declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
-
 
 
     lemma computational_zk stat wit p0 negl &m:
@@ -898,7 +905,7 @@ apply n_pos. smt. auto.
    declare module HonestProver <: HonestProver.
    declare module Sim1 <: Simulator1 {-HonestProver}.
    declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
-
+   declare module D <: ZKDistinguisher{-HonestProver}.
 
    declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge
     => islossless V0.summitup => islossless Sim1(V0).run.
@@ -906,8 +913,9 @@ apply n_pos. smt. auto.
    declare axiom V_challenge_ll : islossless V.challenge.
    declare axiom P_response_ll  : islossless HonestProver.response.
    declare axiom P_commitment_ll  : islossless HonestProver.commitment.
-   (* declare axiom D_guess_ll     : islossless D.guess. *)
+   declare axiom D_guess_ll     : islossless D.guess.
 
+   declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
    declare axiom V_rew :  (exists (f : glob V -> sbits),
         injective f /\
         (forall &m, Pr[ V.getState() @ &m : (glob V) = ((glob V){m})
@@ -943,18 +951,14 @@ apply n_pos. smt. auto.
                  - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= negl.
 
 
-
     lemma statistical_zk stat wit p0 &m:
-       forall (D <: ZKDistinguisher{-HonestProver}),
-       equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ] =>
-       islossless D.guess =>
        zk_relation stat wit => 
        p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
        let ideal_prob = Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res] in
          `|ideal_prob - real_prob| <= negl + 2%r * (1%r - p0)^n.
-   proof. move => D D_guess_prop D_guess_ll. progress.
-apply (computational_zk HonestProver Sim1 V D _ _ _ _ _ _ _ stat wit p0 negl &m H _ _ ). 
+   proof. move => D. progress.
+apply (computational_zk HonestProver Sim1 V D _ _ _ _ _ _ _ stat wit p0 negl &m _ _ _ ). 
 apply sim1_run_ll.
 apply V_summitup_ll.
 apply V_challenge_ll.
@@ -962,6 +966,7 @@ apply D_guess_ll.
 apply V_rew.
 apply sim1_rew_ph.
 apply D_guess_prop.
+auto.
 apply (qqq &m stat wit D V).
 apply D_guess_ll. 
 apply V_summitup_ll.
@@ -970,42 +975,17 @@ apply V_rew.
 auto. auto.
 qed.
 
+
 (*     lemma statistical_zk_seq stat wit p0 &m: *)
 (*        forall (D <: ZKDistinguisher{-HonestProver}), *)
-(*        equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ] => *)
 (*        islossless D.guess => *)
 (*        zk_relation stat wit =>  *)
 (*        (forall &n, p0 <= Pr[Sim1(V).run(stat) @ &n : res.`1]) => *)
 (*        let real_prob = Pr[ZKRealAmp(HonestProver, V, D).run(stat, wit) @ &m : res] in *)
 (*        let ideal_prob = Pr[ZKIdeal(SimAmp(Simulator'(Sim1)), V, D).run(stat, wit) @ &m : res] in *)
 (*          `|ideal_prob - real_prob| <= N%r * (negl + 2%r * (1%r - p0)^n). *)
-(* move => D D_guess_prop D_guess_ll. *)
-(* progress. *)
-(* apply (zk_seq HonestProver  (Simulator'(Sim1)) V D *)
-(*   _ _ _ _ _ _ _ _ &m (negl + 2%r * (1%r - p0) ^ n) stat wit _). *)
-(* admit. *)
-(* apply V_summitup_ll. *)
-(* apply V_challenge_ll. *)
-(* apply P_response_ll. *)
-(* apply P_commitment_ll. *)
-(* apply D_guess_ll. *)
-(* apply N_pos. *)
-(* apply D_guess_prop. *)
-(* have : 0%r <= 2%r * (1%r - p0) ^ n. *)
-(*   have : p0 <= 1%r.  *)
-(*    have : p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1].  apply H0. smt. *)
-(* smt. smt. *)
-(*         progress. *)
-(* apply (statistical_zk stat wit p0 &n D0 _ _ _ _). *)
-(* admit.  admit. auto. *)
-(* auto. *)
-(* apply H0. *)
-(* qed. *)
         
-end section.
-
-
-  
+end section.  
   end StatisticalZK.
 end OneShotSimulator.
 

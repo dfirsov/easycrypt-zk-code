@@ -6,6 +6,12 @@ type prob, wit, sbits, event.
 
 op E : event * sbits -> bool.
 
+
+op pair_sbits : sbits * sbits -> sbits.
+op unpair: sbits -> sbits * sbits.
+
+
+
 require WhileCycle.
 clone import WhileCycle as MW with type irt    <- prob,
                                    type rrt   <- event * sbits,
@@ -13,7 +19,9 @@ clone import WhileCycle as MW with type irt    <- prob,
                                    type dt <- prob * wit * sbits,
                                    type de <- wit,
                                    op MyPred <- E,
-                                   op df <- (fun (x : prob) (y: (event * sbits)) (w: wit) => (x, w,y.`2)).
+                                   op df <- (fun (x : prob) (y: (event * sbits)) (w: wit) => (x, w,y.`2)),
+                                   op pair_sbits <- pair_sbits,
+                                   op unpair <- unpair.
 
   
                          
@@ -70,23 +78,17 @@ module Iter(Sim1 : Simulator1,  D : Dist)  = {
 
 
 section.
-(* declare module V : MaliciousVerifier{DW,W}. *)
+
 declare module Sim1 <: Simulator1{-DW, -W}.
 declare module D <: Dist {-DW, -W}.
 
-
 declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob Sim1, arg} ==> ={res}  ].
-
 declare axiom Sim1_ll : islossless Sim1.run.
-
 declare axiom Sim1_rew_ph : forall (x : (glob Sim1)),
   phoare[ Sim1.run : (glob Sim1) = x ==> !E res => (glob Sim1) = x] = 1%r.
-
-
 declare axiom D_ll    : islossless D.guess.
 
 op fevent : event.
-
 declare axiom  Estart :  E (fevent, witness) = false.
 
 
@@ -249,21 +251,16 @@ seq 1 1 :   (a0{2} = a{2} /\
   fevent0{1} = fevent{1} /\
   Ny0{1} = Ny{1} /\
   w0{1} = w{1} /\
-
   ea0{1} = ea{1} /\
   E0{1} = E{1} /\
   (a{2}, w{2}) = ((Top.E, (p), 1, ea, (Top.fevent, witness)), w) /\
-
   (fevent{1}, Ny{1}, w{1},  ea{1}, E{1}) =
   (Top.fevent, p, w,  ea, Top.E) /\
    (glob Sim1){1} = (glob Sim1){2} /\ r1{1} = r0{2}).
-
-
 call (_: ={glob Sim1}). simplify. sim.
 skip. progress.  smt.
 wp. call whp_axp.
 skip. progress. auto. auto.
-
 have : coeff <= 1%r. 
 rewrite H4.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
@@ -446,7 +443,6 @@ have bf2 : Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2]
                 - Pr[W0(Sim1, D).run(p, w) @ &m : !E res.`2] 
                  = Pr[W0(Sim1, D).run(p, w) @ &m : E res.`2]. 
     rewrite Pr[mu_split E res.`2]. simplify. smt. smt. 
-
   have ->: Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2] 
      = Pr[ W(Sim1).whp(E,(p),1,ea,(fevent,witness)) @ &m : ! E res ].
    byequiv. proc*.  inline Iter(Sim1, D).run. sp. wp. inline Iter(Sim1, D).WI.run.
