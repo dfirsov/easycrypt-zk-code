@@ -527,8 +527,30 @@ exists &n.
 smt.
 qed.
 
+
+lemma lo_ol ii1 ii2 &m p: 
+       p <  Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 
+               Pr[ P(A).main2(ii1,ii2) @ &m : res ]
+   => exists &n, p < Pr[ A.run1(ii2) @ &n : res ] - Pr[ A.run2(ii2) @ &n : res ].
+progress.
+have f1 : Pr[P(A).main1(ii1,ii2) @ &m : res] - Pr[P(A).main2(ii1,ii2) @ &m : res]
+  = fop (Pr[ P(A).init_main12(ii1,ii2) @ &m : res ] ).
+rewrite d_b1. smt.
+have f2 : p < fop Pr[P(A).init_main12(ii1,ii2) @ &m : res].
+smt.
+have f3 : f p < Pr[P(A).init_main12(ii1,ii2) @ &m : res]. smt.
+have f4 : exists &n,  f p < Pr[ P(A).main12(ii2) @ &n : res ].
+admit.
+(* apply (d_b3  &m  (f p) (fun x => x) ii1 ii2). auto. *)
+elim f4. progress.
+exists &n.
+smt.
+qed.
+
    
 end section.
+
+
 
 section.
 

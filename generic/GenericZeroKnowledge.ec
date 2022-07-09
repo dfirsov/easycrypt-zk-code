@@ -70,6 +70,7 @@ module ZKIdeal(S: Simulator, V: RewMaliciousVerifier, D: ZKDistinguisher) = {
 abstract theory SequentialCompositionZK.
 
 op n : int.
+axiom n_pos : 0 <= n.
 
 module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
   proc run(statement: statement, witness: witness) = {
@@ -107,9 +108,9 @@ require HybridWithArg2.
 (* q -> N *)
 
 
-require  MemoryPropsLE.
+require  MemoryPropsL.
 
- clone import MemoryPropsLE with type at2 <- statement * witness,
+ clone import MemoryPropsL with type at2 <- statement * witness,
                                 type at1 <- statement * witness.
 
 
@@ -181,6 +182,7 @@ declare axiom D_guess_ll     : islossless D.guess.
 declare axiom q_ge1 : 1 <= n. 
 
 declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
+
 
 local module Ob = Obb(P,V,Sim).
 local module A = Ad(D).
@@ -493,7 +495,7 @@ local lemma qq ss ww &m:
       - Pr[Rn(Ob,A).main(ss,ww) @ &m : res]
     = n%r *(Pr[HybGame(A,Ob,L(Ob)).main(ss,ww) @ &m : res]
             - Pr[HybGame(A,Ob,R(Ob)).main(ss,ww) @ &m : res]).
-apply (Hybrid_restr _ Ob A _ _ _ _ _ &m (fun _ _ _ r => r)). admit.
+apply (Hybrid_restr _ Ob A _ _ _ _ _ &m (fun _ _ _ r => r)). apply n_pos.
 progress. proc. inline*.
 wp.  call (_:true). 
 while (Count.c = i /\ i <= n) . wp. 
@@ -571,16 +573,17 @@ local module Dstar : ZKDistinguisher = {
 }.
 
 
-local lemma lll (ss : statement) (ww : witness) &m deltoid : 
+local lemma lll (ss : statement) (ww : witness) &m deltoid: 
+   0%r <= deltoid =>
    (forall &n,
     `|Pr[ZKIdeal(Sim, V, Dstar).run(ss, ww) @ &n : res]
     - Pr[ZKReal(P, V, Dstar).run(ss, ww) @ &n : res]|
-           < deltoid) =>
+           <= deltoid) =>
    `|Pr[HybGame(A1,Ob1,L(Ob1)).main(ss,ww) @ &m : res]
-               - Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res]| < deltoid.
-move => zk_ass.
+               - Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res]| <= deltoid.
+move => dlt zk_ass.
 have ->: Pr[HybGame(A1,Ob1,L(Ob1)).main(ss,ww) @ &m : res] =
-         Pr[MemoryPropsLE.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res].
+         Pr[MemoryPropsL.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res].
 rewrite www. rewrite ww. rewrite w.
 byequiv. proc. 
 inline Amem.run1. inline Amem.init.
@@ -602,7 +605,7 @@ skip. progress.
 call D_guess_prop. skip. auto.
 auto. auto. 
 have ->: Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res] =
-         Pr[MemoryPropsLE.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res].
+         Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res].
 rewrite yyy. rewrite yy. rewrite y.
 byequiv. proc. 
 inline Amem.run2. inline Amem.init.
@@ -614,16 +617,16 @@ wp.  call (_:true). call (_:true). call (_:true).  call (_:true).
 skip. progress. wp.  rnd. wp. skip. progress. smt. (*  smt.  *)
 call D_guess_prop. skip. auto.
 auto. auto.
-case (`|Pr[MemoryPropsLE.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
-Pr[MemoryPropsLE.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| < deltoid). auto.
-move => q.
-have zz : `|Pr[MemoryPropsLE.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res] -
-  Pr[MemoryPropsLE.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| >= deltoid. 
+case (`|Pr[MemoryPropsL.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
+Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| <= deltoid). auto.
+move => q. 
+have zz : `|Pr[MemoryPropsL.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res] -
+  Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| > deltoid. 
 smt. clear q.
-have ko : exists &n, deltoid <= `|Pr[Amem.run1((ss,ww)) @ &n : res] - Pr[Amem.run2((ss,ww)) @ &n : res]|.
-apply (oo_oo Amem (ss, ww) (ss, ww) &m).  auto.
+have ko : exists &n, deltoid < `|Pr[Amem.run1((ss,ww)) @ &n : res] - Pr[Amem.run2((ss,ww)) @ &n : res]|. 
+apply (oo_oo Amem (ss, ww) (ss, ww) &m).  auto. auto.
 elim ko. move => &n. move => q.
-have ok : `|Pr[Amem.run1((ss, ww)) @ &n : res] - Pr[Amem.run2((ss, ww)) @ &n : res]| < deltoid.
+have ok : `|Pr[Amem.run1((ss, ww)) @ &n : res] - Pr[Amem.run2((ss, ww)) @ &n : res]| <= deltoid.
 have -> : Pr[Amem.run1((ss, ww)) @ &n : res] = Pr[ZKIdeal(Sim, V, Dstar).run(ss, ww) @ &n : res].
 byequiv. proc.         
 inline Dstar.guess. wp.
@@ -644,14 +647,16 @@ qed.
 
 
 lemma zk_seq &m deltoid ss ww : 
-   (forall &n (D <: ZKDistinguisher{-P }),
-   `|Pr[ZKIdeal(Sim, V, D).run(ss, ww) @ &n : res]
+   0%r <= deltoid =>
+   (forall &n (D <: ZKDistinguisher{-P }), 
+         equiv[ D.guess ~ D.guess : ={glob V, glob D, arg} ==> ={res} ]
+   => `|Pr[ZKIdeal(Sim, V, D).run(ss, ww) @ &n : res]
     - Pr[ZKReal(P, V, D).run(ss, ww) @ &n : res]|
-           < deltoid) =>
+           <= deltoid) =>
    `|Pr[ZKIdeal(SimAmp(Sim), V, D).run(ss, ww) @ &m : res]
         - Pr[ZKRealAmp(P, V, D).run(ss, ww) @ &m : res]|
-          < n%r * deltoid.
-move => zk_ass.
+          <= n%r * deltoid.
+move => dlt zk_ass.
 have -> : Pr[ZKIdeal(SimAmp(Sim), V, D).run(ss, ww) @ &m : res]
  = Pr[Ln(Ob,A).main(ss,ww) @ &m : res].
 byequiv (_:   
@@ -674,15 +679,16 @@ call (_:true). call (_:true). call (_:true). call (_:true). skip. progress.
 skip. progress. call D_guess_prop. skip.  auto. auto. auto.
 rewrite qq.
 have :  `|Pr[HybGame(A1,Ob1,L(Ob1)).main(ss,ww) @ &m : res]
-               - Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res]| < deltoid.
-apply lll. 
+               - Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res]| <= deltoid.
+apply lll.  apply dlt.
 move => &n.
 apply (zk_ass &n Dstar).
-
+proc. 
+admit.
 have : n%r > 0%r. smt.
 progress.
 have : n%r * `|Pr[HybGame(A1, Ob1, L(Ob1)).main(ss, ww) @ &m : res] -
-  Pr[HybGame(A1, Ob1, R(Ob1)).main(ss, ww) @ &m : res]| <
+  Pr[HybGame(A1, Ob1, R(Ob1)).main(ss, ww) @ &m : res]| <=
 n%r * deltoid .
 smt.
 smt.
@@ -886,7 +892,7 @@ apply n_pos. smt. auto.
   theory StatisticalZK.
 
    op negl : real.
-
+   axiom negl_pos : 0%r <= negl.
 
    clone import SequentialCompositionZK as SCZK 
     with op n <- N.
@@ -937,11 +943,9 @@ apply n_pos. smt. auto.
 
       zk_relation p w => 
 
-
        `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
             Pr[Sim1(V).run(p) @ &m : fst res]
                  - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= negl.
-
 
 
 
@@ -955,10 +959,19 @@ apply n_pos. smt. auto.
        let ideal_prob = Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res] in
          `|ideal_prob - real_prob| <= negl + 2%r * (1%r - p0)^n.
    proof. move => D D_guess_prop D_guess_ll. progress.
-apply (computational_zk HonestProver Sim1 V D _ _ _ _ _ _ _ stat wit p0 negl &m H _ _ ). admit. admit. admit.
-admit.  admit.  admit. admit.
+apply (computational_zk HonestProver Sim1 V D _ _ _ _ _ _ _ stat wit p0 negl &m H _ _ ). 
+apply sim1_run_ll.
+apply V_summitup_ll.
+apply V_challenge_ll.
+apply D_guess_ll.
+apply V_rew.
+apply sim1_rew_ph.
+apply D_guess_prop.
 apply (qqq &m stat wit D V).
-admit.  admit.  admit. admit.
+apply D_guess_ll. 
+apply V_summitup_ll.
+apply V_challenge_ll.
+apply V_rew.
 auto. auto.
 qed.
 
@@ -967,22 +980,33 @@ qed.
        equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ] =>
        islossless D.guess =>
        zk_relation stat wit => 
-       p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
+       (forall &n, p0 <= Pr[Sim1(V).run(stat) @ &n : res.`1]) =>
        let real_prob = Pr[ZKRealAmp(HonestProver, V, D).run(stat, wit) @ &m : res] in
        let ideal_prob = Pr[ZKIdeal(SimAmp(Simulator'(Sim1)), V, D).run(stat, wit) @ &m : res] in
-         `|ideal_prob - real_prob| < N%r * (negl + 2%r * (1%r - p0)^n).
+         `|ideal_prob - real_prob| <= N%r * (negl + 2%r * (1%r - p0)^n).
 move => D D_guess_prop D_guess_ll.
 progress.
-
-
 apply (zk_seq HonestProver  (Simulator'(Sim1)) V D
   _ _ _ _ _ _ _ _ &m (negl + 2%r * (1%r - p0) ^ n) stat wit _).
-admit.  admit. admit.  admit. admit. 
-admit. admit. admit.
-
+admit.
+apply V_summitup_ll.
+apply V_challenge_ll.
+apply P_response_ll.
+apply P_commitment_ll.
+apply D_guess_ll.
+apply N_pos.
+apply D_guess_prop.
+have : 0%r <= 2%r * (1%r - p0) ^ n.
+  have : p0 <= 1%r. 
+   have : p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1].  apply H0. smt.
+smt. smt.
         progress.
-
-
+apply (statistical_zk stat wit p0 &n D0 _ _ _ _).
+admit.  admit. auto.
+auto.
+apply H0.
+qed.
+        
 end section.
 
 
