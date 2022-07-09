@@ -6,14 +6,6 @@ clone include GenericSoundness. (* inherit defs. *)
 
 type adv_summary, sbits.
 require OneToManyZK.
-clone import OneToManyZK as OMZK with type prob <- statement,
-                                      type wit <- witness,
-                                      type sbits <- adv_summary,
-                                      type event <- bool,
-                                      op E <- fst,
-                                      op fevent <- false
-
-rename "Simulator1" as "Simulator1NP".
 
 
 
@@ -116,7 +108,8 @@ require HybridWithArg2.
 
 
 require  MemoryPropsLE.
-clone import MemoryPropsLE with type at2 <- statement * witness,
+
+ clone import MemoryPropsLE with type at2 <- statement * witness,
                                 type at1 <- statement * witness.
 
 
@@ -124,12 +117,15 @@ section.
 
 
 
+  (* clone as local  *)
 
-
-declare module P <: HonestProver{ -MW.IFB.IM.W, -MW.IFB.DW}.
+declare module P <: HonestProver.
 declare module Sim <: Simulator{  -P }.
-declare module V <: RewMaliciousVerifier {  -P, -Sim, -MW.IFB.IM.W, -MW.IFB.DW}.
-declare module D <: ZKDistinguisher{-P,  -MW.IFB.IM.W, -MW.IFB.DW }. 
+declare module V <: RewMaliciousVerifier {  -P, -Sim }.
+declare module D <: ZKDistinguisher{-P}. 
+
+
+
 
 
 local clone import HybridWithArg2 as Hyb with type input <- unit,
@@ -605,8 +601,6 @@ skip. progress.
 skip. progress. 
 call D_guess_prop. skip. auto.
 auto. auto. 
-
-
 have ->: Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res] =
          Pr[MemoryPropsLE.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res].
 rewrite yyy. rewrite yy. rewrite y.
@@ -614,15 +608,10 @@ byequiv. proc.
 inline Amem.run2. inline Amem.init.
 wp. seq 10 12 : (={s,w,summary, glob V}). 
 sim. wp.
-
 while (={glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s0,w0){2}
  /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
-
 wp.  call (_:true). call (_:true). call (_:true).  call (_:true).
 skip. progress. wp.  rnd. wp. skip. progress. smt. (*  smt.  *)
-
-
-
 call D_guess_prop. skip. auto.
 auto. auto.
 case (`|Pr[MemoryPropsLE.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
@@ -709,6 +698,9 @@ end SequentialCompositionZK.
 
 abstract theory OneShotSimulator.
 
+
+
+
 op zk_error : statement -> int -> real.
 op n : int.
 axiom n_pos : 0 <= n.
@@ -729,7 +721,34 @@ module ZKD(P : HonestProver, V : MaliciousVerifier, D : ZKDistinguisher) = {
 }.
 
 
-module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
+   theory ComputationalZK.
+
+   section.
+
+   declare module HonestProver <: HonestProver.
+   declare module Sim1 <: Simulator1.
+   declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
+   declare module D <: ZKDistinguisher{-HonestProver} .
+
+
+local clone import OneToManyZK as OMZK with type prob <- statement,
+                                      type wit <- witness,
+                                      type sbits <- adv_summary,
+                                      type event <- bool,
+                                      op E <- fst,
+                                      op fevent <- false
+rename "Simulator1" as "Simulator1NP"
+proof*.
+realize MW.IFB.ips. by admit. qed.
+realize MW.IFB.unpair_pair. by admit. qed.
+realize MW.IFB.RW.ips. by admit. qed.
+realize MW.IFB.RW.unpair_pair. by admit. qed.
+realize MW.A_rew_hoare. by admit. qed.
+
+
+
+
+local module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
   module M = MW.IFB.IM.W(S(V))
   proc simulate(statement : statement) :
     adv_summary = {
@@ -739,15 +758,38 @@ module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
   }
 }.
 
-   theory ComputationalZK.
 
-   section.
+module Simulator'(S : Simulator1)(V : RewMaliciousVerifier)  = {
+  module A = S(V)
+  proc simulate(statement : statement) : adv_summary = {
+   var c,r;
+   c <- 1;
+   r <- (false, Pervasive.witness);
+   while (c <= n /\ ! (fst r)){
+     r <@ A.run(statement);
+     c <- c + 1;
+   }       
+   return r.`2;
+  }
+}.
 
-   declare module HonestProver <: HonestProver.
-   declare module Sim1 <: Simulator1 .
-   declare module V <: RewMaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
-   declare module D <: ZKDistinguisher{-HonestProver} .
+module type ZKRun = {
+  proc run(s:statement) : (bool * adv_summary)
+}.
 
+module RD(A : ZKRun, D0 : ZKDistinguisher) = {
+  proc run(a : statement, w : witness) : bool * (bool * adv_summary) = {
+    var r : bool * adv_summary;
+    var b : bool;
+
+    r <@ A.run(a);
+    b <@ D0.guess((a, w, r.`2));
+
+    return (b, r);
+  }
+}.
+
+   
    declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier),
         islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
    declare axiom V_summitup_ll  : islossless V.summitup.
@@ -770,20 +812,36 @@ module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
 
    declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
 
+
+
     lemma computational_zk stat wit p0 negl &m:
        zk_relation stat wit =>
-       `|Pr[W0(Sim1(V), D).run(stat, wit) @ &m : fst res.`2 /\ res.`1] /
+       `|Pr[RD(Sim1(V), D).run(stat, wit) @ &m : fst res.`2 /\ res.`1] /
             Pr[Sim1(V).run(stat) @ &m : fst res]
         - Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ]| <= negl =>
 
        p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
-       let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res] in
-         `|real_prob - ideal_prob| <= negl + 2%r * (1%r - p0)^n.
+       let ideal_prob = Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res] in
+         `|ideal_prob - real_prob| <= negl + 2%r * (1%r - p0)^n.
    proof. progress.
+
+have ->: Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res]
+ = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res].
+byequiv (_: ={glob V, glob Sim1, arg} ==> _). proc.
+seq 1 1 : (={glob V,statement,witness,summary,glob Sim1}).
+inline*. sp.  wp. 
+sim.
+while (c{1} = MW.IFB.IM.W.c{2} /\ r{1} = r0{2} /\ ={glob V, glob Sim1} /\ statement0{1} = i{2} /\ e{2} = n /\ p{2} = fst).
+wp.  call (_: ={glob V}).
+sim. sim. sim. sim.
+skip. progress. 
+skip. progress.  
+call D_guess_prop. skip. progress.
+auto. auto.
    have ->:
-    `|Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] -
-     Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res]|
+    `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res] - 
+       Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|
      = `|Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res]
          - Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|. smt.
    have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res]
@@ -812,7 +870,14 @@ module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
    conseq D_guess_prop. auto.
    apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll.
    apply sim1_rew_ph. apply D_guess_ll.
-   auto. auto. apply n_pos. smt. auto.
+   auto. 
+   have ->: Pr[W0(Sim1(V), D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1]
+   = Pr[RD(Sim1(V), D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1].
+byequiv (_: ={glob V, glob Sim1, arg} ==> _). proc. 
+seq 1 1 : (={glob V, glob Sim1, r,a,w}).
+sim. call D_guess_prop. skip.
+progress. auto. auto. auto.
+apply n_pos. smt. auto.
    qed.
    end section.
   end ComputationalZK.
@@ -826,11 +891,13 @@ module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
    clone import SequentialCompositionZK as SCZK 
     with op n <- N.
 
+   clone include ComputationalZK.
+
    section.
-   declare module HonestProver <: HonestProver{-MW.IFB.IM.W, -MW.IFB.DW}.
-   declare module Sim1 <: Simulator1 {-MW.IFB.IM.W, -MW.IFB.DW}.
-   declare module V <: RewMaliciousVerifier {-Sim1, -MW.IFB.IM.W, -HonestProver, -MW.IFB.DW}.
-   declare module D <: ZKDistinguisher{-HonestProver,-MW.IFB.IM.W, -MW.IFB.DW} .
+   declare module HonestProver <: HonestProver.
+   declare module Sim1 <: Simulator1 {-HonestProver}.
+   declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
+
 
    declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge
     => islossless V0.summitup => islossless Sim1(V0).run.
@@ -838,7 +905,7 @@ module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
    declare axiom V_challenge_ll : islossless V.challenge.
    declare axiom P_response_ll  : islossless HonestProver.response.
    declare axiom P_commitment_ll  : islossless HonestProver.commitment.
-   declare axiom D_guess_ll     : islossless D.guess.
+   (* declare axiom D_guess_ll     : islossless D.guess. *)
 
    declare axiom V_rew :  (exists (f : glob V -> sbits),
         injective f /\
@@ -867,52 +934,54 @@ module Simulator(S : Simulator1)(V : RewMaliciousVerifier)  = {
         (forall &m b (x: glob V), b = f x =>
           Pr[V.setState(b) @ &m : glob V = x] = 1%r) /\
         islossless V.setState) =>
-      zk_relation p w =>
-       `|Pr[W0(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
+
+      zk_relation p w => 
+
+
+       `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
             Pr[Sim1(V).run(p) @ &m : fst res]
                  - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= negl.
 
 
-   declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
+
 
     lemma statistical_zk stat wit p0 &m:
+       forall (D <: ZKDistinguisher{-HonestProver}),
+       equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ] =>
+       islossless D.guess =>
        zk_relation stat wit => 
        p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
-       let ideal_prob = Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res] in
+       let ideal_prob = Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res] in
          `|ideal_prob - real_prob| <= negl + 2%r * (1%r - p0)^n.
-   proof. progress.
-   have ->: Pr[ZKIdeal(Simulator(Sim1), V, D).run(stat, wit) @ &m : res]
-    = Pr[Iter(Sim1(V), D).run(false,stat,wit,n,fst) @ &m : res.`1].
-   byequiv (_:  E{2} = fst /\ n{1} = ea{2} /\ fevent{2} = false  /\
-     statement{1} = Ny{2} /\ witness{1} = w{2} /\
-       ={glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto. proc.
-   inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
-   call D_guess_prop.  simplify. inline Simulator(Sim1,V).simulate. wp. sp.
-   call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
-   have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]
-     = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
-  byequiv(_: arg{2} = (stat,  wit) /\   arg{1} = (stat, wit) /\  ={glob V, glob HonestProver} ==> _).
-  proc. call D_guess_prop. sim. auto. auto.
-   apply (one_to_many_zk (Sim1(V)) D _ _ _ _ _ &m stat wit p0 negl n
-   Pr[ZKD(HonestProver, V, D).main(stat, wit) @
-  &m : res]  _ _ _
-  ) . conseq D_guess_prop. auto.
-  apply (sim1_run_ll V).  apply V_challenge_ll. apply V_summitup_ll. apply sim1_rew_ph. apply D_guess_ll. auto.
-   apply (qqq &m stat wit  D V);auto.  apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. apply V_rew. apply n_pos. smt.  auto.
-   qed.
-
+   proof. move => D D_guess_prop D_guess_ll. progress.
+apply (computational_zk HonestProver Sim1 V D _ _ _ _ _ _ _ stat wit p0 negl &m H _ _ ). admit. admit. admit.
+admit.  admit.  admit. admit.
+apply (qqq &m stat wit D V).
+admit.  admit.  admit. admit.
+auto. auto.
+qed.
 
     lemma statistical_zk_seq stat wit p0 &m:
+       forall (D <: ZKDistinguisher{-HonestProver}),
+       equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ] =>
+       islossless D.guess =>
        zk_relation stat wit => 
        p0 <= Pr[Sim1(V).run(stat) @ &m : res.`1] =>
-       let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
-       let ideal_prob = Pr[ZKIdeal(SimAmp(Simulator(Sim1)), V, D).run(stat, wit) @ &m : res] in
-         `|ideal_prob - real_prob| <= N%r * (negl + 2%r * (1%r - p0)^n).
+       let real_prob = Pr[ZKRealAmp(HonestProver, V, D).run(stat, wit) @ &m : res] in
+       let ideal_prob = Pr[ZKIdeal(SimAmp(Simulator'(Sim1)), V, D).run(stat, wit) @ &m : res] in
+         `|ideal_prob - real_prob| < N%r * (negl + 2%r * (1%r - p0)^n).
+move => D D_guess_prop D_guess_ll.
 progress.
-print zk_seq.
 
-apply (zk_seq HonestProver  (Simulator(Sim1))).
+
+apply (zk_seq HonestProver  (Simulator'(Sim1)) V D
+  _ _ _ _ _ _ _ _ &m (negl + 2%r * (1%r - p0) ^ n) stat wit _).
+admit.  admit. admit.  admit. admit. 
+admit. admit. admit.
+
+        progress.
+
 
 end section.
 

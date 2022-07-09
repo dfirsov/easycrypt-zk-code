@@ -7,6 +7,13 @@ op MyPred : rrt -> bool.
 
 op df : irt -> rrt -> de -> dt.
 
+
+(* op pair_sbits : sbits * sbits -> sbits. *)
+(* op unpair: sbits -> sbits * sbits. *)
+(* axiom ips: injective pair_sbits.  *)
+(* axiom unpair_pair x : unpair (pair_sbits x) = x. *)
+
+
 module type Dist = {
   proc guess(r:dt) : bool
 }.
@@ -23,6 +30,9 @@ clone import WhileNoSuccess as IFB with
   type iat <- (rrt -> bool) * irt * int * int * rrt,
   type sbits <- sbits,
   op  MyPred <- MyPred.
+  (* op pair_sbits <- pair_sbits, *)
+  (* op unpair <- unpair *)
+
 
 import IM.
 

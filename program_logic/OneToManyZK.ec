@@ -14,12 +14,14 @@ clone import WhileCycle as MW with type irt    <- prob,
                                    type de <- wit,
                                    op MyPred <- E,
                                    op df <- (fun (x : prob) (y: (event * sbits)) (w: wit) => (x, w,y.`2)).
-                           
+
+  
+                         
 import MW.IFB.
 import MW.IFB.IM.
 
 module W0 = W0.
-
+  
 
 (* module type Dist = { *)
 (*   proc guess(_:prob * wit * sbits) : bool *)
