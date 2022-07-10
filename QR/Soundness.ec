@@ -3,7 +3,7 @@ require import AllCore DBool Bool List Distr RealExp.
 require import Basics.
 
 require import PoK.
-import SS.
+import SST.
 
 clone import ExtractabilityTheory as ET.
 
@@ -18,7 +18,6 @@ lemma qr_soundness &m s:
      Pr[Soundness(P, HV).run(s) @ &m : res]
      <= 1%r/2%r.
 progress.
-print computational_statistical_soundness.
 apply (computational_statistical_soundness Extractor HV P &m s
  (fun (x:real) => x ^2 - 1%r/2%r * x) (1%r/2%r)   ).
 auto. simplify. 

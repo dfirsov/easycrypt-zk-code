@@ -2,24 +2,11 @@ pragma Goals:printall.
 require import AllCore List Distr.
 require WhileNotBProc.
 
-(* parameter types  *)
-type statement, witness, commitment, response, challenge.
+require GenericBasics.
+clone include GenericBasics. (* inherit defs.  *)
 
-(* synonyms   *)
-type relation   = statement -> witness -> bool.
-type transcript = commitment * challenge * response.
-
-op in_language (R:relation) statement: bool = exists witness, R statement witness.
-
-(* parameter functions *)
-op challenge_set : challenge list. 
-
-axiom challenge_set_size : 0 < size challenge_set.
-
-op verify_transcript : statement -> transcript -> bool.
 
 op completeness_relation : relation.
-
 
 module type HonestProver = {
   proc commitment(_:statement*witness) : commitment
@@ -36,6 +23,7 @@ module HV : HonestVerifier = {
   var c : commitment
   var s : statement
   var ch : challenge
+
   proc challenge(statement: statement, commitment: commitment) : challenge = {
     ch <$ duniform challenge_set;
     c <- commitment;
@@ -75,14 +63,25 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
 }. 
 
 
+abstract theory CompletenessTheory.
 
-(* completeness for sequentially composed sigma protocol *)
-theory SequentialCompositionCompleteness.
+theory Statistical.
 
 
-  theory StatisticalCompleteness.
+
+  abstract theory Statement.
 
   op completeness_error : statement -> real.
+
+  axiom completeness : exists (HP <: HonestProver) (HV  <: HonestVerifier),
+    forall  statement witness &m,
+      completeness_relation statement witness  =>
+       Pr[Completeness(HP,HV).run(statement, witness) @ &m : res]
+            >= (1%r - completeness_error statement).
+  end Statement.
+
+  
+  theory SequentialComposition.
 
   section.
 
@@ -99,21 +98,18 @@ theory SequentialCompositionCompleteness.
                                                 type iat <- statement * witness.
 
 
-  (* assumption of statistical completeness *)
-  declare axiom completeness &n statement witness :
-   completeness_relation statement witness  =>
-     Pr[Completeness(P,V).run(statement, witness) @ &n : res]
-           >= (1%r - completeness_error statement).
 
   (* detloid can depend on P and V *)
-  lemma completeness_seq &m statement witness n:
-      completeness_relation statement witness
+  lemma completeness_seq &m statement witness n deltoid:
+      completeness_relation statement witness 
+      => (forall &n, Pr[Completeness(P,V).run(statement, witness) @ &n : res]
+           >= deltoid)
       => 1 <= n
       => Pr[CompletenessAmp(P, V).run(statement, witness,n) @ &m : res]
-             >= (1%r - completeness_error statement) ^ n. 
+             >= deltoid ^ n. 
   proof. 
-  move => nil nz.
-  have phs : phoare[ Completeness(P,V).run : arg = (statement,witness) ==> res ] >= (1%r - completeness_error statement).
+  move => nil completeness nz.
+  have phs : phoare[ Completeness(P,V).run : arg = (statement,witness) ==> res ] >= deltoid.
   bypr. progress. 
   have  ->: Pr[Completeness(P, V).run(s{m0},w{m0}) @ &m0 :
      res] = Pr[Completeness(P, V).run(statement, witness) @ &m0 :
@@ -144,11 +140,24 @@ theory SequentialCompositionCompleteness.
 
   end section.
 
-  end StatisticalCompleteness.
+  end SequentialComposition.
+  
+end Statistical.
 
 
 
-  theory PerfectCompleteness.
+theory Perfect.
+
+  abstract theory Statement.
+  axiom completeness  : exists (HP <: HonestProver) (HV  <: HonestVerifier),
+    forall  statement witness &m,
+      completeness_relation statement witness  =>
+       Pr[Completeness(HP,HV).run(statement, witness) @ &m : res]
+            = 1%r.
+  end Statement.
+
+
+  theory SequentialComposition.
 
   section.
   declare module P <: HonestProver{-HV}.
@@ -166,30 +175,24 @@ theory SequentialCompositionCompleteness.
            = 1%r.
 
 
-  local clone import StatisticalCompleteness as SC with 
-    op completeness_error <- (fun x => 0%r).
-
+  local clone import Statistical as SC.
 
   lemma completeness_seq &m statement witness n:
       completeness_relation statement witness  =>
        1 <= n =>
-       Pr[CompletenessAmp(P, V).run(statement, witness,n) @ &m : res]
-       = 1%r.
+       Pr[CompletenessAmp(P, V).run(statement, witness,n) @ &m : res] = 1%r.
   progress.
   have f :   (1%r - 0%r) ^ n <=
     Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res].
-  apply (SC.completeness_seq P V verify_ll challenge_ll response_ll commitment_ll _  
-            &m statement witness n _ _ );auto. 
+  apply (SC.SequentialComposition.completeness_seq P V verify_ll challenge_ll response_ll commitment_ll _  
+            statement witness n _ _ );auto. 
   move => &n.
   progress. rewrite completeness;auto.
   smt.
   qed.
 
   end section.
+  end SequentialComposition.
+end Perfect.
 
-  end PerfectCompleteness.
-
-
-end SequentialCompositionCompleteness.
-
-(* print SequentialCompositionCompleteness. *)
+end CompletenessTheory.

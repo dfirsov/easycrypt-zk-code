@@ -2,7 +2,8 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Aux RealExp.
 require import Basics.
 
-clone import OneShotSimulator as OSS with op zk_error <= (fun x z => 0%r).
+clone import ZeroKnowledgeTheory.
+clone import OneShotSimulator as OSS.
 
 
 
@@ -18,7 +19,7 @@ module Sim1(V : RewMaliciousVerifier)  = {
     return (bb,(rr * if bb then (inv y) else one),r);
   }
 
-  proc run(Ny : qr_prob) : bool * adv_summary  = {
+  proc run(Ny : qr_prob) : bool * summary  = {
     var r,z,b',b,result, vstat;
     vstat <@ V.getState();
     (b',z,r) <@ sinit(Ny);
@@ -157,7 +158,7 @@ local module Sim1'  = {
 
 
 
-axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
+declare axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
 
 local lemma qrp_zk2_eq ya wa  : IsSqRoot ya wa =>
   equiv [ZKReal(HP, V, D).run ~ Sim1'.run
@@ -380,7 +381,7 @@ qed.
 
 
 
-lemma simnres ya wa : IsSqRoot ya wa /\ unit ya =>
+local lemma simnres ya wa : IsSqRoot ya wa /\ unit ya =>
   phoare[ RD(Sim1(V),D).run : arg = (ya, wa) ==> ! (fst res.`2) ] = (1%r/2%r).
 move => ii.
 bypr. progress.
@@ -392,7 +393,7 @@ conseq (ssim ya wa ii). auto. auto. auto.
 smt.  auto. smt.
 qed.
 
-lemma simnresnotnot ya wa : IsSqRoot ya wa /\ unit ya =>
+local lemma simnresnotnot ya wa : IsSqRoot ya wa /\ unit ya =>
   phoare[ RD(Sim1(V),D).run : arg = (ya, wa) ==>  (fst res.`2) ] = (1%r/2%r).
 move => ii.
 bypr. progress.
@@ -443,7 +444,7 @@ qed.
  
 
 
-lemma sim1zk &m ya wa :
+local lemma sim1zk &m ya wa :
   IsSqRoot ya wa /\ unit ya =>
     Pr[RD(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
      = Pr[ZKReal(HP, V, D).run(ya, wa) @ &m : res] / 2%r.
@@ -458,10 +459,10 @@ rewrite (qrp_zk2_pr_l &m ya wa). smt. auto.
 qed.
     
 
-lemma sim1assc &m stat (w : qr_wit) : 
- IsSqRoot stat w /\ unit stat =>
+lemma sim1assc &m stat :  in_language zk_relation  stat =>
  Pr[Sim1(V).run(stat) @ &m : res.`1] = 1%r/2%r.
 proof. progress.
+elim H. move => w wrel.
 have ->: Pr[Sim1(V).run(stat) @ &m : res.`1] 
   = Pr[RD(Sim1(V), D).run(stat, w) @ &m : (fst res.`2) ].
 byequiv (_: _ ==> (fst res{1} = fst res.`2{2})).
@@ -480,7 +481,7 @@ lemma sim1_prop &m (p : qr_prob) (w : qr_wit) :
               - Pr[ ZKD(HP,V,D).main(p,w) @ &m : res ]| = 0%r. 
 progress.
 rewrite sim1zk.  auto.
-rewrite (sim1assc &m p w). auto.
+rewrite (sim1assc &m p ). exists w. auto.
 simplify.
 have ->: Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] * 2%r / 2%r
  = Pr[ZKReal(HP, V, D).run(p, w) @ &m : res].

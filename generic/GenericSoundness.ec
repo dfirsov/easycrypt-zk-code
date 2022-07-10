@@ -5,14 +5,17 @@ require WhileNotBProc.
 require GenericCompleteness.
 clone include GenericCompleteness. (* inherit defs.  *)
 
+
+
 op soundness_relation : relation.
 
 module type MaliciousProver = {  
-  proc commitment(s: statement) : commitment
-  proc response(challenge: challenge) : response
+  proc commitment(s: statement): commitment
+  proc response(challenge: challenge): response
 }.
 
-module Soundness(P: MaliciousProver, V: HonestVerifier) = {
+module Soundness(P: MaliciousProver, 
+                 V: HonestVerifier) = {
   proc run(statement: statement) : bool = {
     var commit, challenge, response, accept; 
     commit <@ P.commitment(statement);
@@ -37,8 +40,19 @@ module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = {
   } 
 }. 
 
+abstract theory SoundnessTheory.
 
-abstract theory SequentialCompositionSoundness.
+theory Statistical.
+
+  abstract theory Statement.
+  op soundness_error : statement -> real.
+
+  axiom soundness: exists (HV <: HonestVerifier), forall (P <: MaliciousProver), 
+   forall statement &m,
+      ! in_language soundness_relation statement =>
+      Pr[Soundness(P,HV).run(statement) @ &m : res]
+            <= soundness_error statement.
+  end Statement.
 
   op soundness_error : statement -> real.
 
@@ -91,8 +105,9 @@ abstract theory SequentialCompositionSoundness.
 
   end section.
 
+end Statistical.
 
-end SequentialCompositionSoundness.
+end SoundnessTheory.
 
 (* print SequentialCompositionSoundness. *)
 

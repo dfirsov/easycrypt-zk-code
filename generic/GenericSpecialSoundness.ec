@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore List Distr.
+require import AllCore List Distr Real RealExp.
 
 require GenericExtractability.
 clone include GenericExtractability. (* inherit defs. *)
@@ -10,18 +10,21 @@ module type SpecialSoundnessAdversary = {
 }.
 
 
-op valid_transcript_pair (statement: statement) (transcript1 transcript2: transcript) : bool 
+op valid_transcript_pair (statement: statement) 
+  (transcript1 transcript2: transcript) : bool 
    = transcript1.`1 = transcript2.`1 
         /\ transcript1.`2 <> transcript2.`2
         /\ verify_transcript statement transcript1 
         /\ verify_transcript statement transcript2.
 
    
-module SpecialSoundnessAdversary(P : RewMaliciousProver) : SpecialSoundnessAdversary = {
-  proc attack(statement : statement) : transcript * transcript = {
-    var i,c1,c2,r1,r2, pstate;
-    i <@ P.commitment(statement);
+module SpecialSoundnessAdversary(P : RewMaliciousProver) 
+ : SpecialSoundnessAdversary = {
 
+  proc attack(statement:statement):transcript * transcript = {
+    var i,c1,c2,r1,r2, pstate;
+
+    i <@ P.commitment(statement);
 
     c1 <$ duniform challenge_set;
     pstate <@ P.getState();
@@ -30,10 +33,10 @@ module SpecialSoundnessAdversary(P : RewMaliciousProver) : SpecialSoundnessAdver
     c2 <$ duniform challenge_set;
     P.setState(pstate);
     r2 <@ P.response(c2);
+
     return ((i,c1,r1), (i,c2,r2));
   }
 }.
-
 
 
 abstract theory SpecialSoundnessTheory.
@@ -49,6 +52,15 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
  }
 }.
 
+ theory Computational.
+
+   abstract theory Statement.
+   axiom computational_special_soundness: forall (A <: SpecialSoundnessAdversary),
+     forall s &m, exists special_soundness_error,
+       Pr[ A.attack(s) @&m: valid_transcript_pair s res.`1 res.`2
+         /\ !(soundness_relation s (special_soundness_extract s res.`1 res.`2))]
+        <= special_soundness_error.
+   end Statement.
 
     require GenericKE.
     clone import GenericKE as GKE with type pt <- statement,
@@ -62,8 +74,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 
     section.
 
-    declare module P <: RewMaliciousProver{-HV}.
-    
+    declare module P <: RewMaliciousProver{-HV}.    
     declare axiom P_response_ll : islossless P.response.
 
     local module A(P : RewMaliciousProver) : Adv = {
@@ -82,7 +93,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
      proc setState = P.setState
     }.
 
-
    op hc_verify = fun s cm ch rs => verify_transcript s (cm , ch, rs). (* TODO: remove later *)
 
    local lemma ex_a_eq_f &m p aux f : 
@@ -100,18 +110,20 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
      call (_:true). wp.  call (_:true). rnd. wp. call (_:true). wp.  skip. progress.
    smt.  smt. smt. smt. smt. smt.
    qed.
-   
-
+ 
     local lemma hc_pok' &m p aux deltoid : 
        Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
-                 ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <= deltoid
-           =>
-      Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
+                 ! soundness_relation p 
+              (special_soundness_extract p res.`1 res.`2)] <= deltoid           
+       => Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                  valid_transcript_pair p res.`1 res.`2 /\
                   soundness_relation p (special_soundness_extract p res.`1 res.`2)]
-        >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
-             - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,aux) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
+             >= (Pr[ InitRun1(A(P)).run(p,aux) @ &m  
+                   : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
+             - (1%r/ (size (challenge_set ) ) %r) 
+                  * Pr[ InitRun1(A(P)).run(p,aux) @ &m 
+                         : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
               - deltoid.
     proof. rewrite -  (ex_a_eq_f &m p aux).
     move => f. simplify.
@@ -124,7 +136,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    auto. 
     qed.
 
-
     local lemma qqq &m p : 
       Pr[SpecialSoundnessAdversary(P).attack(p) @ &m :
            valid_transcript_pair p res.`1 res.`2 /\
@@ -136,7 +147,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
     qed.
 
 
-
     local lemma www &m p aux: 
       Pr[ InitRun1(A(P)).run(p,aux) @ &m 
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
@@ -146,8 +156,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
     skip. simplify. progress. smt. auto. 
     qed.
 
-
-    (* "copy/include/or move"  to special soundness theory (where the spec. sound. axiom is assumed)  *)
+    
     lemma computational_PoK &m p deltoid: 
           Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
@@ -168,42 +177,13 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
     have g :       Pr[ InitRun1(A(P)).run(p,tt) @ &m 
           : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
      = Pr[Soundness(P, HV).run(p) @ &m : res]. apply www.
-
      have j :       Pr[SpecialSoundnessAdversary(P).attack(p) @ &m :
            valid_transcript_pair p res.`1 res.`2 /\
            soundness_relation p (special_soundness_extract p res.`1 res.`2)]
      <=  Pr[Extractor(P).extract(p) @ &m : soundness_relation p res].
     apply qqq.
-
      smt.
     qed.
-
-
-    lemma statistical_PoK &m p :
-      (forall t1 t2, valid_transcript_pair p t1 t2 =>  soundness_relation p (special_soundness_extract p t1 t2))
-      =>
-      Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
-       (Pr[Soundness(P, HV).run(p) @ &m : res]^2
-       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HV).run(p) @ &m : res]).
-    proof.  progress.
-
-      have f : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
-                    valid_transcript_pair p res.`1 res.`2 /\
-                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
-     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
-    rewrite Pr[mu_eq]. smt. auto. apply (computational_PoK &m p 0%r). rewrite f. auto.
-    qed.
-          
-
-
-
-
-    require import Real RealExp.
-    local lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
-    smt. qed.
-    local lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
-    smt. qed.
-
 
     lemma computational_statistical_soundness &m p f epsilon:
         ! in_language soundness_relation p => 
@@ -220,15 +200,20 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
     smt. qed. 
 
 
+    local lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
+    smt. qed.
+    local lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
+    smt. qed.
+
   
-    lemma computational_soundness &m p  deltoid:
-        ! in_language soundness_relation p =>
+    lemma computational_soundness &m p deltoid:
+     ! in_language soundness_relation p =>
        Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
-                    valid_transcript_pair p res.`1 res.`2 /\
-                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
-            deltoid =>
-         Pr[Soundness(P, HV).run(p) @ &m : res]
-         <=  (sqrt deltoid) + (1%r/ (size (challenge_set))%r).
+             valid_transcript_pair p res.`1 res.`2 /\
+             ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] 
+           <= deltoid
+         => Pr[Soundness(P, HV).run(p) @ &m : res]
+              <= (sqrt deltoid) + (1%r/(size challenge_set)%r).
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
       have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
@@ -253,18 +238,20 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    have f53:  (a - 1%r / (size challenge_set)%r) * (a - 1%r / (size challenge_set)%r) <= a * (a - 1%r / (size challenge_set)%r). 
    smt.
     have f5 : (a - 1%r / (size challenge_set)%r)^2  <= b.  smt.
-   smt. qed.
+   smt. 
+   qed.
 
-
-         (*  depending on the size of challenge_set either computational_soundness or computational_soundness_II provide a better bound *)
+    (*  depending on the size of challenge_set either computational_soundness 
+        or computational_soundness_II provide a better bound *)
     lemma computational_soundness_II &m p deltoid:
         ! in_language soundness_relation p =>
        Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
-                    valid_transcript_pair p res.`1 res.`2 /\
-                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
-            deltoid =>
+            valid_transcript_pair p res.`1 res.`2 /\
+             ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] 
+       <= deltoid =>
          Pr[Soundness(P, HV).run(p) @ &m : res]
-         <=  ((size (challenge_set))%r * deltoid) + (1%r/ (size (challenge_set))%r).
+            <= ((size challenge_set)%r * deltoid) 
+                  + (1%r/ (size challenge_set)%r).
     proof. progress.
     have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
       have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
@@ -291,25 +278,62 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    have f7 : (1%r/c) * c * (a - 1%r / c) <= b * c. smt.
    have f8 : (a - 1%r / c) <= b * c. smt.
    have f9 : a  <= b * c + 1%r/c. smt.
-   smt (challenge_set_size). qed.
+   smt (challenge_set_size). 
+   qed.
+   end section.
 
+   end Computational.
+
+
+
+   theory Perfect.
+
+    abstract theory Statement.
+    axiom perfect_special_soundness p : 
+      (forall t1 t2, valid_transcript_pair p t1 t2 =>
+        soundness_relation p (special_soundness_extract p t1 t2)).
+    end Statement.
+
+    import Computational.
+    section.
+    declare module P <: RewMaliciousProver{-HV}.
     
-    lemma statistical_soundness &m p  :
-        ! in_language soundness_relation p
-        => (forall t1 t2, valid_transcript_pair p t1 t2 => soundness_relation p (special_soundness_extract p t1 t2))
-        => Pr[Soundness(P, HV).run(p) @ &m : res] <= ((1%r/ (size (challenge_set))%r)).     
-     proof. progress. 
-       have ->: inv (size challenge_set)%r = sqrt 0%r + inv (size challenge_set)%r. smt.
-    apply (computational_soundness &m p  0%r H _).
-      have -> : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
+    declare axiom P_response_ll : islossless P.response.  
+    declare axiom perfect_special_soundness p : 
+     (forall t1 t2, valid_transcript_pair p t1 t2 =>
+         soundness_relation p (special_soundness_extract p t1 t2)).
+ 
+
+    lemma PoK_from_special_soundness &m p :
+      Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] 
+       >= Pr[Soundness(P, HV).run(p) @ &m : res]^2
+            - 1%r/(size challenge_set)%r 
+                * Pr[Soundness(P, HV).run(p) @ &m : res].
+    proof.  progress.
+      have f : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
      have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
-    rewrite Pr[mu_eq]. smt. auto.   auto. qed.
+    rewrite Pr[mu_eq]. smt. auto. apply (computational_PoK P P_response_ll &m p 0%r). rewrite f. auto.
+    qed.
+     
+    
+   lemma statistical_soundness &m p  :
+       ! in_language soundness_relation p
+       => Pr[Soundness(P, HV).run(p) @ &m : res] 
+           <= ((1%r/ (size (challenge_set))%r)).     
+     proof. progress. 
+     have ->: inv (size challenge_set)%r = sqrt 0%r + inv (size challenge_set)%r. smt.
+     apply (computational_soundness P P_response_ll &m p  0%r H _).
+     have -> : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
+                    valid_transcript_pair p res.`1 res.`2 /\
+                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
+     have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
+     rewrite Pr[mu_eq]. smt. auto.   auto. qed.
 
     end section.
 
-
+  end Perfect.
 
 end SpecialSoundnessTheory.
 

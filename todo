@@ -1,8 +1,3 @@
 
-. prefix protocol specific files (otherwise confusing)
-  . Basics.ec => DL_Basics
-  . xxxx
 
-
-
-. let for pok
+get rid of D_guess_prop by introducing a copy of V' and assuming that 
