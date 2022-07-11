@@ -3,6 +3,7 @@ require import AllCore DBool Bool List Distr.
 require import Basics.
 
 
+
 section.
 
 local lemma qr_complete_h ya wa : completeness_relation ya wa
@@ -10,16 +11,13 @@ local lemma qr_complete_h ya wa : completeness_relation ya wa
 move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
-skip. progress.   apply (d_prop4 rrr.`1 rrr.`2). smt. 
+skip. progress.    smt. 
 have -> : s{hr}  = (w{hr} * w{hr}).
 apply qra. 
 have ->: ch. smt. 
 simplify.
-have -> : rrr.`2 = rrr.`1 * rrr.`1.  smt(d_prop1).
 smt.
-apply (d_prop4 rrr.`1 rrr.`2). smt. 
-have ->: !ch. smt. 
-simplify. smt.
+smt.
 qed.
 
 
@@ -38,7 +36,7 @@ progress. apply d_prop5. auto. auto. auto.
 qed.
 
 
-lemma qr_completeness: forall (statement:qr_prob) (witness:qr_wit) &m,
+lemma qr_completeness: forall (statement:qr_stat) (witness:qr_wit) &m,
         completeness_relation statement witness =>
      Pr[Completeness(HP,HV).run(statement, witness) @ &m : res] = 1%r.
 progress. byphoare (_: arg = (statement, witness) ==> _);auto.

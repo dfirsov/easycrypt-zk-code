@@ -10,16 +10,40 @@ clone import OneShotSimulator as OSS.
 (* one-time simulator  *)
 
 
+lemma qr_prop1 (x : zmod) : unit x => x * (inv x)  = one. smt. qed.
+lemma qr_prop2 (x y w : zmod) : unit y => y = w * w => unit w. smt. qed.
+lemma qr_prop3 (w : zmod) : unit  w => inv (w * w) = (inv w) * (inv w). smt. qed.
+lemma qr_prop11 (x : zmod) : unit x => (inv x) * x = one. smt. qed.
+lemma qr_prop5 (x y r : zmod) : in_language completeness_relation x 
+  => !in_language completeness_relation y => unit y => x * y  <> r * r.
+progress.
+elim H. progress. 
+case (x * y = r * r). elim H.
+move => H xinv.
+pose w := witness.
+rewrite  H. 
+have iw : invertible witness.  smt.
+move => eq.
+have eq2 :  (inv w) * w * w * y = (inv w) * r * r. smt.
+have eq3 :  w * y = (inv w) * r * r. smt.
+clear eq2 eq.
+have eq4 :  (inv w) * w * y = ((inv w) * r) * (inv w) * r. smt.
+have eq5 :  y = ((inv w) * r) * ((inv w) * r). smt.
+apply H0. exists (inv w * r). split.
+apply eq5. auto.
+auto.
+qed.
+
 module Sim1(V : RewMaliciousVerifier)  = {
 
-  proc sinit(y : qr_prob) : bool * zmod * zmod = {
-    var r,rr,bb;
-    (r,rr)  <$ ZNS_dist;    
+  proc sinit(y : qr_stat) : bool * zmod * zmod = {
+    var r,bb;
+    r  <$ zmod_distr;    
     bb <$ {0,1};
-    return (bb,(rr * if bb then (inv y) else one),r);
+    return (bb,((r*r) * if bb then (inv y) else one),r);
   }
 
-  proc run(Ny : qr_prob) : bool * summary  = {
+  proc run(Ny : qr_stat) : bool * summary  = {
     var r,z,b',b,result, vstat;
     vstat <@ V.getState();
     (b',z,r) <@ sinit(Ny);
@@ -123,14 +147,14 @@ local module Sim1'  = {
   var result : bool list
 
   proc sinit() : bool * zmod * zmod  = {
-    var r,rr,bb;
+    var r,bb;
 
-    (r,rr)  <$ ZNS_dist;    
+    r  <$ zmod_distr;    
     bb <$ {0,1};
-    return (bb,rr,r);
+    return (bb,r*r,r);
   }
     
-  proc run(Ny : qr_prob, w : qr_wit) : bool * bool  = {
+  proc run(Ny : qr_stat, w : qr_wit) : bool * bool  = {
     var z,r,b',b,ryb,result, rd;
     (b',z,r) <@ sinit();
     b  <@ V.challenge(Ny,z);
@@ -140,13 +164,12 @@ local module Sim1'  = {
     return (b = b', rd);
   }
 
- proc allinone(Ny : qr_prob, w : qr_wit) = {
-    var z,r,bb,rr,b',b,ryb,result, rd;
-    (r,rr)  <$ ZNS_dist;    
+ proc allinone(Ny : qr_stat, w : qr_wit) = {
+    var r,bb,b',b,ryb,result, rd;
+    r  <$ zmod_distr;    
     bb <$ {0,1};
     b' <- bb;
-    z <- rr ;
-    b  <@ V.challenge(Ny,z);
+    b  <@ V.challenge(Ny,r * r);
     ryb  <- (r * if b then w else one);
     result <@ V.summitup(Ny,ryb);
     rd <@ D.guess(Ny, w, result);
@@ -186,74 +209,20 @@ move => [isqr invrtbl]. proc. swap 2 -1.
 seq 1 1 : (={bb} /\ (y{1}) = (ya) /\ ={glob V}). rnd.    skip. progress. 
 exists* bb{1}. elim*. progress.
 wp. case (bb_L = true).     
-rnd (fun (x : zmod * zmod) => (x.`1 * inv wa, x.`2 * (inv y{1}) ))
-      (fun (x : zmod * zmod) => (x.`1 * wa, x.`2 * y{1} )). skip. progress.
-have ->: rrrR = (rrrR.`1, rrrR.`2). smt.
-simplify. split. 
+rnd (fun (x : zmod) => (x * inv wa ))
+      (fun (x : zmod) => (x * wa )). skip. progress.
+smt. apply (d_prop0). auto.
   have : unit wa.  smt.
-move => iwa.  
-have ->:  rrrR.`1 * wa * inv wa
- =  (rrrR.`1  * wa  * inv wa) . smt.
-have ->: rrrR.`1 * wa * inv wa = rrrR.`1 * (wa * inv wa).
-smt.
+  have : unit rR. smt.
+move => i1 i2.  apply d_prop3. apply ZModpRing.unitrMl. auto. auto.
+apply d_prop3. apply ZModpRing.unitrMl.  smt. smt. 
 smt. 
-have ->:  rrrR.`2 * y{1} * inv y{1} 
- =  (rrrR.`2  * y{1}  * inv  y{1}). smt.
-have ->: rrrR.`2 * y{1} * inv y{1} = rrrR.`2 * (y{1} * inv y{1}).
-smt.
 smt. 
-apply (d_prop0). auto.
-apply (d_prop3).
- have ->: rrrR.`1 * wa * (rrrR.`1 * wa) =
-(rrrR.`1 * rrrR.`1) * (wa *  wa). smt.
- have ->: (rrrR.`1 * rrrR.`1) * (wa *  wa)
- = (rrrR.`1 * rrrR.`1) * (wa *  wa). 
-smt. 
- have ->: (rrrR.`1 * rrrR.`1)  = (rrrR.`2).
-  smt.
-have ->: rrrR.`2 * ( wa *  wa)
- = (wa *  wa) * rrrR.`2. 
-smt. 
-rewrite - isqr. 
-smt. 
-apply d_prop3. 
-have f1 : unit wa. smt.
-clear H H0.
- have ->: rrrL.`1 * inv wa * (rrrL.`1 * inv  wa) =
-(rrrL.`1 * rrrL.`1) * (inv wa * inv wa). smt.
- have ->: (rrrL.`1 * rrrL.`1) * (inv wa * inv wa)
- = (rrrL.`1 * rrrL.`1) * (inv wa * inv wa). 
-smt.
- have ->: (rrrL.`1 * rrrL.`1) = (rrrL.`2).
-  smt.
-have ->: rrrL.`2  * (inv  wa * inv wa) 
- = (inv wa * inv wa) * rrrL.`2.
-smt.
-have ->: inv wa * inv wa = inv y{1}. smt.
-smt.
-have ->: rrrL = (rrrL.`1, rrrL.`2). smt.
-simplify. split. 
-  have : unit wa. smt.
-move => iwa. 
-have ->:  rrrL.`1 *  inv wa  * wa
- =  (rrrL.`1  * inv  wa * wa ).
-smt.
-have ->: rrrL.`1 * inv wa * wa = rrrL.`1 * (wa * inv wa).
-smt.
-smt.
-have ->:  rrrL.`2 * inv y{1} * y{1}
- =  (rrrL.`2  * inv y{1} * y{1}).
-smt.
-have ->: rrrL.`2 * inv y{1} * y{1} = rrrL.`2 * (y{1} * inv y{1}).
-smt.
-smt.
-smt.
 rnd. skip. progress. smt. smt. smt.
 smt. 
-smt.
 qed.
 
-(* import OMZK. *)
+
 
 local lemma qkok ya wa P : zk_relation ya wa =>
   equiv [ RD(Sim1(V),D).run ~ Sim1'.run
@@ -342,16 +311,16 @@ local lemma sim1'not &m ya wa  :
      Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = 1%r/2%r.
 proof.
 have ->: Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m : ! res.`1]. 
-byequiv. proc. 
+byequiv (_: ={glob V, glob D, arg} ==> _) . proc. 
 call jk. progress.
 call (_:true). wp.  simplify.
 call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt. auto. auto.
 byphoare. proc. inline*. simplify. 
-swap [2..3] 5. wp.
-seq 6 : true (1%r) (1%r/2%r) 1%r 0%r.
-auto. call D_guess_ll.
+swap [2..3] 4. wp.
+seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
+ auto. call D_guess_ll.
 call summitup_ll. wp. 
-call challenge_ll. wp. rnd.  skip. smt. 
+call challenge_ll. rnd.  skip. smt. 
 rnd. skip. progress. smt. 
 exfalso. auto. auto.  auto. auto.
 qed.
@@ -365,8 +334,8 @@ call jk. progress.
 call (_:true). wp.  simplify.
 call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt. auto. auto.
 byphoare. proc. inline*. simplify.
-swap [2..3] 5. wp.
-seq 6 : true (1%r) (1%r/2%r) 1%r 0%r.
+swap [2..3] 4. wp.
+seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
 auto. call D_guess_ll.
 call summitup_ll. wp.
 call challenge_ll. wp. rnd. skip. smt.
@@ -471,7 +440,7 @@ byphoare (_: arg = (stat, w) ==> _).
 conseq (simnresnotnot stat w  _). auto. auto.  auto.
 qed.
 
-lemma sim1_prop &m (p : qr_prob) (w : qr_wit) :
+lemma sim1_prop &m (p : qr_stat) (w : qr_wit) :
    zk_relation p w =>
     `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1(V).run(p) @ &m : fst res] 
