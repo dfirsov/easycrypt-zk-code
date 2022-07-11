@@ -44,7 +44,7 @@ declare axiom rewindable_V_plus :
 
 
 lemma qr_statistical_zk stat wit &m:
-        IsSqRoot stat  wit  => unit stat =>
+        zk_relation stat wit =>
         let real_prob = Pr[ZKReal(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res] in
           `|ideal_prob - real_prob| <= 2%r * (1%r / 2%r) ^ OSS.N.

@@ -91,8 +91,6 @@ call (s3 V_v). skip. progress. auto.
 qed.
 
 
-
-
 end section.
 
 
@@ -160,7 +158,7 @@ local module Sim1'  = {
 
 declare axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
 
-local lemma qrp_zk2_eq ya wa  : IsSqRoot ya wa =>
+local lemma qrp_zk2_eq ya wa  : zk_relation ya wa =>
   equiv [ZKReal(HP, V, D).run ~ Sim1'.run
          : ={arg, glob V} /\ arg{1} = (ya, wa)
           ==> res{1} = res{2}.`2 ].
@@ -174,7 +172,7 @@ wp. swap {2} 2 -1.
 qed.
 
 
-local lemma exss ya wa : IsSqRoot ya wa /\ unit ya =>
+local lemma exss ya wa : zk_relation ya wa =>
  equiv[ Sim1(V).sinit ~ Sim1'.sinit
    : arg{1} = (ya) /\ ={glob V} ==>
     ={glob V} /\  (res{1}.`1, res{1}.`2) = (res{2}.`1, res{2}.`2)
@@ -257,14 +255,13 @@ qed.
 
 (* import OMZK. *)
 
-local lemma qkok ya wa P : IsSqRoot  ya wa /\ unit ya =>
+local lemma qkok ya wa P : zk_relation ya wa =>
   equiv [ RD(Sim1(V),D).run ~ Sim1'.run
    :   ={glob V,arg} /\  (ya,wa) = (Ny{2},w{2})
        ==>  (fst res{1}.`2) /\ P res{1}.`1 <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => [isqr invrtbl]. proc.
 inline Sim1(V).run. sp.
 seq 2 1 : (={glob V,b',z, Ny,w} 
-
          /\ Ny{1} = a{1}
          /\ (b'{1} = true => z{1} = r0{1} * r0{1} * (inv ya)
                      /\ r0{1} * (inv wa) = r{2} )
@@ -331,7 +328,7 @@ skip. progress.
 qed.
 
 
-local lemma ssim ya wa  : IsSqRoot ya wa /\ unit ya =>
+local lemma ssim ya wa  : zk_relation ya wa =>
  equiv [ RD(Sim1(V),D).run ~ Sim1'.run : ={glob V, glob D, arg} 
            /\  ((ya),wa) = (Ny{2},w{2}) 
        ==> (fst res{1}.`2) = res.`1{2} ].
@@ -381,7 +378,7 @@ qed.
 
 
 
-local lemma simnres ya wa : IsSqRoot ya wa /\ unit ya =>
+local lemma simnres ya wa : zk_relation ya wa =>
   phoare[ RD(Sim1(V),D).run : arg = (ya, wa) ==> ! (fst res.`2) ] = (1%r/2%r).
 move => ii.
 bypr. progress.
@@ -393,7 +390,7 @@ conseq (ssim ya wa ii). auto. auto. auto.
 smt.  auto. smt.
 qed.
 
-local lemma simnresnotnot ya wa : IsSqRoot ya wa /\ unit ya =>
+local lemma simnresnotnot ya wa : zk_relation ya wa =>
   phoare[ RD(Sim1(V),D).run : arg = (ya, wa) ==>  (fst res.`2) ] = (1%r/2%r).
 move => ii.
 bypr. progress.
@@ -407,7 +404,7 @@ qed.
 
   
     
-local lemma qrp_zk2_pr_l &m ya wa : IsSqRoot ya wa =>
+local lemma qrp_zk2_pr_l &m ya wa : zk_relation ya wa =>
     Pr[ZKReal(HP, V,D).run(ya,wa) @ &m : res  ] = Pr[ Sim1'.run(ya,wa) @ &m : res.`2  ].
 proof. move => isqr. byequiv.
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
@@ -445,7 +442,7 @@ qed.
 
 
 local lemma sim1zk &m ya wa :
-  IsSqRoot ya wa /\ unit ya =>
+  zk_relation ya wa =>
     Pr[RD(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
      = Pr[ZKReal(HP, V, D).run(ya, wa) @ &m : res] / 2%r.
 proof.     
@@ -459,7 +456,7 @@ rewrite (qrp_zk2_pr_l &m ya wa). smt. auto.
 qed.
     
 
-lemma sim1assc &m stat :  in_language zk_relation  stat =>
+lemma sim1assc &m stat :  in_language zk_relation stat =>
  Pr[Sim1(V).run(stat) @ &m : res.`1] = 1%r/2%r.
 proof. progress.
 elim H. move => w wrel.
@@ -475,7 +472,7 @@ conseq (simnresnotnot stat w  _). auto. auto.  auto.
 qed.
 
 lemma sim1_prop &m (p : qr_prob) (w : qr_wit) :
-   IsSqRoot p w /\ unit p =>  
+   zk_relation p w =>
     `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1(V).run(p) @ &m : fst res] 
               - Pr[ ZKD(HP,V,D).main(p,w) @ &m : res ]| = 0%r. 

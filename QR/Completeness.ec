@@ -39,7 +39,7 @@ qed.
 
 
 lemma qr_completeness: forall (statement:qr_prob) (witness:qr_wit) &m,
-        IsSqRoot statement witness /\ unit statement =>
+        completeness_relation statement witness =>
      Pr[Completeness(HP,HV).run(statement, witness) @ &m : res] = 1%r.
 progress. byphoare (_: arg = (statement, witness) ==> _);auto.
 conseq (qr_complete_ph statement witness _). auto. 

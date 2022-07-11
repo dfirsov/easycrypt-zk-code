@@ -18,7 +18,7 @@ lemma qr_soundness &m s:
      Pr[Soundness(P, HV).run(s) @ &m : res]
      <= 1%r/2%r.
 progress.
-apply (computational_statistical_soundness Extractor HV P &m s
+apply (stat_soundness_from_PoK Extractor HV P &m s
  (fun (x:real) => x ^2 - 1%r/2%r * x) (1%r/2%r)   ).
 auto. simplify. 
 simplify.
