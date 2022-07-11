@@ -63,7 +63,7 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
 }. 
 
 
-abstract theory CompletenessTheory.
+theory CompletenessTheory.
 
 theory Statistical.
 

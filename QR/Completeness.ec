@@ -21,7 +21,6 @@ smt.
 qed.
 
 
-
 local lemma qr_complete_ph ya wa : completeness_relation ya wa 
    => phoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ] = 1%r.
 move => [qra invrtbl].
@@ -37,10 +36,25 @@ qed.
 
 
 lemma qr_completeness: forall (statement:qr_stat) (witness:qr_wit) &m,
-        completeness_relation statement witness =>
-     Pr[Completeness(HP,HV).run(statement, witness) @ &m : res] = 1%r.
+  completeness_relation statement witness =>
+  Pr[Completeness(HP,HV).run(statement, witness) @ &m : res] = 1%r.
 progress. byphoare (_: arg = (statement, witness) ==> _);auto.
 conseq (qr_complete_ph statement witness _). auto. 
+qed.
+
+
+lemma qr_completeness_iter: forall (statement:qr_stat) (witness:qr_wit) &m n,
+        1 <= n =>
+       completeness_relation statement witness =>
+      Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
+progress.
+apply (CompletenessTheory.Perfect.SequentialComposition.completeness_seq HP HV _ _ _ _ _ &m).
+proc.  skip.  auto.
+proc.  wp.  rnd.  skip.  progress. smt.
+proc.  wp.  skip. auto.
+proc. rnd. wp. skip.  progress. smt (d_prop5).
+progress.
+apply qr_completeness. auto. auto. auto.
 qed.
 
 end section.

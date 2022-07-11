@@ -40,7 +40,7 @@ module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = {
   } 
 }. 
 
-abstract theory SoundnessTheory.
+theory SoundnessTheory.
 
 theory Statistical.
 
