@@ -5,7 +5,8 @@ require import AllCore List Distr.
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
-require OneToManyZK.
+require OneToManyZK HybridWithArg2.
+
 
 (* we can instantiate sbits with list of Booleans  *)
 type sbits.
@@ -18,6 +19,19 @@ axiom unpair_pair x : unpair (pair_sbits x) = x.
 type summary = sbits.
 
 op zk_relation : relation.
+
+  op n : int.
+  axiom n_pos : 0 <= n.
+
+
+clone import HybridWithArg2 as Hyb with type input <- unit,
+                                        type output <- summary,
+                                        type outputA <- bool,
+                                        type argt <- statement * witness,
+                                        op q <- n.
+
+
+
 
 module type RewMaliciousVerifier = {
   proc challenge(_:statement * commitment) : challenge
@@ -84,8 +98,7 @@ abstract theory ZeroKnowledgeTheory.
 
   theory SequentialComposition.
 
-  op n : int.
-  axiom n_pos : 0 <= n.
+
 
   module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
     proc run(statement: statement, witness: witness) = {
@@ -127,11 +140,7 @@ abstract theory ZeroKnowledgeTheory.
 
   section.
 
-  clone import HybridWithArg2 as Hyb with type input <- unit,
-                                          type output <- summary,
-                                          type outputA <- bool,
-                                          type argt <- statement * witness,
-                                          op q <- n.
+
 
   declare module P <: HonestProver{-HybOrcl,-Count}.
   declare module Sim <: Simulator{-HybOrcl,-Count,  -P }.
@@ -566,7 +575,7 @@ abstract theory ZeroKnowledgeTheory.
     }
   }.
 
-  module Di(D:ZKDistinguisher) : ZKDistinguisher = {
+  module Di(D:ZKDistinguisher)(Sim : Simulator)(V : RewMaliciousVerifier) : ZKDistinguisher = {
     proc guess(s : statement, w: witness, summary: summary) = {
      var guess;
      HybOrcl.l <- HybOrcl.l + 1;
@@ -580,7 +589,7 @@ abstract theory ZeroKnowledgeTheory.
   }.
 
 
-  module Dstar = Di(D).
+  module Dstar = Di(D,Sim,V).
 
   local lemma lll (ss : statement) (ww : witness) &m deltoid: 
      0%r <= deltoid =>
@@ -657,8 +666,8 @@ abstract theory ZeroKnowledgeTheory.
   lemma zk_seq &m deltoid ss ww :
      0%r <= deltoid =>
      (forall &n,
-      `|Pr[ZKIdeal(Sim, V, Di(D)).run(ss, ww) @ &n : res]
-      - Pr[ZKReal(P, V, Di(D)).run(ss, ww) @ &n : res]|
+      `|Pr[ZKIdeal(Sim, V, Di(D,Sim,V)).run(ss, ww) @ &n : res]
+      - Pr[ZKReal(P, V, Di(D,Sim,V)).run(ss, ww) @ &n : res]|
              <= deltoid) =>
      `|Pr[ZKIdeal(SimAmp(Sim), V, D).run(ss, ww) @ &m : res]
           - Pr[ZKRealAmp(P, V, D).run(ss, ww) @ &m : res]|
@@ -757,9 +766,9 @@ abstract theory ZeroKnowledgeTheory.
 
   section.
 
-  declare module HonestProver <: HonestProver.
-  declare module Sim1 <: Simulator1.
-  declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
+  declare module HonestProver <: HonestProver{-Hyb.Count, -Hyb.HybOrcl}.
+  declare module Sim1 <: Simulator1{-Hyb.Count, -Hyb.HybOrcl}.
+  declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver,-Hyb.Count, -Hyb.HybOrcl}.
   declare module D <: ZKDistinguisher{-HonestProver} .
 
 
@@ -779,6 +788,8 @@ abstract theory ZeroKnowledgeTheory.
   realize MW.IFB.RW.unpair_pair. apply unpair_pair. qed.
 
 
+
+
   local module Simulator'(S : Simulator1)(V : RewMaliciousVerifier)  = {
     module M = MW.IFB.IM.W(S(V))
     proc simulate(statement : statement) : summary = {
@@ -787,6 +798,8 @@ abstract theory ZeroKnowledgeTheory.
          return r.`2;
     }
   }.
+
+
 
 
      declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier),
@@ -799,7 +812,20 @@ abstract theory ZeroKnowledgeTheory.
                    phoare[ Sim1(V).run : (glob Sim1(V)) = x ==> ! fst res => (glob Sim1(V)) = x] = 1%r.
 
 
-     declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
+     declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg, glob Hyb.Count, glob Hyb.HybOrcl} ==> ={res} ].
+
+     
+    local module Sim1' = {
+      module C = Count
+      module S = Sim1(V)
+      proc xxx() = {
+           HybOrcl.l <- 0;
+           HybOrcl.l0 <- 0;
+      }
+      proc run = S.run
+    }.
+
+
 
      lemma computational_zk_from_sim1 stat wit sigma epsilon &m:
         zk_relation stat wit =>
@@ -813,8 +839,8 @@ abstract theory ZeroKnowledgeTheory.
      proof. progress.
      have ->: Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res]
       = Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res].
-     byequiv (_: ={glob V, glob Sim1, arg} ==> _). proc.
-     seq 1 1 : (={glob V,statement,witness,summary,glob Sim1}).
+     byequiv (_: ={glob V, glob Sim1, arg, glob Count, glob HybOrcl} ==> _). proc.
+     seq 1 1 : (={glob V,statement,witness,summary,glob Sim1, glob Count, glob HybOrcl}).
      inline*. sp.  wp. 
      sim.
      while (c{1} = MW.IFB.IM.W.c{2} /\ r{1} = r0{2} /\ ={glob V, glob Sim1} 
@@ -834,7 +860,7 @@ abstract theory ZeroKnowledgeTheory.
          = Pr[Iter(Sim1(V), D).run(false,stat,wit,N,fst) @ &m : res.`1].
         byequiv (_:  E{2} = fst  /\ N{1} = ea{2} /\ fevent{2} = false  /\
           statement{1} = Ny{2} /\ witness{1} = w{2} /\
-            ={glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto.  proc.
+            ={glob Count, glob HybOrcl, glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto.  proc.
         inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
          call D_guess_prop.
         simplify. inline Simulator'(Sim1,V).simulate. wp. sp.
@@ -842,25 +868,42 @@ abstract theory ZeroKnowledgeTheory.
         progress.
         have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]
           = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
-         byequiv (_:   arg{2} = (stat, wit) /\ ={glob V, glob HonestProver}
+         byequiv (_:   arg{2} = (stat, wit) /\ ={glob Count, glob HybOrcl, glob V, glob HonestProver}
        /\
        (glob V){2} = (glob V){m} /\
        (glob HonestProver){2} = (glob HonestProver){m} /\
        arg{1} = (stat, wit) /\
        (glob V){1} = (glob V){m} /\
        (glob HonestProver){1} = (glob HonestProver){m} ==> _).
-       proc. seq  4 4 : (={glob V} /\ (statement{1}, witness{1}, summary{1}) =
-       (Ny{2}, w{2}, result{2})). sim. call D_guess_prop. skip. auto. auto. auto.
-        apply (one_to_many_zk  (Sim1(V)) D _  _ _ _ _ &m  stat wit sigma epsilon N
+       proc. seq  4 4 : (={glob V, glob Count, glob HybOrcl} /\ (statement{1}, witness{1}, summary{1}) =
+       (Ny{2}, w{2}, result{2})). sim. call D_guess_prop. skip. auto. auto. auto. 
+  have -> : Pr[Iter(Sim1(V), D).run(false, stat, wit, OneShotSimulator.N,
+                          fun (p : bool * summary) => p.`1) @ &m :
+     res.`1] = Pr[Iter(Sim1', D).run(false, stat, wit, OneShotSimulator.N,
+                          fun (p : bool * summary) => p.`1) @ &m :
+     res.`1]. byequiv (_: ={glob D, glob V, glob Sim1, arg, glob Count, glob HybOrcl} ==> _). proc.   inline*.  wp.  call D_guess_prop. simplify. sp. simplify.
+wp. while (={MW.IFB.IM.W.c, glob Sim1, glob V,p,i,e,glob Count,r1}).
+sim.  skip. progress. auto. auto.
+
+
+        apply (one_to_many_zk  Sim1' D _  _ _ _ _ &m  stat wit sigma epsilon N
            Pr[ZKD(HonestProver, V, D).main(stat, wit) @ &m : res]  _ _ _).
+
+
         conseq D_guess_prop. auto.
-        apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll.
-        apply sim1_rew_ph. apply D_guess_ll.
+        apply (sim1_run_ll V). apply V_challenge_ll. apply V_summitup_ll. 
+
+move => x. 
+proc*. 
+call (sim1_rew_ph (x.`4, x.`5)).
+skip. auto.
+
+apply D_guess_ll.
         auto. 
-        have ->: Pr[W0(Sim1(V), D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1]
+        have ->: Pr[W0(Sim1', D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1]
         = Pr[RD(Sim1(V), D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1].
-     byequiv (_: ={glob V, glob Sim1, arg} ==> _). proc. 
-     seq 1 1 : (={glob V, glob Sim1, r,a,w}).
+     byequiv (_: ={glob V, glob Sim1, arg, glob Count, glob HybOrcl} ==> _). proc. 
+     seq 1 1 : (={glob V, glob Sim1, r,a,w, glob Count, glob HybOrcl}).
      sim. call D_guess_prop. skip.
      progress. auto. auto. auto.
      apply N_pos. smt. auto.
@@ -879,9 +922,9 @@ abstract theory ZeroKnowledgeTheory.
 
     local clone include ComputationalZK.
 
-    declare module HonestProver <: HonestProver.
-    declare module Sim1 <: Simulator1 {-HonestProver}.
-    declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver}.
+    declare module HonestProver <: HonestProver{-Hyb.Count, -Hyb.HybOrcl}.
+    declare module Sim1 <: Simulator1{-Hyb.Count, -Hyb.HybOrcl}.
+    declare module V <: RewMaliciousVerifier {-Sim1, -HonestProver,-Hyb.Count, -Hyb.HybOrcl}.
     declare module D <: ZKDistinguisher{-HonestProver}.
 
     declare axiom sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge
@@ -892,7 +935,9 @@ abstract theory ZeroKnowledgeTheory.
     declare axiom P_commitment_ll  : islossless HonestProver.commitment.
     declare axiom D_guess_ll     : islossless D.guess.
 
-    declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
+
+    (* remove that *)
+    declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg, glob Count, glob HybOrcl} ==> ={res} ].
 
     declare axiom sim1_rew_ph :
      forall (x : (glob Sim1(V))),

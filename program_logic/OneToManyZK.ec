@@ -12,6 +12,10 @@ op unpair: sbits -> sbits * sbits.
 
 
 
+
+
+
+
 require WhileCycle.
 clone import WhileCycle as MW with type irt    <- prob,
                                    type rrt   <- event * sbits,
@@ -74,7 +78,9 @@ module Iter(Sim1 : Simulator1,  D : Dist)  = {
   }
 }.
 
+module type Module = {
 
+}.
 
 
 section.
@@ -83,6 +89,7 @@ declare module Sim1 <: Simulator1{-DW, -W}.
 declare module D <: Dist {-DW, -W}.
 
 declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob Sim1, arg} ==> ={res}  ].
+
 declare axiom Sim1_ll : islossless Sim1.run.
 declare axiom Sim1_rew_ph : forall (x : (glob Sim1)),
   phoare[ Sim1.run : (glob Sim1) = x ==> !E res => (glob Sim1) = x] = 1%r.

@@ -2,7 +2,7 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Aux RealExp.
 require import Basics.
 
-clone import ZeroKnowledgeTheory.
+clone import ZeroKnowledgeTheory as ZKT.
 clone import OneShotSimulator as OSS.
 
 
@@ -179,7 +179,7 @@ local module Sim1'  = {
 
 
 
-declare axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
+axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V} ==> ={res} ].
 
 local lemma qrp_zk2_eq ya wa  : zk_relation ya wa =>
   equiv [ZKReal(HP, V, D).run ~ Sim1'.run
