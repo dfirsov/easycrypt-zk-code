@@ -7,7 +7,6 @@ clone include GenericSoundness. (* inherit defs. *)
 
 require OneToManyZK HybridWithArg2.
 
-
 (* we can instantiate sbits with list of Booleans  *)
 type sbits.
 
@@ -19,18 +18,6 @@ axiom unpair_pair x : unpair (pair_sbits x) = x.
 type summary = sbits.
 
 op zk_relation : relation.
-
-op n : int.
-axiom n_pos : 1 <= n.
-
-
-clone import HybridWithArg2 as Hyb with type input <- unit,
-                                        type output <- summary,
-                                        type outputA <- bool,
-                                        type argt <- statement * witness,
-                                        op q <- n.
-
-
 
 
 module type RewMaliciousVerifier = {
@@ -80,6 +67,16 @@ module ZKIdeal(S: Simulator, V: RewMaliciousVerifier, D: ZKDistinguisher) = {
 
 
 abstract theory ZeroKnowledgeTheory.
+
+op n : int.
+axiom n_pos : 1 <= n.
+
+clone import HybridWithArg2 as Hyb with type input <- unit,
+                                        type output <- summary,
+                                        type outputA <- bool,
+                                        type argt <- statement * witness,
+                                        op q <- n.
+
 
 
   abstract theory Statement.

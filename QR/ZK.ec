@@ -16,9 +16,10 @@ require RewBasics.
 clone import RewBasics as Rew with type sbits <- sbits.
 
 
+
 section.
-declare module V <: RewMaliciousVerifier{-Hyb.HybOrcl,-Hyb.Count,-HP}.
-declare module D <: ZKDistinguisher{-Hyb.HybOrcl,-Hyb.Count, -HP}.
+declare module V <: RewMaliciousVerifier{-ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count,-HP}.
+declare module D <: ZKDistinguisher{-ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP}.
 declare axiom Sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge 
   => islossless V0.summitup => islossless Sim1(V0).run.
 declare axiom V_summitup_ll : islossless V.summitup. 
@@ -61,12 +62,13 @@ progress.
 rewrite (sim1_prop V D _ _  _ _).  apply (rewindable_A_plus V).
 apply rewindable_V_plus.
 apply V_summitup_ll.
-apply V_challenge_ll. apply D_guess_ll. (* conseq D_guess_prop. *) auto. auto. auto.
+apply V_challenge_ll. apply D_guess_ll. 
+conseq D_guess_prop. auto. auto. auto.
 progress.
-rewrite (sim1assc V D _ _ _ _ &m0 stat0). apply (rewindable_A_plus V).
+rewrite (sim1assc V D _ _ _ _ _ &m0 stat0). apply (rewindable_A_plus V).
 apply rewindable_V_plus.
 apply V_summitup_ll.
-apply V_challenge_ll. apply D_guess_ll. (* conseq D_guess_prop. *) auto. auto. 
+apply V_challenge_ll. apply D_guess_ll. conseq D_guess_prop. auto. auto. auto.
 qed.
 
        
@@ -75,7 +77,7 @@ lemma qr_statistical_zk_iter stat wit &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKRealAmp(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimAmp(SimN(Sim1)), V, D).run(stat, wit) @ &m : res] in
-          `|ideal_prob - real_prob| <= n%r * (2%r * (1%r / 2%r) ^ OSS.N).
+          `|ideal_prob - real_prob| <= ZKT.n%r * (2%r * (1%r / 2%r) ^ OSS.N).
 progress.
 apply (zk_seq HP (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  (2%r * (1%r / 2%r) ^ OSS.N) stat wit). 
 progress.  apply (simn_simulate_ll V0). auto. auto.
@@ -88,7 +90,7 @@ apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll.
 apply P_response_ll. apply P_commitment_ll.
 proc. 
 call D_guess_ll. sp.
-while (true) (n - Hyb.HybOrcl.l). progress.
+while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt.
 skip. smt. auto. auto. progress.
 proc. 
@@ -103,13 +105,18 @@ apply (rewindable_A_plus V). apply rewindable_V_plus.
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. 
 call D_guess_ll. sp.
-while (true) (n - Hyb.HybOrcl.l). progress.
+while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll. 
 skip. smt. skip. smt.
 auto. auto. progress.
-rewrite (sim1assc V D _ _ _ _  &m0 stat0). apply (rewindable_A_plus V).
+proc. call D_guess_prop. sim. auto. auto.
+progress.
+rewrite (sim1assc V D _ _ _ _  _ &m0 stat0). apply (rewindable_A_plus V).
 apply rewindable_V_plus. apply V_summitup_ll.
-apply V_challenge_ll. apply D_guess_ll. auto. auto. auto.
+apply V_challenge_ll. apply D_guess_ll. 
+proc*.
+call D_guess_prop. skip. auto. 
+auto. auto. auto.
 qed.
 
 
