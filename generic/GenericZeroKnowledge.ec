@@ -5,7 +5,7 @@ require import AllCore List Distr.
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
-require OneToManyZK HybridWithArg2.
+require OneToManyZK HybridArgumentWithParameter.
 
 (* we can instantiate sbits with list of Booleans  *)
 type sbits.
@@ -71,7 +71,7 @@ abstract theory ZeroKnowledgeTheory.
 op n : int.
 axiom n_pos : 1 <= n.
 
-clone import HybridWithArg2 as Hyb with type input <- unit,
+clone import HybridArgumentWithParameter as Hyb with type input <- unit,
                                         type output <- summary,
                                         type outputA <- bool,
                                         type argt <- statement * witness,
@@ -129,7 +129,7 @@ clone import HybridWithArg2 as Hyb with type input <- unit,
   }.
 
 
-  require HybridWithArg2 MemoryPropsL.
+  require HybridArgumentWithParameter MemoryPropsL.
 
   clone import MemoryPropsL with type at2 <- statement * witness,
                                  type at1 <- statement * witness.

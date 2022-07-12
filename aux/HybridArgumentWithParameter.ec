@@ -1,5 +1,5 @@
 require import AllCore List Finite Distr DInterval.
-require (*--*) MeansWithArg StdOrder.
+require (*--*) MeansWithParameter StdOrder.
 (*---*) import StdBigop.Bigreal.BRA.
 
 
@@ -152,7 +152,7 @@ module HybGame (A:AdvOrclb) (Ob:Orclb) (O:Orcl) = {
 }.
 
 
-clone import MeansWithArg as M with
+clone import MeansWithParameter as M with
   type argt <- argt,
   type input <-  int,
   type output <- outputA,
