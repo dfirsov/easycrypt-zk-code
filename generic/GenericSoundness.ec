@@ -6,22 +6,22 @@ require GenericCompleteness.
 clone include GenericCompleteness. (* inherit defs.  *)
 
 
-
 op soundness_relation : relation.
 
 module type MaliciousProver = {  
   proc commitment(s: statement): commitment
-  proc response(challenge: challenge): response
+  proc response(ch: challenge): response
 }.
+
 
 module Soundness(P: MaliciousProver, 
                  V: HonestVerifier) = {
   proc run(statement: statement) : bool = {
     var commit, challenge, response, accept; 
-    commit <@ P.commitment(statement);
+    commit    <@ P.commitment(statement);
     challenge <@ V.challenge(statement,commit);
-    response <@ P.response(challenge);
-    accept <@ V.verify(response);
+    response  <@ P.response(challenge);
+    accept    <@ V.verify(response);
     return accept;
   }
 }.
@@ -44,17 +44,16 @@ theory SoundnessTheory.
 
 theory Statistical.
 
-  abstract theory Statement.
   op soundness_error : statement -> real.
 
-  axiom soundness: exists (HV <: HonestVerifier), forall (P <: MaliciousProver), 
+  abstract theory Statement.
+  axiom soundness: exists (HV <: HonestVerifier), 
+                   forall (P <: MaliciousProver), 
    forall statement &m,
       ! in_language soundness_relation statement =>
       Pr[Soundness(P,HV).run(statement) @ &m : res]
             <= soundness_error statement.
   end Statement.
-
-  op soundness_error : statement -> real.
 
   section.
 

@@ -5,7 +5,6 @@ require  GenericSigmaProtocol.
 
 
 require import ZModP.           (* standard library formalization of zmod fields, rings, etc.  *)
-
 clone include ZModRing.         (* for FiatShamir we must use ring since in ZModField QR is efficiently computable *)
 
 abbrev invertible = unit.       (* more intuitive synonym *)
@@ -50,7 +49,6 @@ clone export GenericSigmaProtocol as FiatShamir with
   op soundness_relation    <- soundness_relation,
   op completeness_relation <- completeness_relation,
   op zk_relation           <- zk_relation.
-
 
 (* Honest Prover *)
 module HP : HonestProver = {

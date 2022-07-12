@@ -20,8 +20,8 @@ type summary = sbits.
 
 op zk_relation : relation.
 
-  op n : int.
-  axiom n_pos : 0 <= n.
+op n : int.
+axiom n_pos : 1 <= n.
 
 
 clone import HybridWithArg2 as Hyb with type input <- unit,
@@ -195,7 +195,6 @@ abstract theory ZeroKnowledgeTheory.
   declare axiom P_commitment_ll : islossless P.commitment.
   declare axiom D_guess_ll     : islossless D.guess.
 
-  declare axiom q_ge1 : 1 <= n. 
 
   declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
 
@@ -511,7 +510,7 @@ abstract theory ZeroKnowledgeTheory.
         - Pr[Rn(Ob,A).main(ss,ww) @ &m : res]
       = n%r *(Pr[HybGame(A,Ob,L(Ob)).main(ss,ww) @ &m : res]
               - Pr[HybGame(A,Ob,R(Ob)).main(ss,ww) @ &m : res]).
-  apply (Hybrid_restr _ Ob A _ _ _ _ _ &m (fun _ _ _ r => r)). apply n_pos.
+  apply (Hybrid_restr _ Ob A _ _ _ _ _ &m (fun _ _ _ r => r)). smt( n_pos).
   progress. proc. inline*.
   wp.  call (_:true). 
   while (Count.c = i /\ i <= n) . wp. 
