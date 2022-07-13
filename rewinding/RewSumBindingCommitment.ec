@@ -212,11 +212,11 @@ lemma commitment_sum_binding &m:
     1%r + 2%r * Pr[ BindingExperiment(S,R(A)).main() @ &m : res ].
 proof.  rewrite f_case t_case b_case.
 apply (sum_binding_generic WA WInit).
-(* proc. call Aoll. skip. auto. proc. call Aoll. skip. auto. proc. call Acl. call Sgl. skip. auto. *)
-(* proc. call(_:true). call(_:true). skip. smt. *)
-(* proc. call(_:true). call(_:true). skip. smt. *)
-(* proc. call(_:true). call(_:true). skip. smt. *)
-(* proc. call(_:true). call(_:true). skip. smt. *)
+proc. call Aoll. skip. auto. proc. call Aoll. skip. auto. proc. call Acl. call Sgl. skip. auto.
+proc. call(_:true). call(_:true). skip. smt.
+proc. call(_:true). call(_:true). skip. smt.
+proc. call(_:true). call(_:true). skip. smt.
+proc. call(_:true). call(_:true). skip. smt.
 (* elim (RewProp). *)
 (* progress. *)
 (* exists f. *)

@@ -4,7 +4,7 @@ timeout=35
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./program_logic -I ./memory_props -I ./generic -timeout $timeout $1;
+  if easycrypt -I .  -I ./rewinding  -I ./aux -I ./aux/program_logic -I ./generic_sigma_protocols -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;
@@ -16,45 +16,31 @@ check() {
 
 # list of files to check
 
-## Generic prog. results
-check program_logic/OneToManyZK.ec
-check program_logic/GenericKE.ec
-check program_logic/WhileNoSuccess.ec
-check program_logic/WhileNotB.ec
-check program_logic/WhileCycle.ec
+
+## Generic sigma protocol defs/results
+check generic_sigma_protocols/GenericSigmaProtocol.ec
+check generic_sigma_protocols/GenericCompleteness.ec
+check generic_sigma_protocols/GenericSoundness.ec
+check generic_sigma_protocols/GenericZeroKnowledge.ec
+check generic_sigma_protocols/GenericExtractability.ec
+check generic_sigma_protocols/GenericSpecialSoundness.ec
 
 
-## Generic ZK results
-check generic/GenericSigmaProtocol.ec
-check generic/GenericCompleteness.ec
-check generic/GenericSoundness.ec
-check generic/GenericZeroKnowledge.ec
-check generic/GenericExtractability.ec
-check generic/GenericSpecialSoundness.ec
-
-# ## Hamilton-Blum protocol
-# check HC/Basics.ec
-# check HC/Completeness.ec
-# check HC/SpecialSoundness.ec
-# check HC/PoK_Soundness.ec
-# check HC/ZK.ec 
-
-## Quadratic residue protocol
-check QR/Basics.ec
-check QR/Completeness.ec
-check QR/SpecialSoundness.ec
-check QR/PoK.ec
-check QR/Soundness.ec
-check QR/Sim1Property.ec
-check QR/ZK.ec
+## instance of Fiat-Shamir protocol
+check case_studies/FiatShamir/FS_Basics.ec
+check case_studies/FiatShamir/FS_Completeness.ec
+check case_studies/FiatShamir/FS_SpecialSoundness.ec
+check case_studies/FiatShamir/FS_Extractability.ec
+check case_studies/FiatShamir/FS_Soundness.ec
+check case_studies/FiatShamir/FS_Sim1Property.ec
+check case_studies/FiatShamir/FS_ZeroKnowledge.ec
 
 
-# ## Quadratic residue protocol
-# check DL/Basics.ec
-# check DL/Completeness.ec
-# check DL/SpecialSoundness.ec
-# check DL/PoK.ec
-
+## instance of Schnorr protocol
+check case_studies/Schnorr/Schnorr_Basics.ec
+check case_studies/Schnorr/Schnorr_Completeness.ec
+check case_studies/Schnorr/Schnorr_SpecialSoundness.ec
+check case_studies/Schnorr/Schnorr_Extractability.ec
 
 
 echo "DONE";

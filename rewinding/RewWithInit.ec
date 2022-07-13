@@ -122,10 +122,10 @@ local module RunMe = {
 
 
 (* ASSUMPTIONS *)
-axiom Bsens : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ].    
-axiom Bsens2 : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ].    
+declare axiom Bsens : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ].    
+declare axiom Bsens2 : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ].    
 
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -135,8 +135,8 @@ axiom RewProp :
   islossless A.setState.
 
   
-axiom ll_A_run : islossless A.run.
-axiom ll_B_init : islossless B.init.
+declare axiom ll_A_run : islossless A.run.
+declare axiom ll_B_init : islossless B.init.
 (* /ASSUMPTIONS *)
 
 

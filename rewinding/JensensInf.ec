@@ -42,10 +42,7 @@ apply dscalar_ll.
 qed.
 
 
-search hasE.
-print dscalar1E.
 
-search dscalar.
 local lemma has_E' k (X : 'a distr) g :  hasE X g  => 0%r <= k && k <= inv (weight X)
  => hasE (k \cdot X) g.
 rewrite /hasE. progress.

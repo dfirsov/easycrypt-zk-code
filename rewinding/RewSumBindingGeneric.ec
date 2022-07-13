@@ -63,15 +63,15 @@ declare module A <: RewRunExec1Exec2.
 declare module B <: Initializer.
 
 
-axiom Afl : islossless A.ex1.
-axiom Agl : islossless A.ex2.
-axiom Bin : islossless B.init.
+declare axiom Afl : islossless A.ex1.
+declare axiom Agl : islossless A.ex2.
+declare axiom Bin : islossless B.init.
 
 (* due to EC restrictions (bug) these are not provable and not reduciable to one another  *)
-axiom Bsens    : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, res} ].
-axiom Bsens'   : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, glob B, res} ].
-axiom Bsens''  : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ]. 
-axiom Bsens''' : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ]. 
+declare axiom Bsens    : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, res} ].
+declare axiom Bsens'   : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, glob B, res} ].
+declare axiom Bsens''  : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ]. 
+declare axiom Bsens''' : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ]. 
 
 
 axiom RewProp :
@@ -94,19 +94,38 @@ have : forall &m,
       Pr[QQ(SBB(A), B).main(i) @ &m : (fun (x : irt * rrt) => P x.`2) res.`1 /\ (fun (x : irt * rrt) => P x.`2)  res.`2 ].
 move => &m0.
 apply (rew_with_init (SBB(A)) B).  
-elim (rewindable_A A RewProp). move => fA [s1 [s2 [s3]]] s4. simplify. (* apply Bsens''. *)
-simplify.
-(* apply Bsens'''. *)
-elim RewProp. progress.
-(* exists f. progress. *)
-(* rewrite - (H0 &m1). byequiv. proc*.  inline*. wp. call (_:true). *)
-(*       skip. progress. auto. auto. *)
-(* rewrite -  (H1 &m1 (f x) x). auto. *)
-(* byequiv. proc*. inline*. sp.   call(_:true). skip. progress. auto. auto. *)
-(* proc. call H2. skip. auto. *)
-(* proc. seq 1 : (true). rnd. auto. rnd.  skip. auto. smt. *)
-(* if. call Afl. skip. auto. call Agl. skip. auto.  hoare.  simplify. rnd. skip. auto.  auto. *)
-(* apply Bin.       *)
+apply Bsens''. apply Bsens'''.
+
+elim (RewProp). move => fA [s1 [s2 [s3]]] s4.
+simplify. 
+
+exists fA. progress.
+rewrite - (s2 &m1). byequiv. proc*.  inline*. wp. call (_:true).
+      skip. progress. auto. auto.
+rewrite -  (s3 &m1 (fA x) x). auto.
+byequiv. proc*. inline*. sp.   call(_:true). skip. progress. auto. auto.
+proc. call s4. skip. auto.
+proc. seq 1 : (true). rnd. auto. rnd.  skip. auto. smt.
+if. call Afl. skip. auto. call Agl. skip. auto.  hoare.  simplify. rnd. skip. auto.  auto.
+apply Bin.
+
+
+(* proc. seq 1 : (true). rnd.  auto.  rnd. skip. smt. *)
+(* if. call Afl. skip. auto. call Agl. skip. auto. hoare. simplify. rnd. skip. auto. auto. apply Bin. *)
+(* progress. *)
+(* elim (rewindable_A A RewProp). move => fA [s1 [s2 [s3]]] s4. simplify. (* apply Bsens''. *) *)
+(* simplify. *)
+(* (* apply Bsens'''. *) *)
+(* elim RewProp. progress. *)
+(* (* exists f. progress. *) *)
+(* (* rewrite - (H0 &m1). byequiv. proc*.  inline*. wp. call (_:true). *) *)
+(* (*       skip. progress. auto. auto. *) *)
+(* (* rewrite -  (H1 &m1 (f x) x). auto. *) *)
+(* (* byequiv. proc*. inline*. sp.   call(_:true). skip. progress. auto. auto. *) *)
+(* (* proc. call H2. skip. auto. *) *)
+(* (* proc. seq 1 : (true). rnd. auto. rnd.  skip. auto. smt. *) *)
+(* (* if. call Afl. skip. auto. call Agl. skip. auto.  hoare.  simplify. rnd. skip. auto.  auto. *) *)
+(* (* apply Bin.       *) *)
 
 
 simplify.
@@ -121,7 +140,7 @@ seq 1 1 : (i0{2} = ix{2} /\
   exists (ga : (glob A)), ga = (glob A){1} /\ ={glob A} /\ r0{1} = ix{2} /\ ={x}).
 rnd. skip. progress. smt.
 if.  smt. call (_:true). skip. progress. call(_:true). skip. progress. auto. 
-auto.  
+auto.   
 rewrite - q. clear q.
 have q : Pr[QQ(SBB(A), B).main(i) @ &m : P res.`1.`2 /\ P res.`2.`2] = Pr[SB(A, B).main(i) @ &m : P res.`1 /\ P res.`2].
 byequiv (_: (={i, glob A, glob B}) ==> _). proc. simplify.
@@ -139,8 +158,8 @@ if.  auto. call (_:true). skip. progress.
 call (_:true). skip. progress.
 inline {1} SBB(A).getState. wp. call (_:true). skip. progress. auto. auto.
 rewrite - q. 
-rewrite H3.
-
+progress.
+rewrite H.
 qed.
 
 
