@@ -48,7 +48,7 @@ lemma qr_completeness_iter: forall (statement:qr_stat) (witness:qr_wit) &m n,
        completeness_relation statement witness =>
       Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
 progress.
-apply (CompletenessTheory.Perfect.SequentialComposition.completeness_seq HP HV _ _ _ _ _ &m).
+apply (FiatShamir.CompletenessTheory.Perfect.completeness_seq HP HV _ _ _ _ _ &m).
 proc.  skip.  auto.
 proc.  wp.  rnd.  skip.  progress. smt.
 proc.  wp.  skip. auto.

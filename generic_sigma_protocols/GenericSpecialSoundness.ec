@@ -59,9 +59,9 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
  theory Computational.
 
    abstract theory Statement.
-   axiom computational_special_soundness: forall (A <: SpecialSoundnessAdversary),
+   axiom computational_special_soundness: forall (P <: RewMaliciousProver), 
      forall s &m, exists special_soundness_error,
-       Pr[ A.attack(s) @&m: valid_transcript_pair s res.`1 res.`2
+       Pr[ SpecialSoundnessAdversary(P).attack(s) @&m: valid_transcript_pair s res.`1 res.`2
          /\ !(soundness_relation s (special_soundness_extract s res.`1 res.`2))]
         <= special_soundness_error.
    end Statement.
@@ -178,7 +178,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    qed.
 
 
-   lemma computational_PoK &m p deltoid: 
+   lemma computational_extractability &m p deltoid: 
          Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                    valid_transcript_pair p res.`1 res.`2 /\
                    ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] <=
@@ -206,19 +206,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
     smt.
    qed.
 
-   lemma computational_statistical_soundness &m p f epsilon:
-       ! in_language soundness_relation p => 
-     Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
-      f Pr[Soundness(P, HV).run(p) @ &m : res]
-       => (forall s, f s <= 0%r => s <= epsilon) =>
-       Pr[Soundness(P, HV).run(p) @ &m : res]
-        <= epsilon.
-   proof. progress.
-   have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
-     have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
-     rewrite Pr[mu_false]. auto.
-   rewrite Pr[mu_eq]. smt. auto.
-   smt. qed. 
 
 
    local lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
@@ -245,7 +232,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HV).run(p) @ &m : res])
         - deltoid.
     rewrite - f1.
-   apply (computational_PoK &m p). auto. 
+   apply (computational_extractability &m p). auto. 
    pose a := Pr[Soundness(P, HV).run(p) @ &m : res].
    pose b := deltoid.
    have f2 : 0%r <= a <= 1%r. smt.
@@ -283,7 +270,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
       - (1%r/ (size (challenge_set ))%r) * Pr[Soundness(P, HV).run(p) @ &m : res])
         - deltoid.
     rewrite - f1.
-   apply (computational_PoK &m p). auto. 
+   apply (computational_extractability &m p). auto. 
    pose a := Pr[Soundness(P, HV).run(p) @ &m : res].
    pose b := deltoid.
    pose c := (size challenge_set)%r.
@@ -337,7 +324,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
          soundness_relation p (special_soundness_extract p t1 t2)).
  
 
-    lemma PoK_from_special_soundness &m p :
+    lemma statistical_extractability &m p :
       Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] 
        >= Pr[Soundness(P, HV).run(p) @ &m : res]^2
             - 1%r/(size challenge_set)%r 
@@ -347,7 +334,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
      have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. smt.
-    rewrite Pr[mu_eq]. smt. auto. apply (computational_PoK P P_response_ll _ &m p 0%r). apply rewindable_P_plus. rewrite f. auto.
+    rewrite Pr[mu_eq]. smt. auto. apply (Computational.computational_extractability P P_response_ll _ &m p 0%r). apply rewindable_P_plus. rewrite f. auto.
     qed.
      
     

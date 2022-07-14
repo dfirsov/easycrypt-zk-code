@@ -2,10 +2,13 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Real.
 require import FS_Basics.
 
+require import FS_SpecialSoundness.
 require import FS_Extractability.
 import SST.
 
-clone import ExtractabilityTheory as ET.
+
+
+
 
 section.
 
@@ -30,15 +33,10 @@ lemma qr_soundness &m s:
      Pr[Soundness(P, HV).run(s) @ &m : res]
      <= 1%r/2%r.
 progress.
-apply (stat_soundness_from_PoK Extractor HV P &m s
- (fun (x:real) => x ^2 - 1%r/2%r * x) (1%r/2%r)   ).
-auto. simplify. 
-simplify.
-apply (qr_computational_PoK P _ _ &m s). 
-apply P_response_ll. apply rewindable_P_plus.
-move => x. simplify.
-have -> : x ^ 2 = x * x. smt.
-smt.
+apply (SST.Perfect.statistical_soundness P _).
+apply rewindable_P_plus.
+apply P_response_ll.
+apply qr_perfect_special_soundness. auto.
 qed.
 
 

@@ -28,7 +28,7 @@ declare module Extractor <: Extractor.
 declare module V <: HonestVerifier.
 declare module P <: RewMaliciousProver{-HV}.
 
-lemma stat_soundness_from_PoK &m p f epsilon:
+lemma statistical_soundness &m p f epsilon:
     ! in_language soundness_relation p => 
   Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] >=
    f Pr[Soundness(P, V).run(p) @ &m : res]

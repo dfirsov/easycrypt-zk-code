@@ -28,8 +28,8 @@ lemma qr_computational_PoK &m  s:
   Pr[Extractor(P).extract(s) @ &m : soundness_relation s res ] >=
    (Pr[Soundness(P, HV).run(s) @ &m : res]^2
      - (1%r/2%r) * Pr[Soundness(P, HV).run(s) @ &m : res]).
-apply (SST.Perfect.PoK_from_special_soundness P  _ _ _ &m s  ). apply rewindable_P_plus. apply P_response_ll. 
-apply perfect_special_soundness.
+apply (SST.Perfect.statistical_extractability P  _ _ _ &m s  ). apply rewindable_P_plus. apply P_response_ll. 
+apply qr_perfect_special_soundness.
 qed.
 
 end section.

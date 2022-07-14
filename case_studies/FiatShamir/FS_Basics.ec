@@ -50,6 +50,7 @@ clone export GenericSigmaProtocol as FiatShamir with
   op completeness_relation <- completeness_relation,
   op zk_relation           <- zk_relation.
 
+
 (* Honest Prover *)
 module HP : HonestProver = {
   var r, y, w : zmod

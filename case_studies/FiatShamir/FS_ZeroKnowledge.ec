@@ -8,7 +8,7 @@ import OSS.
 clone import ZKT.SequentialComposition.
 
 
-clone import  StatisticalZK with op epsilon <- 0%r,
+clone import  Statistical with op epsilon <- 0%r,
                                  op sigma <- 1%r/2%r.
 
 
@@ -51,7 +51,7 @@ lemma qr_statistical_zk stat wit &m:
           `|ideal_prob - real_prob| <= 2%r * (1%r / 2%r) ^ OSS.N.
 proof.
 progress.
-apply (statistical_zk_from_sim1 HP Sim1  V D _ _ _ _ _ _ _ _ _  _ stat wit  
+apply (statistical_zk HP Sim1  V D _ _ _ _ _ _ _ _ _  _ stat wit  
    &m _ );auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
 apply P_response_ll. apply P_commitment_ll.
 apply D_guess_ll.  conseq  D_guess_prop. auto.
@@ -84,7 +84,7 @@ progress.  apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. apply D_guess_ll.  conseq D_guess_prop. 
 smt. progress.
-apply (statistical_zk_from_sim1 HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _  _ stat wit  
+apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _  _ stat wit  
    &n _ ).
 apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll.
 apply P_response_ll. apply P_commitment_ll.

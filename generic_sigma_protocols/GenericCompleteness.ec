@@ -81,7 +81,6 @@ theory CompletenessTheory.
     end Statement.
 
 
-    theory SequentialComposition.
     section.
     declare module P <: HonestProver{-HV}.
     declare module V <: HonestVerifier{-P}.
@@ -137,7 +136,6 @@ theory CompletenessTheory.
     qed.  
     end section.
 
-    end SequentialComposition.
 
   end Statistical.
 
@@ -154,7 +152,7 @@ theory CompletenessTheory.
     end Statement.
 
 
-    theory SequentialComposition.
+
 
     section.
     declare module P <: HonestProver{-HV}.
@@ -180,7 +178,7 @@ theory CompletenessTheory.
     progress.
     have f :   (1%r - 0%r) ^ n <=
       Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res].
-    apply (SC.SequentialComposition.completeness_seq P V verify_ll 
+    apply (SC.completeness_seq P V verify_ll 
                challenge_ll response_ll commitment_ll _  
                statement witness n _ _ );auto. 
     move => &n.
@@ -189,7 +187,6 @@ theory CompletenessTheory.
     qed.
 
     end section.
-    end SequentialComposition.
   end Perfect.
 
 end CompletenessTheory.

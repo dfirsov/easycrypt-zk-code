@@ -9,7 +9,7 @@ op special_soundness_extract (p : qr_stat) (t1 t2 : transcript): qr_wit
    if ch1 then  (inv r2) * r1 else (inv r1) * r2.
 
 
-lemma perfect_special_soundness (statement:qr_stat) 
+lemma qr_perfect_special_soundness (statement:qr_stat) 
  (transcript1 transcript2: transcript):
         valid_transcript_pair statement transcript1 transcript2 =>
    soundness_relation statement 

@@ -770,7 +770,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   }.
 
 
-  theory ComputationalZK.
+  theory Computational.
 
   section.
 
@@ -835,7 +835,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
 
 
 
-     lemma computational_zk_from_sim1 stat wit sigma epsilon &m:
+     lemma computational_zk stat wit sigma epsilon &m:
         zk_relation stat wit =>
         `|Pr[RD(Sim1(V), D).run(stat, wit) @ &m : fst res.`2 /\ res.`1] /
               Pr[Sim1(V).run(stat) @ &m : fst res]
@@ -917,10 +917,10 @@ apply D_guess_ll.
      apply N_pos. smt. auto.
      qed.
      end section.
-    end ComputationalZK.
+    end Computational.
 
 
-    theory StatisticalZK.
+    theory Statistical.
 
     op epsilon : real.
     op sigma   : real.
@@ -928,7 +928,7 @@ apply D_guess_ll.
 
     section.
 
-    local clone include ComputationalZK.
+    local clone include Computational.
 
     declare module HonestProver <: HonestProver{-Hyb.Count, -Hyb.HybOrcl}.
     declare module Sim1 <: Simulator1{-Hyb.Count, -Hyb.HybOrcl}.
@@ -963,13 +963,13 @@ apply D_guess_ll.
              => Pr[Sim1(V).run(stat) @ &m : res.`1] >= sigma.
 
 
-    lemma statistical_zk_from_sim1 stat wit &m:
+    lemma statistical_zk stat wit &m:
         zk_relation stat wit => 
         let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res] in
           `|ideal_prob - real_prob| <= epsilon + 2%r * (1%r - sigma)^N.
     proof. move => D. progress.
-     apply (computational_zk_from_sim1 HonestProver Sim1 V D _ _ _ _ _ _ stat wit sigma epsilon &m). 
+     apply (computational_zk HonestProver Sim1 V D _ _ _ _ _ _ stat wit sigma epsilon &m). 
      apply sim1_run_ll.
      apply V_summitup_ll.
      apply V_challenge_ll.
@@ -981,7 +981,7 @@ apply D_guess_ll.
      apply succ_event_prob. exists wit. auto.
     qed.  
     end section.  
-    end StatisticalZK.
+    end Statistical.
   end OneShotSimulator.
 
 end ZeroKnowledgeTheory.
