@@ -1,5 +1,7 @@
 # Overview
 
+Our generic development is contained in EasyCrypt theories. Below we present how these theories are structured and the main results (lemmas) which they feature:
+
 - CompletenessTheory (file: GenericCompleteness.ec)
 	- Statistical
 	     - `lemma completeness_seq` 
