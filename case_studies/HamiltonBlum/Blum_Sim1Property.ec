@@ -50,9 +50,11 @@ module Sim1(V : RewMaliciousVerifier)  = {
     (b',zryb) <@ sinit(pa);
     b <@ V.challenge(pa, zryb.`1);
     result <@ V.summitup(pa, zryb.`2);
-    V.setState(vstat);
-    (HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
-    HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n) <- hpstat;
+    if (b <> b'){
+      V.setState(vstat);
+      (HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
+        HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n) <- hpstat;
+    }
     return (b = b', result);
   }
 }.
@@ -63,6 +65,8 @@ declare module V <: RewMaliciousVerifier {-HonestProver}.
 
 declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom V_challenge_ll : islossless V.challenge.
+declare axiom P_response_ll : islossless HonestProver.response.
+declare axiom P_commitment_ll : islossless HonestProver.commitment.
 
 
 declare axiom rewindable_V_plus : 
@@ -81,16 +85,16 @@ declare axiom rewindable_V_plus :
 
 
 
-
-
 lemma sim1_rew_ph : forall (x : (glob V) * (glob Sim1)),
     phoare[ Sim1(V).run :
-             ((glob V), (glob Sim1)) = x ==> ((glob V), (glob Sim1)) = x] = 1%r.
-progress. proc.
+             ((glob V), (glob Sim1)) = x
+                 ==> ! res.`1 => ((glob V), (glob Sim1)) = x] = 1%r.
+proof. progress.
 exists* (glob V). elim* => V_v.
 progress.
 elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
+proc.
 seq 1 : (V_v = (glob V) /\ vstat = fA V_v /\
   ((glob V),
    (HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
@@ -99,24 +103,29 @@ seq 1 : (V_v = (glob V) /\ vstat = fA V_v /\
 call (_: true ==> true). auto. skip. auto.
 call (s2 V_v).
 skip. progress.
+wp.
+seq 4 : (vstat = fA V_v /\ x = (V_v, hpstat)) 1%r.
+call (_:true).  call (_:true). call (_:true). auto. wp.  auto.
+simplify. call V_summitup_ll. call V_challenge_ll. sp.
+conseq (_: true ==> true). progress.  
+call (_:true). sp. 
+seq 1 : (true). rnd. skip. auto. rnd.  skip. smt.
+if. call (_:true). call P_response_ll.
+call P_commitment_ll. skip. auto. skip. auto.
+call (_:true). call P_response_ll.
+call P_commitment_ll. auto. auto. hoare. auto. auto. auto.
+case (b = b').
+rcondf 1. skip. auto. skip. auto.
+rcondt 1. skip. auto. wp. call (s5 V_v). skip. auto. 
+progress.  smt.
+hoare. simplify.
+call (_:true). call (_:true). call (_:true). auto.
 wp. 
-call (s5 V_v).
-call (_: true ==> true). apply V_summitup_ll.
-call (_: true ==> true). apply V_challenge_ll.
-call (_: true ==> true). proc. sp.
-seq 1 : (true). rnd. auto. auto. smt.
-if. call (_: true ==> true). proc. inline*. wp. rnd. 
-conseq (_: _ ==> true). progress. apply djoinmap_weight. smt. 
-wp.  rnd.  wp. skip.  progress. smt. skip. auto. 
-call (_: true ==> true). proc. inline*. wp. rnd. 
-conseq (_: _ ==> true). progress. apply djoinmap_weight. smt.  
-wp.  rnd.  wp. skip.  progress. smt. skip. auto. 
-hoare. auto. auto.
-wp. skip. progress.
-hoare. simplify. 
+skip. auto. auto.  hoare. simplify. 
 call (s3 V_v). skip. progress. auto.
 qed.
 
+  
 
 end section.
 
@@ -125,7 +134,7 @@ section.
 declare module V <: RewMaliciousVerifier {-HonestProver}.
 declare module D <: ZKDistinguisher {-V,-HonestProver}.
 
-
+declare axiom V_summitup_ll : islossless V.summitup.
 
 declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
@@ -416,11 +425,11 @@ op negl, negl2 : real.
 declare axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
 
 
-local lemma sim_1_2 &m pa wa: 
+axiom sim_1_2 &m pa wa: 
    `|Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ]
       - Pr[ Sim1_2(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ]| 
    <= negl.
-admitted.
+
 
 (**
 
@@ -440,7 +449,7 @@ Instead: (success, result) is indist. between them (* Here: maybe not easiest *)
 
 
     
-local lemma  sim1ass &m pa :
+axiom  sim1ass &m pa :
   `|Pr[Sim1_0(V,D).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2.
   (* 
 Using sim_1_2, but for Sim1, Sim1_9 (but discard rb if fails)
@@ -448,7 +457,7 @@ Instantiate with pred := fst
 Gives: |Pr[Sim1(V).simulate(pa) @ &m : res.`1] - Pr[Sim1_9 @ &m : res.`1] | <= negl2.
 The second probability is =1/2 by simple phoare analysis.
  *)
-admitted.
+
 
 
 local module Sim1_3(V : MaliciousVerifier) = {
@@ -873,18 +882,27 @@ seq 1 1 : ( p_a{2} = pa{2} /\
    ={HonestProver.pi_w, HonestProver.pi_gwco, HonestProver.fal,
        HonestProver.prm, HonestProver.w, HonestProver.g, HonestProver.n}) /\
   ={pa,bb}).
-rnd. skip. progress. if.  smt.
+rnd. skip. progress. if.  
+progress.
+seq 4 4 : (={result,b',b}).
+sim.
+if{1}.
+wp.
 call {1} (_: true ==> true). 
 elim rewindable_V_plus.
-move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. apply s7.
+move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  apply s7.
+    skip. auto. skip. auto.
+
+seq 4 4 : (={result,b',b}).
 sim.
-call {1} (_: true ==> true).  elim rewindable_V_plus.
-move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. apply s7.
-sim.
-progress.
 call (zkp_hp'_hp ((N, compl_graph N),(compl_graph_cyc N))). 
-apply compl_graph_prop.  auto.
-skip. progress. 
+apply compl_graph_prop.  auto. skip. progress.
+if{1}.
+wp.
+call {1} (_: true ==> true). 
+elim rewindable_V_plus.
+move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  apply s7.
+skip. auto. skip. auto.
 qed.
 
 
