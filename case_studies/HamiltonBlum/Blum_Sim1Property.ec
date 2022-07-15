@@ -130,28 +130,8 @@ qed.
 end section.
 
 
-section.
-declare module V <: RewMaliciousVerifier {-HonestProver}.
-declare module D <: ZKDistinguisher {-V,-HonestProver}.
 
-declare axiom V_summitup_ll : islossless V.summitup.
-
-declare axiom rewindable_V_plus : 
-  exists (f : glob V -> sbits),
-  injective f /\
-  (forall (x : glob V),
-    phoare[ V.getState : (glob V) = x ==> (glob V) = x  /\ res = f x ] = 1%r) /\
-  (forall (x : glob V),
-    hoare[ V.getState : (glob V) = x ==> (glob V) = x  /\ res = f x ]) /\
-  islossless V.getState /\
-  (forall (x: glob V),
-    phoare[V.setState: b = f x ==> glob V = x] = 1%r) /\
-  (forall (x: glob V),
-    hoare[V.setState: b = f x ==> glob V = x]) /\
-  islossless V.setState.
-
-
-local module HP' : HonestProver  = {
+ module HP' : HonestProver  = {
   var n : int 
   var g : graph
   var prm : permutation
@@ -182,6 +162,28 @@ local module HP' : HonestProver  = {
           else Right (pi_w, map snd pi_wco);
  } 
 }.
+
+
+section.
+declare module V <: RewMaliciousVerifier {-HonestProver, -HP'}.
+declare module D <: ZKDistinguisher {-V,-HonestProver, -HP'}.
+
+declare axiom V_summitup_ll : islossless V.summitup.
+
+declare axiom rewindable_V_plus : 
+  exists (f : glob V -> sbits),
+  injective f /\
+  (forall (x : glob V),
+    phoare[ V.getState : (glob V) = x ==> (glob V) = x  /\ res = f x ] = 1%r) /\
+  (forall (x : glob V),
+    hoare[ V.getState : (glob V) = x ==> (glob V) = x  /\ res = f x ]) /\
+  islossless V.getState /\
+  (forall (x: glob V),
+    phoare[V.setState: b = f x ==> glob V = x] = 1%r) /\
+  (forall (x: glob V),
+    hoare[V.setState: b = f x ==> glob V = x]) /\
+  islossless V.setState.
+
 
 
 declare axiom D_run_ll : islossless D.guess.
@@ -256,7 +258,7 @@ qed.
 
 
 (* one-time simulator  *)
-local module Sim1_0(V : RewMaliciousVerifier, D : ZKDistinguisher) = {
+module Sim1_0(V : RewMaliciousVerifier, D : ZKDistinguisher) = {
   module ZKP_HP = ZKP(HonestProver,V)
   module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_prob) : bool * (hc_com * hc_resp) = {
@@ -284,7 +286,7 @@ local module Sim1_0(V : RewMaliciousVerifier, D : ZKDistinguisher) = {
 
 
 
-local module Sim1_1(V : MaliciousVerifier) = {
+module Sim1_1(V : MaliciousVerifier) = {
   module ZKP_HP = ZKP(HonestProver,V)
   module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_prob, w_a : hc_wit) = {
@@ -392,7 +394,7 @@ qed.
 
 
 
-local module Sim1_2(V : MaliciousVerifier) = {
+module Sim1_2(V : MaliciousVerifier) = {
   module ZKP_HP = ZKP(HonestProver,V)
   module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_prob, w_a : hc_wit) = {
@@ -422,7 +424,7 @@ local module Sim1_2(V : MaliciousVerifier) = {
 
 (* hiding props  *)
 op negl, negl2 : real.
-declare axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
+axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
 
 
 axiom sim_1_2 &m pa wa: 
@@ -449,8 +451,8 @@ Instead: (success, result) is indist. between them (* Here: maybe not easiest *)
 
 
     
-axiom  sim1ass &m pa :
-  `|Pr[Sim1_0(V,D).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2.
+axiom sim1ass &m pa :
+  `|Pr[Sim1_0(V,D).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2. 
   (* 
 Using sim_1_2, but for Sim1, Sim1_9 (but discard rb if fails)
 Instantiate with pred := fst

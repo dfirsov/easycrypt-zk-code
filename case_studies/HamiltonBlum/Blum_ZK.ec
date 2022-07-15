@@ -9,7 +9,6 @@ clone import Statistical with op epsilon <- 2%r * negl + 20%r * negl2,
                               op sigma <- (1%r/2%r - negl2).
 
 
-axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
 
 require RewBasics.
 clone import RewBasics as Rew with type sbits <- sbits.
@@ -17,8 +16,8 @@ clone import RewBasics as Rew with type sbits <- sbits.
 
 section.
 
-declare module V <: RewMaliciousVerifier{-HonestProver, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count}.
-declare module D <: ZKDistinguisher{-HonestProver, -V, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count }.
+declare module V <: RewMaliciousVerifier{-HonestProver, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP'}.
+declare module D <: ZKDistinguisher{-HonestProver, -V, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP' }.
 
 
 declare axiom Sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
@@ -54,11 +53,11 @@ move => x.
 apply (sim1_rew_ph V _ _ _ _ _ x). apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll. apply P_commitment_ll.
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress.
-apply (sim1_prop V D  _ _  _ _ _  _ &m0 p w  _ );auto.  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. 
-apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. smt (negl2_prop).
+apply (sim1_prop V D  _ _  _ _ _  &m0 p w  _ );auto.  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. 
+apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. 
 progress.
-apply (sim1assc V D _ _ _ _ _ _ &m0 stat0 _).  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
-apply V_challenge_ll. apply negl2_prop. 
+apply (sim1assc V D _ _ _ _ _ &m0 stat0 _).  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
+apply V_challenge_ll. 
 elim H0. progress. smt.
 auto.
 qed.
