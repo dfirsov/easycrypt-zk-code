@@ -42,5 +42,14 @@ check case_studies/Schnorr/Schnorr_Completeness.ec
 check case_studies/Schnorr/Schnorr_SpecialSoundness.ec
 check case_studies/Schnorr/Schnorr_Extractability.ec
 
+## instance of Blum protocol
+check case_studies/HamiltonBlum/Blum_Basics.ec
+check case_studies/HamiltonBlum/Blum_Completeness.ec
+check case_studies/HamiltonBlum/Blum_SpecialSoundness.ec
+check case_studies/HamiltonBlum/Blum_Extractability.ec
+check case_studies/HamiltonBlum/Blum_Soundness.ec
+check case_studies/HamiltonBlum/Blum_Sim1Property.ec
+check case_studies/HamiltonBlum/Blum_ZeroKnowledge.ec
+
 
 echo "DONE";

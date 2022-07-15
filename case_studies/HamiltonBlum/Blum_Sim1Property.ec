@@ -147,8 +147,8 @@ end section.
     (n,g) <- p_a;
     w <- w_a;
     prm <$ perm_d n; 
-    fal <- fap prm g;
-    pi_w <- permute_wit prm w;
+    fal <- permute_graph prm g;
+    pi_w <- permute_witness prm w;
     (zpd_g, zpd_w) <- (drop n (ip (prj pi_w) fal), 
                             take n (ip (prj pi_w) fal));
     (pi_wco, pi_gco) <@ DJM.main1(zpd_w, zpd_g);
@@ -201,8 +201,8 @@ proof. move => ishc. proc.
 seq 1 1 : (={Ny, c, glob V,b} 
     /\ HonestProver.pi_gwco{1} = HP'.pi_gwco{2}
     /\ a = ((HP'.n, HP'.g), HP'.w){2}
-    /\ HP'.pi_w{2} = permute_wit HP'.prm{2} HP'.w{2}
-  /\ HP'.fal{2} = fap HP'.prm{2} HP'.g{2}
+    /\ HP'.pi_w{2} = permute_witness HP'.prm{2} HP'.w{2}
+  /\ HP'.fal{2} = permute_graph HP'.prm{2} HP'.g{2}
   /\  (HP'.zpd_g){2} = drop HP'.n{2} (ip (prj HP'.pi_w) HP'.fal){2}
   /\  (HP'.zpd_w){2} = take HP'.n{2} (ip (prj HP'.pi_w) HP'.fal){2}
     /\   (pi ((prj HP'.pi_w{2})) 
@@ -223,7 +223,7 @@ seq 6 6 : (={Ny, glob V,b}
   /\ HonestProver.prm{1} = HP'.prm{2}
   /\ HonestProver.n{1} = HP'.n{2}
   /\ ={w_a, p_a}
-  /\ HP'.fal{2} = fap HP'.prm{2} HP'.g{2}).
+  /\ HP'.fal{2} = permute_graph HP'.prm{2} HP'.g{2}).
 wp. rnd. wp. skip. progress.  smt. sp.
 exists* HP'.pi_w{2}.
 elim*. progress.
@@ -233,10 +233,10 @@ elim*. progress.
 call (djm_main511 (prj pi_w_R ) (zpd_w_R, zpd_g_R) ).
 skip. progress. smt.
 have : size result_R.`1 = HP'.n{2}.
-  have : HP'.n{2} <= size (ip (prj (permute_wit HP'.prm{2} HP'.w{2}))
-            (fap HP'.prm{2} HP'.g{2})).
-rewrite /permute_wit.  
-rewrite size_ip. rewrite fap_prop2. 
+  have : HP'.n{2} <= size (ip (prj (permute_witness HP'.prm{2} HP'.w{2}))
+            (permute_graph HP'.prm{2} HP'.g{2})).
+rewrite /permute_witness.  
+rewrite size_ip. rewrite permute_graph_prop2. 
 smt.
 smt. 
 smt. auto.
@@ -315,8 +315,8 @@ proc aux1(n, w_a) = {
 g <- compl_graph n;
     w <- w_a;
     prm <$ perm_d n; 
-    fal <- fap prm g;
-    pi_w <- permute_wit prm w;
+    fal <- permute_graph prm g;
+    pi_w <- permute_witness prm w;
     (zpd_g, zpd_w) <- (drop n (ip (prj pi_w) fal), 
                             take n (ip (prj pi_w) fal));
     (pi_wco, pi_gco) <@ DJM.main1(zpd_w, zpd_g);
@@ -378,12 +378,12 @@ rnd (fun (f : permutation) => compose f (mk_perm_list_fun w{2}))
 skip. progress.  rewrite /compose.  smt (inv_prop2). 
 rewrite /compose.  smt. rewrite /compose. smt.
 rewrite /compose. smt (inv_prop1). 
-rewrite /permute_wit /compose. 
+rewrite /permute_witness /compose. 
 have ->: pa{2}.`1 = size (wa{2}). smt.
 rewrite /compl_graph_cyc.
 rewrite -  invop. 
 rewrite map_comp. auto. 
-smt (fap_prop1).
+smt (permute_graph_prop1).
 wp.  rnd. rnd.  wp.  skip. progress.
 rewrite H. simplify. auto.
 call (_:true).
