@@ -48,20 +48,8 @@ lemma size_ip ['a] p (l: 'a list) : size (ip p l) = size l.
 by smt. qed.
 
 
-(* op mk_perm ['a] : 'a list -> 'a list -> permutation. *)
 
 op mk_perm_list_fun : int list -> permutation.
-
-
-(* axiom mk_perm_good ['a] (l1 l2 : 'a list) : perm_eq l1 l2  *)
-(*    => is_good (mk_perm l1 l2). *)
-
-(* axiom mk_perm_pi ['a] (l1 l2 : 'a list) : perm_eq l1 l2 *)
-(*    => pi (mk_perm l1 l2) l1 = l2. *)
-
-(* axiom mk_perm_ip ['a] (l1 l2 : 'a list) : perm_eq l1 l2  *)
-(*    => ip (mk_perm l1 l2) l2 = l1. *)
-
 
 op perm_d : int -> permutation distr.
 axiom perm_d_uni n : is_uniform (perm_d n).

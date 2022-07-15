@@ -1,6 +1,6 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
-require import Aux Permutation Basics.
+require import Aux Permutation Blum_Basics.
 
 
 section.
@@ -133,14 +133,8 @@ op my_extract (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
 op special_soundness_extract (p : hc_prob) (r1 r2 : transcript) : int list = 
  my_extract p r1.`1  r1.`3 r2.`3.
 
-clone include SpecialSoundnessStatements  with  
+clone include SpecialSoundnessTheory  with  
   op special_soundness_extract <- special_soundness_extract.
-
-
-
-
-clone include ComputationalSpecialSoundnessStatement with
- op special_soundness_red_function <- fun _ r => r.
 
 
 
@@ -161,10 +155,10 @@ op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitme
  with r1 = Right x, r2 = Right z => ((witness, witness), (witness, witness)).
 
  
-module (SpecialSoundnessAdvReduction : SpecialSoundnessAdvReduction) (A : SpecialSoundnessAdversary)  = {
-  proc run(statement : hc_prob, aux : auxiliary_input) : bool = {
+module SpecialSoundnessAdvReduction (A : SpecialSoundnessAdversary)  = {
+  proc run(statement : hc_prob) : bool = {
       var r1,r2,n,g,p1,p2;
-      (r1, r2) <@ A.attack(statement, aux);
+      (r1, r2) <@ A.attack(statement);
       (n,g)    <- statement;
       (p1, p2) <- hc_verify1 (n,g) r1.`1  r1.`3 r2.`3 ;
       return (Ver p1 /\ Ver p2) /\ p1.`1 <> p2.`1 /\ p1.`2.`1 = p2.`2.`1;
@@ -173,16 +167,16 @@ module (SpecialSoundnessAdvReduction : SpecialSoundnessAdvReduction) (A : Specia
 
 
 lemma computational_special_soundness:
-      forall (s : hc_prob) (aux : auxiliary_input) &m
+      forall (s : hc_prob) &m
         (SpecialSoundnessAdversary <: SpecialSoundnessAdversary),
         let attack_prob =
-          Pr[SpecialSoundnessAdversary.attack(s, aux) @ &m :
+          Pr[SpecialSoundnessAdversary.attack(s) @ &m :
              valid_transcript_pair s res.`1 res.`2 /\
              ! IsHC
                  (s, special_soundness_extract s res.`1 res.`2)] in
         let red_prob =
           Pr[SpecialSoundnessAdvReduction(SpecialSoundnessAdversary).run
-             (s, aux) @ &m : res] in
+             (s) @ &m : res] in
         attack_prob <= red_prob.
 proof.  simplify.
 progress.
@@ -239,12 +233,11 @@ section.
 declare module S <: SpecialSoundnessAdversary.
 
 op ss : hc_prob.
-op auxx : auxiliary_input.
 
 module SpecialSoundnessBinder(A : SpecialSoundnessAdversary) : Binder = {
   proc bind() = {
       var r1,r2,n,g,p1,p2;
-      (r1, r2) <@ A.attack(ss, auxx);
+      (r1, r2) <@ A.attack(ss);
       (n,g)    <- ss;
       (p1, p2) <- hc_verify1 (n,g) r1.`1  r1.`3 r2.`3 ;
       return (p1.`2.`1, p1.`1, p1.`2.`2, p2.`1, p2.`2.`2);
@@ -254,7 +247,7 @@ module SpecialSoundnessBinder(A : SpecialSoundnessAdversary) : Binder = {
 
 local lemma qq &m : 
  Pr[SpecialSoundnessAdvReduction(S).run
-             (ss, auxx) @ &m : res] <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res]  .
+             (ss) @ &m : res] <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res]  .
 byequiv;auto. 
 proc. inline*. wp.  call (_:true). skip. progress. 
 smt.
@@ -264,20 +257,19 @@ qed.
 
 
 lemma computational_special_soundness_binding &m :
-          Pr[S.attack(ss, auxx) @ &m :
+          Pr[S.attack(ss) @ &m :
              valid_transcript_pair ss res.`1 res.`2 /\
              ! IsHC
                  (ss,
                   special_soundness_extract ss res.`1 res.`2)] 
   <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res].
-have f :           Pr[S.attack(ss, auxx) @ &m :
+have f :           Pr[S.attack(ss) @ &m :
              valid_transcript_pair ss res.`1 res.`2 /\
              ! IsHC
                  (ss,
                   special_soundness_extract ss res.`1 res.`2)] 
- <= Pr[SpecialSoundnessAdvReduction(S).run
-             (ss, auxx) @ &m : res].
-apply (computational_special_soundness ss auxx &m S).
+ <= Pr[SpecialSoundnessAdvReduction(S).run(ss) @ &m : res].
+apply (computational_special_soundness ss  &m S).
 smt (qq).
 qed.
 

@@ -1,5 +1,5 @@
 require import AllCore DBool Bool List Distr Int Aux DJoin Permutation.
-require import GenericZK.
+require  GenericSigmaProtocol.
 
 
 require CommitmentSpecial.
@@ -18,6 +18,13 @@ op compl_graph_cyc : int -> int list = range 0.
 
 (* flatten and permute  *)
 op fap (p : permutation) (g : graph) : bool list.
+
+(* projects the witness up-fron
+   prj (1,2,3) [x11 x12 x13 x21 x22 x23 x31 x32 x33]
+
+    project out the positions of the cycle (1,2)(2,3)(3,1)
+           [x12 x23 x31] ++ [x11 x13 x21 x22 x32 x33]
+*)
 op prj  : hc_wit -> permutation.
 
 
@@ -60,17 +67,17 @@ op IsHC (x : hc_prob * hc_wit) : bool
 axiom compl_graph_prop n : 0 <= n => IsHC ((n, compl_graph n), compl_graph_cyc n).
 
 
-clone include ZKProtocol with 
+clone export GenericSigmaProtocol as BlumProtocol with 
   type statement       <- hc_prob,
   type commitment      <- hc_com,  
-  type witness         <- int list,
+  type witness         <- hc_wit,
   type response        <- hc_resp,
   type challenge       <- bool,
-  op challenge_set     <-  (false :: true :: []),
-  op verify_transcript <- fun p (x : transcript) => hc_verify p x.`1 x.`2 x.`3,
-  op soundness_relation    <- fun x y => IsHC (x, y),
-  op completeness_relation <- fun x y => IsHC (x, y),
-  op zk_relation           <- fun x y => IsHC (x, y).
+  op challenge_set     <=  (false :: true :: []),
+  op verify_transcript <= fun p (x : transcript) => hc_verify p x.`1 x.`2 x.`3,
+  op soundness_relation    <= fun x y => IsHC (x, y),
+  op completeness_relation <= fun x y => IsHC (x, y),
+  op zk_relation           <= fun x y => IsHC (x, y).
  
 
 require Djoinmap.
@@ -78,12 +85,6 @@ clone import Djoinmap as DJMM with type a <- bool,
                                    type b <- commitment * opening,
                                    op   d <- Com.
 
-(* projects the witness up-fron
-   prj (1,2,3) [x11 x12 x13 x21 x22 x23 x31 x32 x33]
-
-    project out the positions of the cycle (1,2)(2,3)(3,1)
-           [x12 x23 x31] ++ [x11 x13 x21 x22 x32 x33]
-*)
 op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 
 
@@ -107,6 +108,16 @@ axiom ishc_prop3 a n g w : IsHC a => a = ((n,g),w) =>
 
 axiom ishc_prop4 a : IsHC a =>
   uniq a.`2 /\ (forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
+
+
+axiom kjk prm n w : prm \in perm_d n =>
+ uniq w => (forall i, i \in w => 0 <= i < n) =>
+  size w = n => uniq (permute_wit prm w).
+
+axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) : 
+  take (size w) (ip (prj w) g) 
+  = take (size w) (ip (prj (permute_wit perm w)) (fap perm g)).
+
 
 
 
