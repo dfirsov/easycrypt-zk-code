@@ -25,29 +25,28 @@ apply H.
 qed.
     
 
-local lemma is_hc_perm_2 (n : int) (g : graph) (w : hc_wit) :
-  !IsHC ((n,g),w) /\
-     n = size w /\ 
-     n * n = size g /\ 
-     perm_eq w (range 0 n)
-  => false \in (take n (hc_align w g)) .
+local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :
+  !IsHC ((g),w) /\
+     K = size w /\ 
+     K * K = size g /\ 
+     perm_eq w (range 0 K)
+  => false \in prj_path w g  .
 progress.
-  have : nseq (size w) true <> take (size w) (hc_align w g). smt.
+
+  have : nseq (size w) true <> prj_path w g. smt.
 progress.
-have f : size (take (size w) (hc_align w g)) = size w.
-  have ff : size (hc_align w g) = (size w) * (size w). smt.
-  smt.
-apply (aux_lem (take (size w) (hc_align w g)) (size w)).
+have f : size (prj_path w g) = size w. rewrite lemma1. smt. auto.
+apply (aux_lem (prj_path w g)  (size w)).
 auto. auto.
 qed.
 
     
-local lemma phase2 (n : int) (g : graph) (w : hc_wit) :
-  !IsHC ((n,g),w) /\
-     n = size w /\ 
-     n * n = size g /\ 
-     perm_eq w (range 0 n) =>
-   false \in (take n (hc_align w g)).
+local lemma phase2  (g : graph) (w : hc_wit) :
+  !IsHC (g,w) /\
+     K = size w /\ 
+     K * K = size g /\ 
+     perm_eq w (range 0 K) =>
+   false \in (prj_path w g).
 smt (is_hc_perm_2).
 qed.
 
@@ -82,49 +81,56 @@ qed.
 
 
 
-lemma fin_bind_real   (w : hc_wit) (g : graph) (n : int) c o1 (p : permutation) X: 
-   !IsHC ((n,g), permute_witness (inv p) w) =>  
-   hc_verify (n,g) c true  (Left (p,o1)) =>
-   hc_verify (n,g) c false (Right (w,X)) 
-  => Ver (true,  nth witness (take n (zip (hc_align w c)
-                             X)) (index false (take n (hc_align w (permute_graph p g))))) /\
-     Ver (false, nth witness (take n (zip (hc_align w c)
-                             (hc_align w o1))) (index false (take n (hc_align w (permute_graph p g))))).
-proof. 
+
+lemma fin_bind_real   (w : hc_wit) (g : graph)  c o1 (p : permutation) X: 
+   !IsHC ((g), permute_witness (inv p) w) =>  
+   hc_verify (g) c true  (Left (p,o1)) =>
+   hc_verify (g) c false (Right (w,X)) 
+  => Ver (true,  nth witness ( (zip (prj_path w c)
+                             X)) (index false ( (prj_path  w  (permute_graph p g))))) /\
+     Ver (false, nth witness ( (zip (prj_path  w c)
+                             (prj_path w o1))) (index false ( (prj_path w (permute_graph p g))))).
+proof.  
 move => p0 p1 p2 .
-apply (quasi_fin ((take n (hc_align w (permute_graph p g)))) n) .
-apply is_hc_perm_2.   split. 
-have ->: IsHC ((n, permute_graph p g), w) = IsHC ((n, permute_graph (inv p) (permute_graph p g)), permute_witness (inv p) w).
+apply (quasi_fin (prj_path w (permute_graph p g)) K) .
+apply (is_hc_perm_2 ).
+progress. 
+print permute_graph_prop3.
+case (IsHC (( permute_graph p g), w)).
+move => q. 
+apply p0. 
+have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto.
+rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). rewrite q. auto.
+elim p2. smt.
+rewrite permute_graph_prop2.
+elim p1. smt.
+elim p2. smt.
+smt.
+elim p1. progress. 
+rewrite lemma8. rewrite lemma8.
+apply allP. progress.
+have f : x \in (zip (permute_graph p g) (zip c o1)). smt.
+apply (allP Ver ( zip (permute_graph p g) (zip c o1))). auto. auto.
+have f1 : K <= size (permute_graph p g). elim p1. smt.
+have f2 : K = size w. elim p2. smt.
+smt (lemma1).
+have f1 : size (prj_path w c) = K. elim p1.  elim p2. progress.
+rewrite lemma1. smt. auto.
+have f2 : size (prj_path w o1) = K. elim p1.  elim p2. progress.
 smt. smt.
-split. elim p2. smt.
-split.  elim p1. smt. elim p1 p2. smt.
-elim p1 p2. progress. smt.
-elim p1 p2. progress. rewrite /hc_align. rewrite - zip_ip. apply phase1. auto.
-elim p1 p2. progress.
-  have : size (hc_align w (permute_graph p g)) = (size w * size w). smt.
-  smt.
-elim p1 p2. progress.
-  have : size (hc_align w c) = (size w) * (size w). 
-  smt.
-  have : size (hc_align w o1) = (size w) * (size w). 
-  smt.
-smt.
-elim p2.
-progress.
-  have : size (hc_align w c) = (size w) * (size w). 
-  smt.
-smt.
+elim p2. progress. smt.
 qed.
+
 
 end section.
 
 
 
 op my_extract (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
- with r1 = Left  x, r2 = Right z => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
+ with r1 = Left  x, r2 = Right z => let n = K in let g = p  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
                                      permute_witness (inv p) w
- with r1 = Right z, r2 = Left  x => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
+ with r1 = Right z, r2 = Left  x => let n = K in let g = p  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
                                      permute_witness (inv p) w
  with r1 = Left  x, r2 = Left  z => witness
@@ -139,33 +145,34 @@ clone include SpecialSoundnessTheory  with
 
 
 op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitment * opening)) * (bool * (commitment * opening))  =
- with r1 = Left  x, r2 = Right z => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
+ with r1 = Left  x, r2 = Right z => let n = K in let g = p  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
-   ((true,  nth witness (take n (zip (hc_align w c)
-                             X)) (index false (take n (hc_align w (permute_graph p g))))), 
-                                 (false, nth witness (take n (zip (hc_align w c)
-                             (hc_align w o1))) (index false (take n (hc_align w (permute_graph p g))))))
- with r1 = Right z, r2 = Left  x => let n = p.`1 in let g = p.`2  in let p = x.`1 in let o1 = x.`2 in 
+   ((true,  nth witness ((zip (prj_path w c)
+                             X)) (index false ( (prj_path (w) (permute_graph p g))))), 
+                                 (false, nth witness ( (zip (prj_path w c)
+                             (prj_path w o1))) (index false ( (prj_path (w) (permute_graph p g))))))
+ with r1 = Right z, r2 = Left  x => let n = K in let g = p  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
-                            ((true,  nth witness (take n (zip (hc_align w c)
-                             X)) (index false (take n (hc_align w (permute_graph p g))))), 
-                                 (false, nth witness (take n (zip (hc_align w c)
-                             (hc_align w o1))) (index false (take n (hc_align w (permute_graph p g))))))
+                            ((true,  nth witness ( (zip (prj_path w c)
+                             X)) (index false ( (prj_path ( w) (permute_graph p g))))), 
+                                 (false, nth witness ( (zip (prj_path w c)
+                             (prj_path w o1))) (index false ( (prj_path ( w) (permute_graph p g))))))
  with r1 = Left  x, r2 = Left  z => ((witness, witness), (witness, witness))
  with r1 = Right x, r2 = Right z => ((witness, witness), (witness, witness)).
 
  
 module SpecialSoundnessAdvReduction (A : SpecialSoundnessAdversary)  = {
   proc run(statement : hc_prob) : bool = {
-      var r1,r2,n,g,p1,p2;
+      var r1,r2,g,p1,p2;
       (r1, r2) <@ A.attack(statement);
-      (n,g)    <- statement;
-      (p1, p2) <- hc_verify1 (n,g) r1.`1  r1.`3 r2.`3 ;
+      g    <- statement;
+      (p1, p2) <- hc_verify1 (g) r1.`1  r1.`3 r2.`3 ;
       return (Ver p1 /\ Ver p2) /\ p1.`1 <> p2.`1 /\ p1.`2.`1 = p2.`2.`1;
   }
 }.
 
 
+timeout 10.
 lemma computational_special_soundness:
       forall (s : hc_prob) &m
         (SpecialSoundnessAdversary <: SpecialSoundnessAdversary),
@@ -198,34 +205,58 @@ elim result_R.`2.`3. progress.
 smt. smt. smt. smt.
 move => x p1 p2 p3 p4.
 simplify. move => p5.
-rewrite fin_bind_real.  auto. 
-smt. smt. simplify. 
-have : s.`1 <= size (hc_align x.`1 p1.`2). 
+have : K <= size (prj_path x.`1 p1.`2). 
 elim p4. move => _. elim.
 progress. 
-have ->: size (hc_align x.`1 p1.`2) = s.`1 * s.`1. smt. smt.
-have : s.`1 <=  size x.`2.  smt.
-smt. smt.
-move => q.
-have z : result_R.`1.`2 = false. smt.
-clear q. 
+have ->: size (prj_path x.`1 p1.`2) = K.
+smt (lemma1).
+auto.
+have : K <=  size x.`2.  smt.
+move => q g. 
+
+elim p4. move => zz1 . elim.
+have ->: result_R.`2.`2 = false. smt.
+ move => zz2 zz3.
+elim zz2.  move => _. elim zz3.
+move => _ qq ll. 
+rewrite (fin_bind_real  x.`1 s). auto.
+smt. smt. simplify.
+
+have ->: (nth witness <: commitment * opening> (zip (prj_path x.`1 result_R.`1.`1) x.`2)
+   (index false (prj_path x.`1 (permute_graph p1.`1 s))))
+ = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) x.`2)
+   (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt.
+rewrite nth_zip. smt. simplify.
+
+have ->: (nth witness <: commitment * opening>  (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
+   (index false (prj_path x.`1 (permute_graph p1.`1 s))))
+ = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
+   (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt.
+rewrite nth_zip. smt. simplify. auto.
+progress. simplify.
 rewrite /special_soundness_extract.
 elim result_R.`1.`3.
-elim result_R.`2.`3. progress. 
-move => x p1 p2 p3 p4. simplify.
-rewrite fin_bind_real.   auto.
-smt. smt. simplify. smt. 
-elim result_R.`2.`3. 
-move => x p1 p2 p3.
-simplify. move => p4. progress. smt. smt. 
-have : size p1.`2 <= size (hc_align p1.`1 x.`2). 
-elim p3. move => _. elim.
-progress. 
-have ->: size (hc_align p1.`1 x.`2) = s.`1 * s.`1. smt. smt.
-have : s.`1 <=  size p1.`2.  smt.
-smt. smt. (* fin_bind_real *)
+progress.
+elim result_R.`2.`3.
+move => x p1 p2 p3 p4. 
+simplify .
+move => z.
+rewrite (fin_bind_real  p1.`1 s ).  auto. 
+smt. smt. simplify. 
+have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)
+   (index false (prj_path p1.`1 (permute_graph x.`1 s))))
+ = (nth (fst witness <:commitment * opening>, snd witness <:commitment * opening>) (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)
+   (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt.
+rewrite nth_zip. 
+elim p4. move => q. elim. move => q1 q2. elim q1. smt. simplify.
+have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
+   (index false (prj_path p1.`1 (permute_graph x.`1 s)))) 
+ = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>)  (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
+   (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt.
+rewrite nth_zip. 
+elim p4. move => q. elim. move => q1 q2. elim q2. elim q1. progress. smt. simplify. auto.
+smt.
 qed.
-
 
 
 theory SSB.
@@ -236,10 +267,10 @@ op ss : hc_prob.
 
 module SpecialSoundnessBinder(A : SpecialSoundnessAdversary) : Binder = {
   proc bind() = {
-      var r1,r2,n,g,p1,p2;
+      var r1,r2,g,p1,p2;
       (r1, r2) <@ A.attack(ss);
-      (n,g)    <- ss;
-      (p1, p2) <- hc_verify1 (n,g) r1.`1  r1.`3 r2.`3 ;
+      g    <- ss;
+      (p1, p2) <- hc_verify1 g r1.`1  r1.`3 r2.`3 ;
       return (p1.`2.`1, p1.`1, p1.`2.`2, p2.`1, p2.`2.`2);
   }
 }.

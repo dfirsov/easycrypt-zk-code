@@ -8,7 +8,10 @@ clone include CommitmentSpecial with type message <- bool.
 
 type graph = bool list.         (* n * n list representin n x n matrix *)
 
-type hc_prob = (int * graph).
+op K : int.
+axiom K_pos : 0 < K.
+
+type hc_prob = graph.
 type hc_wit  = int list.
 type hc_com  = commitment list.
 type hc_resp = (permutation * (opening list) , hc_wit * (opening list)) sum.
@@ -25,38 +28,34 @@ op permute_witness : permutation -> hc_wit -> hc_wit = map.
     project out the positions of the cycle (1,2)(2,3)(3,1)
            [x12 x23 x31] ++ [x11 x13 x21 x22 x32 x33]
 *)
-op prj  : hc_wit -> permutation.
-
-
-op hc_align ['a] (w : hc_wit) (l : 'a list) : 'a list
- = ip (prj w) l.
+op prj_path ['a]  : hc_wit -> 'a list -> 'a list.
 
 
 op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
- with r = (Left x) => b /\ all Ver (zip (permute_graph x.`1 p.`2) (zip c x.`2))
-                         /\ size c = p.`1 * p.`1
-                         /\ size p.`2 = p.`1 * p.`1
-                         /\ size x.`2 = p.`1 * p.`1
+ with r = (Left x) => b /\ all Ver (zip (permute_graph x.`1 p) (zip c x.`2))
+                         /\ size c = K * K
+                         /\ size p = K * K
+                         /\ size x.`2 = K * K
 
  with r = (Right x) => ! b /\ uniq x.`1
-                        /\ size x.`1 = p.`1
-                        /\ size c = p.`1 * p.`1
-                        /\ size x.`2 = p.`1
+                        /\ size x.`1 = K
+                        /\ size c = K * K
+                        /\ size x.`2 = K
                         /\ all Ver 
-                             (zip (nseq p.`1 true) 
-                                    (zip (take p.`1 (hc_align x.`1 c)) x.`2))
-                        /\ perm_eq x.`1 (range 0 (p.`1))
-                        /\ size p.`2 = p.`1 * p.`1.
+                             (zip (nseq K true) 
+                                    (zip ((prj_path x.`1 c)) x.`2))
+                        /\ perm_eq x.`1 (range 0 K)
+                        /\ size p = K * K.
 
 
 op IsHC (x : hc_prob * hc_wit) : bool 
-  = let n = x.`1.`1 in
-    let g = x.`1.`2 in
+  = 
+    let g = x.`1 in
     let w = x.`2 in
-     n = size w /\ 
-     n * n = size g /\ 
-     perm_eq w (range 0 n) /\ 
-     nseq n true = take n (hc_align w g).
+     K = size w /\ 
+     K * K = size g /\ 
+     perm_eq w (range 0 K) /\ 
+     nseq K true = prj_path w g.
 
 
 clone export GenericSigmaProtocol as BlumProtocol with 
@@ -82,46 +81,50 @@ op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 
 
 
+lemma ishc_prop3 a  g w : IsHC a => a = (g,w) => prj_path w g = nseq K true.
+progress. elim H. smt.
+qed.
+
 
 axiom permute_graph_prop1 p n  : 
  permute_graph p (compl_graph n) = (compl_graph n).
 
-axiom permute_graph_prop4  (g : graph) (p : permutation) : 
+axiom permute_graph_prop4  (g : graph) (p : permutation) :
  permute_graph (inv p) (permute_graph p g) = g.
 
 axiom permute_graph_prop2 p g : size (permute_graph p g) = size g.
 
-axiom permute_graph_prop3 n g perm w : 
- IsHC ((n,g), w) = IsHC ((n, permute_graph perm g), permute_witness perm w).
+axiom permute_graph_prop3  g perm w : 
+ IsHC (g, w) = IsHC (permute_graph perm g, permute_witness perm w).
 
 axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) : 
-  take (size w) (ip (prj w) g) 
-  = take (size w) (ip (prj (permute_witness perm w)) (permute_graph perm g)).
+   prj_path w g = prj_path (permute_witness perm w) (permute_graph perm g).
 
-axiom compl_graph_prop n : 0 <= n => IsHC ((n, compl_graph n), compl_graph_cyc n).
+axiom compl_graph_prop n : 0 <= n => IsHC ((compl_graph n), compl_graph_cyc n).
 
-axiom ishc_prop1 a : IsHC a =>
- (fst (fst a)) = size (snd a) 
-    /\ size (snd (fst a)) 
-         = (fst (fst a)) * (fst (fst a)).
+axiom kjk prm w : prm \in perm_d K => uniq w => uniq (permute_witness prm w).
 
-axiom ishc_prop2 a : IsHC a => 0 < fst (fst a).
+axiom lemma1 ['a] : forall w (s : 'a list), size w <= size s => size (prj_path w s) = size w.
 
-axiom ishc_prop3 a n g w : IsHC a => a = ((n,g),w) =>
-  take n (ip (prj w) g) = nseq n true.
+axiom lemma2 ['a 'b] (f : 'a -> 'b)  w (s : 'a list):   (prj_path  w (map f s)) = map f (prj_path  w s).
 
-axiom ishc_prop4 a : IsHC a =>
-  uniq a.`2 /\ (forall (i : int), i \in a.`2 => 0 <= i && i < a.`1.`1).
+axiom lemma3 (w : hc_wit) (s : hc_prob) : completeness_relation s w => prj_path w s = nseq K true.
 
-axiom kjk prm n w : prm \in perm_d n =>
- uniq w => (forall i, i \in w => 0 <= i < n) =>
-  size w = n => uniq (permute_witness prm w).
+axiom lemma4 (w : hc_wit) (s : hc_prob) prm : completeness_relation s w => 
+   completeness_relation (permute_graph prm s) (permute_witness prm w).
+
+axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
+
+axiom lemma6 (x : 'a) xs (y : 'b) ys : size xs = size ys => x \in xs => y \in ys => (x,y) \in zip xs ys.
+
+axiom lemma7 w prm : perm_eq (permute_witness prm w) w.
+
+axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
 
 
 
 
 module HonestProver : HonestProver  = {
-  var n : int                   (* size of the graph *)
   var g : graph                 (* n*n adj. matrix *)
   var prm : permutation         (* uniformly sampled permutation *)
   var w : hc_wit                (* hamiltonian cycle *)
@@ -130,11 +133,11 @@ module HonestProver : HonestProver  = {
   var pi_w : hc_wit
   
   proc commitment(p_a : hc_prob, w_a : hc_wit)  = {
-    (n,g) <- p_a;
+    g <- p_a;
     w     <- w_a;
-    prm   <$ perm_d n;
+    prm   <$ perm_d K;
     fal   <- permute_graph prm g;
-    pi_gwco <@ DJM.main5(fal);
+    pi_gwco <$ djoinmap Com fal; 
 
     return map fst pi_gwco;
   }
@@ -142,7 +145,6 @@ module HonestProver : HonestProver  = {
   proc response(b : bool) : hc_resp = {
     pi_w <- permute_witness prm w;
     return if b then Left (prm, map snd pi_gwco) 
-                else Right (pi_w, 
-                        map snd (take n (ip (prj pi_w) pi_gwco)));
+                else Right (pi_w, map snd (prj_path pi_w pi_gwco));
  } 
 }.
