@@ -71,10 +71,10 @@ clone export GenericSigmaProtocol as BlumProtocol with
   op zk_relation           <= fun x y => IsHC (x, y).
  
 
-require Djoinmap.
-clone import Djoinmap as DJMM with type a <- bool, 
-                                   type b <- commitment * opening,
-                                   op   d <- Com.
+(* require Djoinmap. *)
+(* clone import Djoinmap as DJMM with type a <- bool,  *)
+(*                                    type b <- commitment * opening, *)
+(*                                    op   d <- Com. *)
 
 op HasHC (Ny : hc_prob) = exists w, IsHC (Ny, w).
 

@@ -2,7 +2,7 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 require import Permutation Blum_Basics Blum_Sim1Property.
 
-import DJMM.
+(* import DJMM. *)
 import OSS.
 
 clone import Statistical with op epsilon <- 2%r * negl + 20%r * negl2,

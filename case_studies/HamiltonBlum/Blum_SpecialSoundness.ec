@@ -4,25 +4,25 @@ require import Aux Permutation Blum_Basics.
 
 
 section.
-local lemma phase1_1 ['a 'b] p (l1 : 'a list) (l2 : 'b list) perm : 
- all p (zip l1 l2)
-  =  all p (zip (ip perm l1) (ip perm l2)).
-rewrite - zip_ip.
-rewrite allP.
-rewrite allP.
-smt.
-qed.
+(* local lemma phase1_1 ['a 'b] p (l1 : 'a list) (l2 : 'b list) perm :  *)
+(*  all p (zip l1 l2) *)
+(*   =  all p (zip (ip perm l1) (ip perm l2)). *)
+(* rewrite - zip_ip. *)
+(* rewrite allP. *)
+(* rewrite allP. *)
+(* smt. *)
+(* qed. *)
 
 
-local lemma phase1 ['a 'b] ver (l1 : 'a list) (l2 : 'b list) perm n : 
- all ver (zip l1 l2)
-  =>  all ver (zip (take n (ip perm l1)) (take n (ip perm l2))).
-progress.
-rewrite - (phase1_3 (ip perm l1) (ip perm l2) n).
-rewrite phase1_2.
-rewrite - phase1_1.    
-apply H.
-qed.
+(* local lemma phase1 ['a 'b] ver (l1 : 'a list) (l2 : 'b list) perm n :  *)
+(*  all ver (zip l1 l2) *)
+(*   =>  all ver (zip (take n (ip perm l1)) (take n (ip perm l2))). *)
+(* progress. *)
+(* rewrite - (phase1_3 (ip perm l1) (ip perm l2) n). *)
+(* rewrite phase1_2. *)
+(* rewrite - phase1_1.     *)
+(* apply H. *)
+(* qed. *)
     
 
 local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :

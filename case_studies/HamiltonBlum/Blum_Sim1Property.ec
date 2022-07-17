@@ -5,7 +5,7 @@ require  PrArg.
 require  AllCore Distr FSet StdRing StdOrder StdBigop List.
 
 require import Permutation Blum_Basics.
-import DJMM.
+(* import DJMM. *)
 
 
 clone import ZeroKnowledgeTheory as ZKT.
@@ -289,10 +289,10 @@ ZKDB ~ Sim1
 
 *)
 
-local lemma sim_0_1 (a : hc_prob * hc_wit):  K = size (snd a) =>
+local lemma sim_0_1 (a : hc_prob * hc_wit):  K = size (snd a) => IsHC a =>
   equiv [ Sim1_0(V,D).simulate ~ Sim1_1(V).simulate : 
                a .`1 = arg{2}.`1 /\ a.`2 = arg{2}.`2 /\ ={arg} /\ ={glob V, glob D} ==> ={res} ].
-proof. move => sas. proc.
+proof. move => sas ishc. proc.
 inline Sim1_0(V,D).sinit.
 inline Sim1_1(V).sinit. 
 sp.
@@ -331,7 +331,8 @@ rewrite permute_graph_prop1. rewrite permute_graph_prop1. auto.
 rewrite permute_graph_prop1. rewrite - (permute_graph_prop1 prmL). auto.
 rewrite /permute_witness /compose. 
 rewrite map_comp.
-smt (invop).
+rewrite invop.
+elim ishc. progress. smt. smt.
 wp.   skip. progress. 
 rewrite H.  simplify. auto. sim.
 qed.
@@ -711,12 +712,12 @@ have ->:
    Pr[Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 /\ res.`2]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ].
    byequiv. 
-conseq (sim_0_1 (pa,wa) _ ). smt.  simplify. smt. auto. auto.
+conseq (sim_0_1 (pa,wa) _ _ ). smt.  simplify. smt. auto. auto. auto.
 have h: 
    Pr[Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1].
-   byequiv. conseq (sim_0_1 (pa,wa) _). smt. auto. auto. auto.
-smt. auto. auto.
+   byequiv. conseq (sim_0_1 (pa,wa) _ _). smt. smt. auto. auto. auto.
+
 rewrite sim_9_pr3.
 apply (ler_trans (2%r * 
     `|Pr[Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2] -
