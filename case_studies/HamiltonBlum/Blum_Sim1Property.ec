@@ -320,13 +320,28 @@ rnd
   (fun (f : permutation) => compose f (mk_perm_list_fun HP'.w{2})) .
 wp. skip. progress.  rewrite /compose.
 simplify. 
-smt (inv_prop1).
+
+have ->: (prmR \o mk_perm_list_fun wa{2} \o inv (mk_perm_list_fun wa{2}))
+ = (prmR \o (mk_perm_list_fun wa{2} \o inv (mk_perm_list_fun wa{2}))). 
+   apply fun_ext. move => x. rewrite /(\o). auto.
+ 
+
+rewrite   (inv_prop1 (mk_perm_list_fun wa{2}) K). 
+apply perm_d_in4. smt. 
+apply fun_ext. move => x. smt.
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite H1. simplify.
 rewrite perm_d_in1. apply H1. simplify. auto.
 apply perm_d_in2. auto.
-smt (inv_prop2).
+rewrite /compose.
+
+have ->: (prmL \o inv (mk_perm_list_fun wa{2}) \o mk_perm_list_fun wa{2})
+ = (prmL \o (inv (mk_perm_list_fun wa{2}) \o mk_perm_list_fun wa{2})).
+apply fun_ext. move => x. rewrite /(\o). auto.
+rewrite   (inv_prop2 (mk_perm_list_fun wa{2}) K). 
+apply perm_d_in4. smt. 
+apply fun_ext. move => x.  rewrite /(\o). auto.
 rewrite permute_graph_prop1. rewrite permute_graph_prop1. auto. 
 rewrite permute_graph_prop1. rewrite - (permute_graph_prop1 prmL). auto.
 rewrite /permute_witness /compose. 
