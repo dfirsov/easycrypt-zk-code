@@ -91,19 +91,18 @@ module HonestProver : HonestProver  = {
 
 axiom permute_graph_prop1 p n : permute_graph p (compl_graph n) = (compl_graph n).
 
-axiom permute_graph_prop4  (g : graph) (p : permutation) :
- permute_graph (inv p) (permute_graph p g) = g.
-
 axiom permute_graph_prop2 p g : size (permute_graph p g) = size g.
 
 axiom permute_graph_prop3 g perm w : 
  soundness_relation g w 
    = soundness_relation (permute_graph perm g) (permute_witness perm w).
 
+axiom permute_graph_prop4  (g : graph) (p : permutation) :
+ permute_graph (inv p) (permute_graph p g) = g.
+
 axiom prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
- completeness_relation g w 
- => perm \in perm_d K 
- => prj_path w g = prj_path (permute_witness perm w) (permute_graph perm g).
+ completeness_relation g w => perm \in perm_d K 
+  => prj_path w g = prj_path (permute_witness perm w) (permute_graph perm g).
 
 axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
 
