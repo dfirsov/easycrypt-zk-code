@@ -122,7 +122,7 @@ axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
 
 axiom lemma6 (x : 'a) xs (y : 'b) ys : size xs = size ys => x \in xs => y \in ys => (x,y) \in zip xs ys.
 
-axiom lemma7 w prm : perm_eq (permute_witness prm w) w.
+axiom lemma7 w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
 
 axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
 
