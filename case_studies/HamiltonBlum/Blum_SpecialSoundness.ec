@@ -4,29 +4,10 @@ require import Aux Permutation Blum_Basics.
 
 
 section.
-(* local lemma phase1_1 ['a 'b] p (l1 : 'a list) (l2 : 'b list) perm :  *)
-(*  all p (zip l1 l2) *)
-(*   =  all p (zip (ip perm l1) (ip perm l2)). *)
-(* rewrite - zip_ip. *)
-(* rewrite allP. *)
-(* rewrite allP. *)
-(* smt. *)
-(* qed. *)
-
-
-(* local lemma phase1 ['a 'b] ver (l1 : 'a list) (l2 : 'b list) perm n :  *)
-(*  all ver (zip l1 l2) *)
-(*   =>  all ver (zip (take n (ip perm l1)) (take n (ip perm l2))). *)
-(* progress. *)
-(* rewrite - (phase1_3 (ip perm l1) (ip perm l2) n). *)
-(* rewrite phase1_2. *)
-(* rewrite - phase1_1.     *)
-(* apply H. *)
-(* qed. *)
     
 
 local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :
-  !IsHC ((g),w) /\
+  !soundness_relation g w /\
      K = size w /\ 
      K * K = size g /\ 
      perm_eq w (range 0 K)
@@ -42,7 +23,7 @@ qed.
 
     
 local lemma phase2  (g : graph) (w : hc_wit) :
-  !IsHC (g,w) /\
+  !soundness_relation g w /\
      K = size w /\ 
      K * K = size g /\ 
      perm_eq w (range 0 K) =>
@@ -83,7 +64,7 @@ qed.
 
 
 lemma fin_bind_real   (w : hc_wit) (g : graph)  c o1 (p : permutation) X: 
-   !IsHC ((g), permute_witness (inv p) w) =>  
+   !soundness_relation g (permute_witness (inv p) w) =>  
    hc_verify (g) c true  (Left (p,o1)) =>
    hc_verify (g) c false (Right (w,X)) 
   => Ver (true,  nth witness ( (zip (prj_path w c)
@@ -96,10 +77,10 @@ apply (quasi_fin (prj_path w (permute_graph p g)) K) .
 apply (is_hc_perm_2 ).
 progress. 
 print permute_graph_prop3.
-case (IsHC (( permute_graph p g), w)).
+case (soundness_relation (permute_graph p g) w).
 move => q. 
 apply p0. 
-have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto.
+have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto. 
 rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). rewrite q. auto.
 elim p2. smt.
 rewrite permute_graph_prop2.
@@ -172,15 +153,15 @@ module SpecialSoundnessAdvReduction (A : SpecialSoundnessAdversary)  = {
 }.
 
 
-timeout 10.
+
 lemma computational_special_soundness:
       forall (s : hc_prob) &m
         (SpecialSoundnessAdversary <: SpecialSoundnessAdversary),
         let attack_prob =
           Pr[SpecialSoundnessAdversary.attack(s) @ &m :
              valid_transcript_pair s res.`1 res.`2 /\
-             ! IsHC
-                 (s, special_soundness_extract s res.`1 res.`2)] in
+             ! soundness_relation
+                 s (special_soundness_extract s res.`1 res.`2)] in
         let red_prob =
           Pr[SpecialSoundnessAdvReduction(SpecialSoundnessAdversary).run
              (s) @ &m : res] in
@@ -290,15 +271,15 @@ qed.
 lemma computational_special_soundness_binding &m :
           Pr[S.attack(ss) @ &m :
              valid_transcript_pair ss res.`1 res.`2 /\
-             ! IsHC
-                 (ss,
-                  special_soundness_extract ss res.`1 res.`2)] 
+             ! soundness_relation
+                 ss
+                  (special_soundness_extract ss res.`1 res.`2)] 
   <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res].
 have f :           Pr[S.attack(ss) @ &m :
              valid_transcript_pair ss res.`1 res.`2 /\
-             ! IsHC
-                 (ss,
-                  special_soundness_extract ss res.`1 res.`2)] 
+             ! soundness_relation
+                 ss
+                  (special_soundness_extract ss res.`1 res.`2)] 
  <= Pr[SpecialSoundnessAdvReduction(S).run(ss) @ &m : res].
 apply (computational_special_soundness ss  &m S).
 smt (qq).

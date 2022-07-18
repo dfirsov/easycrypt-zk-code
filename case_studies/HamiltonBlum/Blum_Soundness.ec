@@ -24,7 +24,7 @@ declare axiom P_rewindable : exists (f : (glob P) -> sbits),
 clone import SSB as SSB with op ss <- ss.
 
 lemma hc_computational_soundness &m :
-    ! in_language (fun x y => IsHC (x,y)) ss =>
+    ! in_language soundness_relation ss =>
      Pr[Soundness(P, HV).run(ss) @ &m : res]
      <= sqrt (Pr[BindingExperiment(SpecialSoundnessBinder(SpecialSoundnessAdversary(P))).main() @ &m : res]) + 1%r/2%r.
 proof.  progress.

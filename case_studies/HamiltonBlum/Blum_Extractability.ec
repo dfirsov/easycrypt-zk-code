@@ -24,7 +24,7 @@ declare axiom P_rewindable : exists (f : (glob P) -> sbits),
 clone import SSB as SSB with op ss <- ss.
 
 lemma hc_computational_PoK &m : 
-  Pr[Extractor(P).extract(ss) @ &m : IsHC (ss, res)] >=
+  Pr[Extractor(P).extract(ss) @ &m : soundness_relation ss res] >=
    (Pr[Soundness(P, HV).run(ss) @ &m : res]^2
    - (1%r/2%r) * Pr[Soundness(P, HV).run(ss) @ &m : res])
      - Pr[BindingExperiment(SpecialSoundnessBinder(SpecialSoundnessAdversary(P))).main() @ &m : res].

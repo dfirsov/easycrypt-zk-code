@@ -8,7 +8,7 @@ require import Permutation Blum_Basics.
 section.
 
 
-local lemma hc_complete_hoare pa wa : IsHC (pa,wa) =>
+local lemma hc_complete_hoare pa wa : completeness_relation pa wa =>
    hoare[ Completeness(HonestProver, HV).run : arg = (pa,wa) ==> res ].
 move => ishc. proc. inline*. wp. rnd. 
 wp. rnd. wp. rnd. wp. skip.
@@ -88,8 +88,10 @@ apply Com_sound.
 
 
 
-have : x1.`1 \in (nseq K true). smt.
-progress.
+have : x1.`1 \in (nseq K true). 
+ have md : (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr}))
+   = (prj_path (w{hr}) (s{hr})).
+smt (prj_lemma). smt.
 have : x1.`2 \in (prj_path (permute_witness prm w{hr}) pi_gwco).
    smt.
  move => qq.
@@ -100,7 +102,7 @@ move => qqq.
    apply (supp_djoinmap Com (permute_graph prm s{hr}) pi_gwco ). apply H0.
    elim. progress.
   have : forall x, x \in (zip (permute_graph prm s{hr}) pi_gwco) => x.`2 \in Com x.`1.
-apply allP. apply H9.
+apply allP. apply H8.
 progress. apply H10. 
   have z : x1.`1 \in (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr})). smt.
   have z2 : x1.`1 \in (permute_graph prm s{hr}). smt (lemma5).
@@ -112,7 +114,7 @@ smt(lemma7 perm_eq_trans).
 smt.
 qed.
 
-local lemma hc_complete statement witness &m : IsHC (statement,witness) =>
+local lemma hc_complete statement witness &m : completeness_relation statement witness =>
   Pr[Completeness(HonestProver, HV).run(statement, witness) @ &m : true] = 1%r.
 move => inlang. byphoare (_: arg = (statement, witness) ==> _);auto. proc. inline*. wp. rnd.  simplify. wp. 
 rnd.  wp. 
@@ -122,15 +124,16 @@ rnd. wp.  skip. progress. apply perm_d_lossless. (* smt (ishc_prop2).  *)
 qed.
 
 
-local lemma hc_complete_failure statement witness &m : IsHC (statement,witness) =>
-     Pr[Completeness(HonestProver, HV).run(statement, witness) @ &m : !res] = 0%r.
+local lemma hc_complete_failure statement witness &m : 
+ completeness_relation statement witness =>
+   Pr[Completeness(HonestProver, HV).run(statement, witness) @ &m : !res] = 0%r.
 progress. byphoare (_: arg = (statement,witness) ==> _);auto.
 hoare. simplify. conseq (hc_complete_hoare statement witness H).
 qed.
 
 
-lemma hc_completeness: forall (statement : hc_prob) (witness : int list) &m,
-        IsHC (statement, witness) =>
+lemma hc_completeness: forall (statement : hc_prob) (witness : hc_wit) &m,
+        completeness_relation statement witness =>
      Pr[Completeness(HonestProver, HV).run(statement, witness) 
             @ &m : res] = 1%r.
 progress. 

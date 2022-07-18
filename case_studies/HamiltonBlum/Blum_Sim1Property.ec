@@ -192,8 +192,8 @@ declare axiom V_summitup_ll2 : islossless V.summitup.
 declare axiom V_challenge_ll2 : islossless V.challenge.
 
 
-local lemma zkp_hp'_hp (a : hc_prob * hc_wit):  IsHC a =>
-  equiv [ ZKP(HonestProver, V).run ~ ZKP(HP',V).run : (arg{2}.`1, arg{2}.`2) = a  /\ ={arg, glob V} ==> ={res} ].
+local lemma zkp_hp'_hp (g : hc_prob) (w: hc_wit):  zk_relation g w =>
+  equiv [ ZKP(HonestProver, V).run ~ ZKP(HP',V).run : (arg{2}.`1, arg{2}.`2) = (g,w)  /\ ={arg, glob V} ==> ={res} ].
 progress.
 proc. sim.
 qed.
@@ -289,21 +289,21 @@ ZKDB ~ Sim1
 
 *)
 
-local lemma sim_0_1 (a : hc_prob * hc_wit):  K = size (snd a) => IsHC a =>
+local lemma sim_0_1 (g : hc_prob) (w: hc_wit):  K = size w => zk_relation g w =>
   equiv [ Sim1_0(V,D).simulate ~ Sim1_1(V).simulate : 
-               a .`1 = arg{2}.`1 /\ a.`2 = arg{2}.`2 /\ ={arg} /\ ={glob V, glob D} ==> ={res} ].
+               g = arg{2}.`1 /\ w = arg{2}.`2 /\ ={arg} /\ ={glob V, glob D} ==> ={res} ].
 proof. move => sas ishc. proc.
 inline Sim1_0(V,D).sinit.
 inline Sim1_1(V).sinit. 
 sp.
-seq 1 1 : (p_a{2} = pa{2} /\ a = (pa,wa){2} /\
+seq 1 1 : (p_a{2} = pa{2} /\ (g,w) = (pa,wa){2} /\
   w_a{2} = wa{2} /\
   g{2} = p_a{2} /\
   p_a{1} = pa{1} /\
   g{1} = p_a{1} /\
 
   pa{1} = pa{2} /\ ={glob V, glob D,wa} /\ bb{1} = bb{2}).
-rnd. skip. progress.  smt.
+rnd. skip. progress.  
 if. auto. 
 call (_:true).
 call (_:true).
@@ -335,7 +335,7 @@ rewrite H1. simplify.
 rewrite perm_d_in1. apply H1. simplify. auto.
 apply perm_d_in2. auto.
 rewrite /compose.
-
+ 
 have ->: (prmL \o inv (mk_perm_list_fun wa{2}) \o mk_perm_list_fun wa{2})
  = (prmL \o (inv (mk_perm_list_fun wa{2}) \o mk_perm_list_fun wa{2})).
 apply fun_ext. move => x. rewrite /(\o). auto.
@@ -444,9 +444,9 @@ local module Sim1_3(V : MaliciousVerifier) = {
 }.
 
 
-local lemma sim_2_3 (a : hc_prob * hc_wit): IsHC a =>
+local lemma sim_2_3 (g : hc_prob)(w: hc_wit): zk_relation g w =>
   equiv [ Sim1_2(V).simulate ~ Sim1_3(V).simulate : 
-               arg{1}.`1 = a.`1 /\ arg{1}.`2 = a.`2 /\ ={arg} /\ ={glob V, glob D} ==> ={res} ].
+               arg{1}.`1 = g /\ arg{1}.`2 = w /\ ={arg} /\ ={glob V, glob D} ==> ={res} ].
 move => ishc.
 proc.
 inline Sim1_2(V).sinit.
@@ -454,27 +454,26 @@ inline Sim1_3(V).sinit.
 sp.
 seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
-  a = (pa{2},wa{2}) /\
+  (g,w) = (pa{2},wa{2}) /\
   g{2} = p_a{2} /\
 
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
   g{1} = p_a{1} /\
    (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob D} /\ bb{1} = bb{2}).
-rnd. skip. progress. smt.
+rnd. skip. progress. 
 case (bb{1} = true).
 rcondt {1} 1. progress. sim.
 rcondf {1} 1. progress. skip. smt.
 seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
   g{2} = p_a{2} /\
-
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
   g{1} = p_a{1} /\
  (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob D} /\ bb{1} = bb{2} /\ r{1} = r{2}).
 symmetry.
-call (zkp_hp'_hp a ). simplify. skip. progress.
+call (zkp_hp'_hp g w ). simplify. skip. progress.
 sim.
 qed.
 
@@ -628,16 +627,16 @@ proc. inline*. sim. progress. smt.
 qed.
 
 
-local lemma sim_2_9 a: IsHC a =>
+local lemma sim_2_9 g w: zk_relation g w =>
   equiv [ Sim1_2(V).simulate ~ Sim1_9(V).simulate : 
-               a.`1 = arg{1}.`1 /\ a.`2 = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
+              g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2} ].
 move => ishc.
 transitivity Sim1_3(V).simulate 
-(a.`1 = arg{1}.`1 /\ a.`2 = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
+(g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
-conseq (sim_2_3 a ishc). smt. auto. 
+conseq (sim_2_3 g w ishc). smt. auto. 
 transitivity Sim1_4(V).simulate 
 (arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob D, glob HonestProver} ==> 
@@ -709,7 +708,7 @@ require import AllCore Distr FSet StdRing StdOrder StdBigop List.
 import BRM.
 
 
-local lemma sim1_main &m pa wa:  IsHC (pa,wa) =>
+local lemma sim1_main &m pa wa:  zk_relation pa wa =>
    `|Pr[ Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ]
 
       / Pr[ Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 ]
@@ -727,11 +726,11 @@ have ->:
    Pr[Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 /\ res.`2]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ].
    byequiv. 
-conseq (sim_0_1 (pa,wa) _ _ ). smt.  simplify. smt. auto. auto. auto.
+conseq (sim_0_1 pa wa _ _ ). smt.  simplify. smt. auto. auto. auto.
 have h: 
    Pr[Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1].
-   byequiv. conseq (sim_0_1 (pa,wa) _ _). smt. smt. auto. auto. auto.
+   byequiv. conseq (sim_0_1 pa wa _ _). smt. smt. auto. auto. auto.
 
 rewrite sim_9_pr3.
 apply (ler_trans (2%r * 
@@ -748,7 +747,7 @@ have ->: Pr[Sim1_9(V).simulate(pa, wa) @ &m : res.`2 /\ res.`1] =
  Pr[Sim1_2(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2].
 byequiv (_: (pa,wa) = arg{1} /\ arg{1} = arg{2} 
  /\ ={glob V, glob D, glob HonestProver} ==> _). 
-symmetry. conseq (sim_2_9 (pa,wa) ishc). smt. smt. auto. auto.
+symmetry. conseq (sim_2_9 pa wa ishc). smt. smt. auto. auto.
 smt (sim_1_2).
 qed.    
 
@@ -787,7 +786,7 @@ local lemma qqq &m (p : hc_prob) (w : hc_wit) :
 
    islossless D.guess =>
    islossless V.summitup =>
-   IsHC (p,w) =>  
+   zk_relation p w =>  
     `|Pr[RD(Sim1'(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1'(V).run(p) @ &m : fst res] 
               - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= 2%r * negl + 20%r * negl2.
@@ -864,7 +863,7 @@ qed.
 
 lemma sim1_prop &m (p : hc_prob) (w : hc_wit) 
   : 
-   IsHC (p,w) =>  
+   zk_relation p w =>  
     `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1(V).run(p) @ &m : fst res] 
               - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= 2%r * negl + 20%r * negl2.
