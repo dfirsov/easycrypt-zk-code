@@ -76,12 +76,12 @@ move => p0 p1 p2 .
 apply (quasi_fin (prj_path w (permute_graph p g)) K) .
 apply (is_hc_perm_2 ).
 progress. 
-print permute_graph_prop3.
 case (soundness_relation (permute_graph p g) w).
 move => q. 
 apply p0. 
 have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto. 
-rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). rewrite q. auto.
+rewrite /soundness_relation.
+rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). smt.  auto.
 elim p2. smt.
 rewrite permute_graph_prop2.
 elim p1. smt.

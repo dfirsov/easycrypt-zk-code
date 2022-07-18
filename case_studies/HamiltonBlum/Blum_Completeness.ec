@@ -7,6 +7,15 @@ require import Permutation Blum_Basics.
 
 section.
 
+lemma prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
+ completeness_relation g w => perm \in perm_d K 
+  => prj_path w g = prj_path (permute_witness perm w) (permute_graph perm g).
+progress.
+have : completeness_relation (permute_graph perm g) (permute_witness perm w).
+smt (permute_graph_prop3).
+elim. progress. elim H. progress.
+rewrite - H4. rewrite  - H7. auto.
+qed.
 
 local lemma hc_complete_hoare pa wa : completeness_relation pa wa =>
    hoare[ Completeness(HonestProver, HV).run : arg = (pa,wa) ==> res ].
@@ -42,10 +51,8 @@ split. smt. split. smt. smt.
 move => p.
 have ->: b1 = false. smt.
 simplify. clear p. progress.
-apply (kjk prm ). auto. 
-
 elim ishc. smt.
-smt.  smt.
+smt.  
 have : size pi_gwco = size (permute_graph prm s{hr}). smt.
 have ->: size (permute_graph prm s{hr}) = size s{hr}. smt. 
 have ->: size s{hr} = K * K. elim ishc. smt.
@@ -82,7 +89,9 @@ apply allP.
 move => x1.
 
 have ->: (nseq K true) = (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr})).
-rewrite  (lemma3  (permute_witness prm w{hr}) (permute_graph prm s{hr})). apply lemma4. auto. auto.
+rewrite  (lemma3  (permute_witness prm w{hr}) (permute_graph prm s{hr})). 
+
+smt( permute_graph_prop3). auto. 
 progress.
 apply Com_sound.
 
