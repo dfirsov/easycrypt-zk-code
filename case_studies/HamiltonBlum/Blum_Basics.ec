@@ -98,7 +98,7 @@ axiom permute_graph_prop2 perm g : size (permute_graph perm g) = size g.
 axiom permute_graph_prop3 g perm w : perm  \in perm_d K =>
  completeness_relation g w = completeness_relation (permute_graph perm g) (permute_witness perm w).
 
-axiom permute_graph_prop4  (g : graph) (perm : permutation) : 
+axiom permute_graph_prop4  (g : graph) (perm : permutation) : perm \in perm_d K => size g = K * K =>
   permute_graph (inv perm) (permute_graph perm g) = g.
 
 axiom lemma1 ['a] : forall w (s : 'a list), size w <= size s => size (prj_path w s) = size w.

@@ -80,7 +80,7 @@ progress.
 case (soundness_relation (permute_graph p g) w).
 move => q. 
 apply p0. 
-have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto. 
+have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto.  smt (permute_graph_prop2). auto.
 rewrite /soundness_relation.
 rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). smt (perm_d_in0).  auto. auto.
 elim p2. smt.
