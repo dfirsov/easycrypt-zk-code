@@ -86,15 +86,13 @@ module HonestProver : HonestProver  = {
  } 
 }.
 
-
 (* TODO: for all perms you must add condition \in perm_d *)
 axiom permute_graph_prop1 p n : permute_graph p (compl_graph n) = (compl_graph n).
 
 axiom permute_graph_prop2 p g : size (permute_graph p g) = size g.
 
 axiom permute_graph_prop3 g perm w : 
- completeness_relation g w 
-   = completeness_relation (permute_graph perm g) (permute_witness perm w).
+ completeness_relation g w = completeness_relation (permute_graph perm g) (permute_witness perm w).
 
 axiom permute_graph_prop4  (g : graph) (p : permutation) :
  permute_graph (inv p) (permute_graph p g) = g.
@@ -103,21 +101,10 @@ axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (comp
 
 axiom lemma1 ['a] : forall w (s : 'a list), size w <= size s => size (prj_path w s) = size w.
 
-axiom lemma2 ['a 'b] (f : 'a -> 'b)  w (s : 'a list):   (prj_path  w (map f s)) = map f (prj_path  w s).
-
-  (* not needed *)
-axiom lemma3 (w : hc_wit) (s : hc_prob) : completeness_relation s w => prj_path w s = nseq K true.
-
-  (* not needed *)
-(* axiom lemma4 (w : hc_wit) (s : hc_prob) prm : completeness_relation s w =>  *)
-(*    completeness_relation (permute_graph prm s) (permute_witness prm w). *)
+axiom lemma2 ['a 'b] (f : 'a -> 'b)  w (s : 'a list):  (prj_path  w (map f s)) = map f (prj_path  w s).
 
 axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
 
-  (* not needed *)
-axiom lemma6 (x : 'a) xs (y : 'b) ys : size xs = size ys => x \in xs => y \in ys => (x,y) \in zip xs ys.
-
-(* conclusion: perm_eq (permute_witness prm w) (range 0 K) *)
 axiom lemma7 w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
 
 axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).

@@ -89,14 +89,12 @@ apply allP.
 move => x1.
 
 have ->: (nseq K true) = (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr})).
-rewrite  (lemma3  (permute_witness prm w{hr}) (permute_graph prm s{hr})). 
 
-smt( permute_graph_prop3). auto. 
+(* rewrite  (lemma3  (permute_witness prm w{hr}) (permute_graph prm s{hr})).  *)
+
+smt( permute_graph_prop3).
 progress.
 apply Com_sound.
-
-
-
 have : x1.`1 \in (nseq K true). 
  have md : (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr}))
    = (prj_path (w{hr}) (s{hr})).
@@ -106,19 +104,16 @@ have : x1.`2 \in (prj_path (permute_witness prm w{hr}) pi_gwco).
  move => qq.
 have : x1.`2 \in pi_gwco. apply (lemma5 x1.`2 (permute_witness prm w{hr})). auto.
 move => qqq.
-
   have :   size (permute_graph prm s{hr}) = size pi_gwco /\ all (fun xy => snd xy \in Com xy.`1) (zip (permute_graph prm s{hr}) pi_gwco).
    apply (supp_djoinmap Com (permute_graph prm s{hr}) pi_gwco ). apply H0.
    elim. progress.
   have : forall x, x \in (zip (permute_graph prm s{hr}) pi_gwco) => x.`2 \in Com x.`1.
 apply allP. apply H8.
 progress. apply H10. 
-  have z : x1.`1 \in (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr})). smt.
-  have z2 : x1.`1 \in (permute_graph prm s{hr}). smt (lemma5).
-have ->: x1 = (x1.`1,x1.`2). smt.
-apply (lemma6 x1.`1 (permute_graph prm s{hr}) x1.`2 pi_gwco).
-smt.
-auto. auto. 
+have H6' : 
+ x1 \in prj_path (permute_witness prm w{hr}) (zip (permute_graph prm s{hr}) pi_gwco).
+rewrite - lemma8. auto.
+rewrite  (lemma5 x1 (permute_witness prm w{hr})). apply H6'.
 smt(lemma7 perm_eq_trans).
 smt.
 qed.
