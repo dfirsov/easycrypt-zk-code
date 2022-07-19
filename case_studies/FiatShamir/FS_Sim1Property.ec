@@ -101,7 +101,7 @@ wp.
 seq 3 : (vstat = fA V_v /\ x.`1 = V_v) 1%r.
 call (_:true).  call (_:true). call (_:true). rnd. rnd. skip. auto. skip. auto.
 simplify. call V_summitup_ll. call V_challenge_ll.
-inline*.  wp. rnd. rnd. wp. skip.  smt.
+inline*.  wp. rnd. rnd. wp. skip. progress. smt. smt (d_prop5).
 case (b = b').
 rcondf 1. skip. auto. skip. auto.
 rcondt 1. skip. auto. call (s5 V_v). skip. auto. 
@@ -217,7 +217,7 @@ smt. apply (d_prop0). auto.
 move => i1 i2.  apply d_prop3. apply ZModpRing.unitrMl. auto. auto.
 apply d_prop3. apply ZModpRing.unitrMl.  smt. smt. 
 smt. 
-smt. 
+smt (@ZModpRing). 
 rnd. skip. progress. smt. smt. smt.
 smt. 
 qed.

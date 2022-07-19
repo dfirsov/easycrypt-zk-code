@@ -46,7 +46,11 @@ have f : (forall (i : int), 0 <= i && i < size (zip (nseq (size l') true) X) =>
             ver (nth witness (zip (nseq (size l') true) X) i)).
 smt (all_nthP).
 have : ver (nth witness (zip (nseq (size l') true) X) (index false l')). apply f. smt.
-have ->:  (nth witness (zip (nseq (size l') true) X) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness X (index false l'))). timeout 20. smt.
+
+
+have ->:  (nth witness (zip (nseq (size l') true) X) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness X (index false l'))).  
+rewrite - nth_zip. smt.
+smt.
 smt.
 have f : (forall (i : int), 0 <= i && i < size (zip l' l) =>
             ver (nth witness (zip l' l) i)).
@@ -83,24 +87,41 @@ apply p0.
 have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto.  smt (permute_graph_prop2). auto.
 rewrite /soundness_relation.
 rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). smt (perm_d_in0).  auto. auto.
-elim p2. smt.
+elim p2. progress. rewrite H. auto.
 rewrite permute_graph_prop2.
-elim p1. smt.
-elim p2. smt.
-smt.
+elim p1. progress.  rewrite H1. auto. 
+elim p2. progress.
+elim p2. progress. 
 elim p1. progress. 
 rewrite lemma8. rewrite lemma8.
 apply allP. progress.
-have f : x \in (zip (permute_graph p g) (zip c o1)). smt.
+have f : x \in (zip (permute_graph p g) (zip c o1)). smt(lemma5).
 apply (allP Ver ( zip (permute_graph p g) (zip c o1))). auto. auto.
-have f1 : K <= size (permute_graph p g). elim p1. smt.
-have f2 : K = size w. elim p2. smt.
+have f1 : K <= size (permute_graph p g). elim p1.
+progress. smt (permute_graph_prop2).
+
+have f2 : K = size w. elim p2. progress. rewrite H. auto.
 smt (lemma1).
 have f1 : size (prj_path w c) = K. elim p1.  elim p2. progress.
-rewrite lemma1. smt. auto.
+rewrite lemma1. rewrite H0. rewrite H. smt. auto.
 have f2 : size (prj_path w o1) = K. elim p1.  elim p2. progress.
-smt. smt.
-elim p2. progress. smt.
+smt (lemma1).
+rewrite lemma8. 
+rewrite lemma1. 
+elim p2. progress.
+rewrite H. elim p1. progress.
+have ->: size (zip c o1) = K * K. 
+rewrite size1_zip. rewrite H0. rewrite H8. auto. rewrite H6. auto.
+smt.
+
+elim p2. progress.
+elim p2. progress.
+rewrite size1_zip.
+rewrite lemma1. rewrite H. rewrite H0. smt.
+rewrite H1. rewrite H. auto.
+rewrite lemma1.
+rewrite H. rewrite H0. smt. apply H.
+
 qed.
 
 

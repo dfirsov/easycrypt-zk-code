@@ -1,6 +1,6 @@
 #!/bin/bash
 
-timeout=35
+timeout=20
 
 check() {
   echo checking $1;

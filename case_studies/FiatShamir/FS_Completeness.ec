@@ -6,19 +6,23 @@ require import FS_Basics.
 
 section.
 
+search unit.
+
 local lemma qr_complete_h ya wa : completeness_relation ya wa
    => hoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ].
 move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
-skip. progress.    smt. 
+skip.  simplify. progress.  simplify. apply ZModpRing.unitrM. smt (d_prop4).
+
 have -> : s{hr}  = (w{hr} * w{hr}).
 apply qra. 
-have ->: ch. smt. 
+have ->: ch. clear H0. smt. 
 simplify.
 smt.
 smt.
-qed.
+
+ qed.
 
 
 local lemma qr_complete_ph ya wa : completeness_relation ya wa 

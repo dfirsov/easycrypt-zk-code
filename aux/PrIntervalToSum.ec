@@ -71,6 +71,7 @@ auto. auto.
 qed.
 
 
+
 lemma pr_interval_to_sum_lemma &m : forall (a : iat) 
   (f : (glob A) -> int) 
   (P : iat -> rt -> (glob A) -> bool) 
@@ -84,7 +85,16 @@ proof. progress.
 case (s <= e). move => sep.
 have : exists e', 0 <= e' /\ e = s + e'.
 smt. elim. progress.
-apply (zzz &m a). auto. timeout 20. smt.
+apply (zzz &m a). auto. 
+progress.
+
+
+rewrite range_geq. smt. 
+rewrite big_nil.
+have ->:  Pr[A.run(a) @ &m : (s <= f (glob A) && f (glob A) <= e) /\ P a res (glob A)]
+ = Pr[A.run(a) @ &m : false ].
+rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_false]. auto.
 qed.
 
 end section.

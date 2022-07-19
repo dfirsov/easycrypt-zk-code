@@ -205,7 +205,8 @@ rewrite mulr_suml.
 rewrite mulr_suml.
 rewrite - big_split.
 simplify. smt.
-timeout 20. smt.
+
+progress. rewrite H4. auto.
 move => H5.
 have : Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1] 
         = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]  
@@ -225,7 +226,8 @@ rewrite mulr_suml.
 rewrite mulr_suml.
 rewrite - big_split_min.
 simplify. smt.
-timeout 20. smt.
+progress. rewrite H4.
+auto.
 qed.
 
 
@@ -438,7 +440,11 @@ rewrite Pr[mu_split E res.`2] .
 have ->: Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : res.`1 /\ E res.`2]
  = Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : E res.`2 /\ res.`1 ].
 smt.
-smt.
+ have -> : Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : res.`1 /\ ! E res.`2] = 
+   Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2 /\ res.`1]. rewrite Pr[mu_eq]. auto. auto.
+  have arthf : forall (a b : real), a + b - a = b. smt.
+  rewrite (arthf Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : E res.`2 /\ res.`1] Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2 /\ res.`1]).
+rewrite Pr[mu_sub]. auto. auto.
 auto.  
 clear H.
 have bf2 : Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2]

@@ -194,7 +194,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
        >= (Pr[ InitRun1(A(P)).run(p,tt) @ &m  : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]^2
             - (1%r/ (size (challenge_set ) ) %r) * Pr[ InitRun1(A(P)).run(p,tt) @ &m : hc_verify p res.`2.`2 res.`1 res.`2.`1 ])
              - deltoid. apply (hc_pok' &m p). auto.
-   timeout 20.  
    have g :       Pr[ InitRun1(A(P)).run(p,tt) @ &m 
          : hc_verify p res.`2.`2 res.`1 res.`2.`1 ]
     = Pr[Soundness(P, HV).run(p) @ &m : res]. apply www.

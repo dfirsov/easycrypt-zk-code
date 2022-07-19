@@ -468,9 +468,9 @@ rewrite Pr[mu_split (1 < W.c && W.c <= ea + 1)].
   smt. 
     have f2 : 1%r = Pr[W1(A,D).run((MyPred, ia, 1, ea, r),wa) @ &m : ! (1 < W.c && W.c <= ea + 1)] + Pr[W1(A,D).run((MyPred, ia, 1, ea, r),wa) @ &m : (1 < W.c && W.c <= ea + 1)]. 
     have  <- : Pr[W1(A,D).run((MyPred, ia, 1, ea, r),wa) @ &m : true ] = 1%r.
-    smt.
+    smt.                        (* how does it do it?? *)
    rewrite Pr[mu_split (1 < W.c && W.c <= ea + 1)]. simplify.
-   smt. auto. timeout 20. smt. smt. smt.
+   smt. auto. smt. smt. smt.
 rewrite big_int_cond.
 rewrite (whp_cap_fin_int_sum_D &m ia MyPred (fun x => MyPred (snd x) /\   fst x) ea r).
 simplify.
