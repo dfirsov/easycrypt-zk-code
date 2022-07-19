@@ -65,6 +65,7 @@ qed.
 
 lemma fin_bind_real   (w : hc_wit) (g : graph)  c o1 (p : permutation) X: 
    !soundness_relation g (permute_witness (inv p) w) =>  
+   p \in perm_d K =>
    hc_verify (g) c true  (Left (p,o1)) =>
    hc_verify (g) c false (Right (w,X)) 
   => Ver (true,  nth witness ( (zip (prj_path w c)
@@ -72,7 +73,7 @@ lemma fin_bind_real   (w : hc_wit) (g : graph)  c o1 (p : permutation) X:
      Ver (false, nth witness ( (zip (prj_path  w c)
                              (prj_path w o1))) (index false ( (prj_path w (permute_graph p g))))).
 proof.  
-move => p0 p1 p2 .
+move => p0 pin p1 p2 .
 apply (quasi_fin (prj_path w (permute_graph p g)) K) .
 apply (is_hc_perm_2 ).
 progress. 
@@ -81,7 +82,7 @@ move => q.
 apply p0. 
 have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto. 
 rewrite /soundness_relation.
-rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). smt.  auto.
+rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). smt (perm_d_in0).  auto. auto.
 elim p2. smt.
 rewrite permute_graph_prop2.
 elim p1. smt.
@@ -200,7 +201,7 @@ have ->: result_R.`2.`2 = false. smt.
  move => zz2 zz3.
 elim zz2.  move => _. elim zz3.
 move => _ qq ll. 
-rewrite (fin_bind_real  x.`1 s). auto.
+rewrite (fin_bind_real  x.`1 s). auto. smt.
 smt. smt. simplify.
 
 have ->: (nth witness <: commitment * opening> (zip (prj_path x.`1 result_R.`1.`1) x.`2)
@@ -223,7 +224,7 @@ move => x p1 p2 p3 p4.
 simplify .
 move => z.
 rewrite (fin_bind_real  p1.`1 s ).  auto. 
-smt. smt. simplify. 
+smt. smt. smt. simplify. 
 have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)
    (index false (prj_path p1.`1 (permute_graph x.`1 s))))
  = (nth (fst witness <:commitment * opening>, snd witness <:commitment * opening>) (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)

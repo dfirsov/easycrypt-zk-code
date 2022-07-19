@@ -29,6 +29,7 @@ op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
                         /\ size c = K * K
                         /\ size p = K * K
                         /\ size x.`2 = K * K
+                        /\ x.`1 \in perm_d K
  with r = (Right x) => ! b /\ size x.`1 = K
                            /\ size c = K * K
                            /\ size x.`2 = K
@@ -86,18 +87,19 @@ module HonestProver : HonestProver  = {
  } 
 }.
 
-(* TODO: for all perms you must add condition \in perm_d *)
+
+
 axiom permute_graph_prop1 p n : permute_graph p (compl_graph n) = (compl_graph n).
 
-axiom permute_graph_prop2 p g : size (permute_graph p g) = size g.
+axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
 
-axiom permute_graph_prop3 g perm w : 
+axiom permute_graph_prop2 perm g : size (permute_graph perm g) = size g.
+
+axiom permute_graph_prop3 g perm w : perm  \in perm_d K =>
  completeness_relation g w = completeness_relation (permute_graph perm g) (permute_witness perm w).
 
-axiom permute_graph_prop4  (g : graph) (p : permutation) :
- permute_graph (inv p) (permute_graph p g) = g.
-
-axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
+axiom permute_graph_prop4  (g : graph) (perm : permutation) : 
+  permute_graph (inv perm) (permute_graph perm g) = g.
 
 axiom lemma1 ['a] : forall w (s : 'a list), size w <= size s => size (prj_path w s) = size w.
 
@@ -108,6 +110,12 @@ axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
 axiom lemma7 w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
 
 axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
+
+
+
+
+
+
 
 
 

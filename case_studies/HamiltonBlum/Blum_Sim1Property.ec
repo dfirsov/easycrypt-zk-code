@@ -332,10 +332,12 @@ apply fun_ext. move => x. smt.
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite H1. simplify.
-rewrite perm_d_in1. apply H1. smt.
+rewrite /compose. rewrite perm_d_comp.  apply H1. smt(perm_d_in4).
 
-simplify. auto.
-apply perm_d_in2. auto. smt.
+ smt.
+apply perm_d_comp. auto.  apply perm_d_in0. smt(perm_d_in4).
+
+
 rewrite /compose.
  
 have ->: (prmL \o inv (mk_perm wa{2}) \o mk_perm wa{2})
