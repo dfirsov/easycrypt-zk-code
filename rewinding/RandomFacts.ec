@@ -8,7 +8,6 @@ require (*--*) FinType.
 require import Logic.
 
 
-search dlet.
 
 (* "sum" interpretation of dlet *)
 lemma dlet_mu_main ['a, 'b]:

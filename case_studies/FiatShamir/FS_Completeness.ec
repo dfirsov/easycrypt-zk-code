@@ -6,8 +6,6 @@ require import FS_Basics.
 
 section.
 
-search unit.
-
 local lemma qr_complete_h ya wa : completeness_relation ya wa
    => hoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ].
 move => [qra invrtbl].

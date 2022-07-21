@@ -157,8 +157,6 @@ have ->: mu1 (D1 i1 (glob A){m}) (tt, g) * p +
   = sum
   (fun (x : unit * (glob A)) =>
       mu1 (D1 i1 (glob A){m}) x * p).
-search sum.
-print sumD1.
 rewrite (sumD1 (fun (x : unit * (glob A)) => mu1 (D1 i1 (glob A){m}) x * p) (tt,g)). 
 have ->: (fun (x : unit * (glob A)) => mu1 (D1 i1 (glob A){m}) x * p) 
  = (fun (x : unit * (glob A)) => p * mu1 (D1 i1 (glob A){m}) x ).

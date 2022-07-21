@@ -108,7 +108,6 @@ have f3 : size xR.`1 = size l1{2}. smt.
 have f4 : size xR.`2 = size l2{2}. smt.
 rewrite /merge.
 rewrite - f3. smt.
-search dmap.
 have f : exists (a : b list * b list), (a \in djoinmap d l1{2} `*` djoinmap d l2{2}) /\ xL = merge a.
 apply supp_dmap. auto.
 elim f. progress.

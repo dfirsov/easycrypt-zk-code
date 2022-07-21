@@ -55,7 +55,6 @@ apply summableZ. auto.
 qed.
 
 
-search drestrict.
 local lemma has_E (X : 'a distr) M g :  mu X M > 0%r => hasE X g 
  => hasE (inv (mu X M) \cdot drestrict X M) g.
 proof. progress.
@@ -68,7 +67,6 @@ auto.
 qed.
 
 
-search mk.
 local lemma qqq (X : 'a distr) c f : 0%r <= c && c <= inv (weight X) 
   => c * E X f = E (c \cdot X) f.
 proof. rewrite /E. rewrite - sumZ.

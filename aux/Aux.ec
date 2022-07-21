@@ -159,7 +159,6 @@ progress.
 have ->: 1%r - p ^ 0 = 0%r. smt.
 smt.
 progress.
-search big.
 rewrite big_int_recr. auto. simplify.
 rewrite H0. auto.  smt.
 qed.

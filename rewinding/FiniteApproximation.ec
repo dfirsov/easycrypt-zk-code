@@ -20,7 +20,6 @@ proof.  progress.
 rewrite muE. smt.
 qed.
 
-search isdistr.
 local lemma nosmt le4 ['a] :  forall (d : 'a distr),  
    summable (fun (x : 'a) => mass d x).
 proof. progress.

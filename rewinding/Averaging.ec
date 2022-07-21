@@ -135,7 +135,7 @@ rewrite mu_and. timeout 30. smt.
 smt.
 qed.
 
-search big.
+
 local lemma oks' &m P d i2: 
   summable (fun r => (mu1 d r) * Pr[ A.main(r,i2) @ &m : P res ]).
 simplify summable. exists 1%r.

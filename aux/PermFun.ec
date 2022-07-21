@@ -299,8 +299,7 @@ progress.
 have f2 : exists i, 0 <= i < (size l) /\ nth witness l i = x.
 exists (index x l). smt.
 elim f2. move => i [p1 p2].
-have f3 : forall j, 0 <= j < (size l) => nth witness l j = x => j = i
-. timeout 20. smt.
+have f3 : forall j, 0 <= j < (size l) => nth witness l j = x => j = i. smt.
 have : count (pred1 x) l = 1. smt.
 progress. rewrite H2. clear H2.
 have  z : nth witness (pi p l) (p i) = x. smt.
@@ -309,7 +308,7 @@ progress.
 have f6 : (inv p j) = i.
 apply f3. 
 have f9 : j < size l. smt.
-timeout 30. clear f H1 p2 f3. smt.
+clear f H1 p2 f3. smt.
 smt. clear  z f3 p2 H1 f  H3 H2 .  smt.
 have f7 :  0 <= (p i) && (p i) < size l. smt.
 have ->: count (pred1 x) (pi p l) = 1. 
