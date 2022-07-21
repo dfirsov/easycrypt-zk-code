@@ -14,15 +14,13 @@ move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
 skip.  simplify. progress.  simplify. apply ZModpRing.unitrM. smt (d_prop4).
-
 have -> : s{hr}  = (w{hr} * w{hr}).
 apply qra. 
 have ->: ch. clear H0. smt. 
 simplify.
 smt.
 smt.
-
- qed.
+qed.
 
 
 local lemma qr_complete_ph ya wa : completeness_relation ya wa 

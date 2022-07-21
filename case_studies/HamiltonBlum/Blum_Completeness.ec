@@ -7,7 +7,7 @@ require import Permutation Blum_Basics.
 
 section.
 
-lemma prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
+local lemma prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
  completeness_relation g w => perm \in perm_d K 
   => prj_path w g = prj_path (permute_witness perm w) (permute_graph perm g).
 progress.
@@ -16,6 +16,7 @@ smt (permute_graph_prop3).
 elim. progress. elim H. progress.
 rewrite - H4. rewrite  - H7. auto.
 qed.
+
 
 local lemma hc_complete_hoare pa wa : completeness_relation pa wa =>
    hoare[ Completeness(HonestProver, HV).run : arg = (pa,wa) ==> res ].
@@ -59,40 +60,19 @@ have ->: size s{hr} = K * K. elim ishc. smt.
 move => q. 
 have qqq : size (prj_path (permute_witness prm w{hr}) pi_gwco) = K.
 smt. smt.
-
-(* have ->: size (unzip1 x0) = size x0. smt. *)
-(* have -> : size x0 = size (permute_graph prm s{hr}). smt(supp_djoinmap). *)
-(* have -> : size (permute_graph prm s{hr}) = size (s{hr}). smt. smt. *)
-
-
-(* have : size (prj_path (permute_witness prm w{hr}) x0) = K. *)
-(*    have ->: K = size (permute_witness prm w{hr}). smt. *)
-(* apply (lemma1 (permute_witness prm w{hr}) x0).  *)
-(*   have -> : size (permute_witness prm w{hr}) = size w{hr}. smt. *)
-(* have -> : size x0 = size (permute_graph prm s{hr}). smt(supp_djoinmap). *)
-(* have -> : size (permute_graph prm s{hr}) = size (s{hr}). smt.  *)
-(* elim ishc. smt. *)
-(* smt. *)
-
 have ->: (prj_path (permute_witness prm w{hr}) (unzip1 pi_gwco))
   = (unzip1 (prj_path (permute_witness prm w{hr}) pi_gwco)).
 rewrite lemma2. auto.
-
 have ->: 
  (zip (unzip1 (prj_path (permute_witness prm w{hr}) pi_gwco))
         (unzip2 (prj_path (permute_witness prm w{hr}) pi_gwco)))
  = ((prj_path (permute_witness prm w{hr}) pi_gwco)). 
 apply zip_unzip.
 elim ishc. progress.
-
 apply allP.
 move => x1.
-
 have ->: (nseq K true) = (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr})).
-
-(* rewrite  (lemma3  (permute_witness prm w{hr}) (permute_graph prm s{hr})).  *)
-
-smt( permute_graph_prop3).
+smt(permute_graph_prop3).
 progress.
 apply Com_sound.
 have : x1.`1 \in (nseq K true). 
@@ -117,6 +97,7 @@ rewrite  (lemma5 x1 (permute_witness prm w{hr})). apply H6'.
 smt(lemma7 perm_eq_trans).
 smt.
 qed.
+
 
 local lemma hc_complete statement witness &m : completeness_relation statement witness =>
   Pr[Completeness(HonestProver, HV).run(statement, witness) @ &m : true] = 1%r.
@@ -149,6 +130,23 @@ rewrite Pr[mu_split res].
 rewrite hc_complete_failure;auto. 
 smt.
 qed.
+
+
+(* iterated completeness for Blum protocol  *)
+lemma hc_completeness_iter: forall (statement:hc_prob) (witness:hc_wit) &m n,
+        1 <= n =>
+       completeness_relation statement witness =>
+      Pr[CompletenessAmp(HonestProver,HV).run(statement, witness,n) @ &m : res] = 1%r.
+progress.
+apply (BlumProtocol.CompletenessTheory.Perfect.completeness_seq HonestProver HV _ _ _ _ _ &m).
+proc.  skip.  auto.
+proc.  wp.  rnd.  skip.  progress. smt.
+proc.  wp.  skip. auto.
+proc. rnd. conseq (_: _ ==> true). progress. smt(djoinmap_weight Com_lossless). wp. rnd. wp. skip. smt (perm_d_lossless).
+progress.
+apply hc_completeness. auto. auto. auto.
+qed.
+
 
 end section.
 
