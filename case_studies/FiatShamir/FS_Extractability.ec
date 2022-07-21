@@ -23,8 +23,8 @@ declare axiom rewindable_P_plus :
          islossless P.setState).
 
 
-
-lemma qr_computational_PoK &m  s: 
+(* automatically implying proof-of-knowledge from special soundness  *)
+lemma qr_statistical_PoK &m  s: 
   Pr[Extractor(P).extract(s) @ &m : soundness_relation s res ] >=
    (Pr[Soundness(P, HV).run(s) @ &m : res]^2
      - (1%r/2%r) * Pr[Soundness(P, HV).run(s) @ &m : res]).

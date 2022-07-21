@@ -6,10 +6,6 @@ require import FS_SpecialSoundness.
 require import FS_Extractability.
 import SST.
 
-
-
-
-
 section.
 
 declare module P <: RewMaliciousProver {-HV}.
@@ -27,7 +23,7 @@ declare axiom rewindable_P_plus :
            Pr[P.setState(b) @ &m : glob P = x] = 1%r) /\
          islossless P.setState).
 
-
+(* one-round soundnedss  *)
 lemma qr_soundness &m s:
     ! in_language soundness_relation s =>
      Pr[Soundness(P, HV).run(s) @ &m : res]
@@ -43,6 +39,7 @@ qed.
 clone import SoundnessTheory.
 clone import Statistical with op soundness_error <= fun _ => 1%r/2%r.
 
+(* automatic conclusion of iterated soundness *)
 lemma qr_soundness_iter &m s n:
      1 <= n =>
      ! in_language soundness_relation s =>
@@ -51,7 +48,7 @@ lemma qr_soundness_iter &m s n:
 proof. progress.
 apply (soundness_seq P  _ _ _ _ _ &m).
 proc. skip. auto.
-proc. wp. rnd. skip. progress. smt.
+proc. wp. rnd. skip. progress. smt(@Distr).
 apply P_response_ll.
 apply P_commitment_ll.
 apply qr_soundness. auto. auto.

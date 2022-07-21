@@ -4,10 +4,10 @@ require import FS_Basics.
 
 clone import ZeroKnowledgeTheory as ZKT.
 clone import OneShotSimulator as OSS.
+import ZMR.
 
 
-
-(* one-time simulator  *)
+(* one-time simulator *)
 module Sim1(V : RewMaliciousVerifier)  = {
   proc sinit(y : qr_stat) : bool * zmod * zmod = {
     var r,bb;
@@ -31,11 +31,11 @@ module Sim1(V : RewMaliciousVerifier)  = {
 
 
 
-
-lemma qr_prop1 (x : zmod) : unit x => x * (inv x)  = one. smt. qed.
-lemma qr_prop2 (x y w : zmod) : unit y => y = w * w => unit w. smt. qed.
-lemma qr_prop3 (w : zmod) : unit  w => inv (w * w) = (inv w) * (inv w). smt. qed.
-lemma qr_prop11 (x : zmod) : unit x => (inv x) * x = one. smt. qed.
+(* basic algebraic properties  *)
+lemma qr_prop1 (x : zmod) : unit x => x * (inv x)  = one. smt(@ZMR). qed.
+lemma qr_prop2 (x y w : zmod) : unit y => y = w * w => unit w. smt(@ZMR). qed.
+lemma qr_prop3 (w : zmod) : unit  w => inv (w * w) = (inv w) * (inv w). smt(@ZMR). qed.
+lemma qr_prop11 (x : zmod) : unit x => (inv x) * x = one. smt(@ZMR). qed.
 lemma qr_prop5 (x y r : zmod) : in_language completeness_relation x 
   => !in_language completeness_relation y => unit y => x * y  <> r * r.
 progress.
@@ -44,19 +44,26 @@ case (x * y = r * r). elim H.
 move => H xinv.
 pose w := witness.
 rewrite  H. 
-have iw : invertible witness.  smt.
+have iw : invertible witness.  smt(@ZMR).
 move => eq.
-have eq2 :  (inv w) * w * w * y = (inv w) * r * r. smt.
-have eq3 :  w * y = (inv w) * r * r. smt.
+have eq2 :  (inv w) * w * w * y = (inv w) * r * r. smt(@ZMR).
+have eq3 :  w * y = (inv w) * r * r. smt(@ZMR).
 clear eq2 eq.
-have eq4 :  (inv w) * w * y = ((inv w) * r) * (inv w) * r. smt.
-have eq5 :  y = ((inv w) * r) * ((inv w) * r). smt.
+have eq4 :  (inv w) * w * y = ((inv w) * r) * (inv w) * r. smt(@ZMR).
+have eq5 :  y = ((inv w) * r) * ((inv w) * r). smt(@ZMR).
 apply H0. exists (inv w * r). split.
 apply eq5. auto.
 auto.
 qed.
 
 
+
+(* In this section we prove two lemmas:
+
+- lemma "sim1_succ" eastablishes the probability of a success-event
+- lemma "sim1_erorr" establishes the probability of successful extraction conditioned on the success-event
+
+*)
 section.
 
 declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
@@ -65,7 +72,7 @@ declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}
 declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom V_challenge_ll : islossless V.challenge.
 
-
+(* rewindability assumption *)
 declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
   injective f /\
@@ -80,7 +87,7 @@ declare axiom rewindable_V_plus :
     hoare[V.setState: b = f x ==> glob V = x]) /\
   islossless V.setState.
 
-  
+(* if good-event does not happen then Sim1(V) rewinds its state  *)
 lemma sim1_rew_ph : forall (x : (glob V) * (glob Sim1)),
     phoare[ Sim1(V).run :
              ((glob V), (glob Sim1)) = x
@@ -101,13 +108,13 @@ wp.
 seq 3 : (vstat = fA V_v /\ x.`1 = V_v) 1%r.
 call (_:true).  call (_:true). call (_:true). rnd. rnd. skip. auto. skip. auto.
 simplify. call V_summitup_ll. call V_challenge_ll.
-inline*.  wp. rnd. rnd. wp. skip. progress. smt. smt (d_prop5).
+inline*.  wp. rnd. rnd. wp. skip. progress. smt(@Distr). smt (d_prop5).
 case (b = b').
 rcondf 1. skip. auto. skip. auto.
 rcondt 1. skip. auto. call (s5 V_v). skip. auto. 
 progress. 
-have -> : tt = x.`2. smt.
-smt.
+have -> : tt = x.`2. smt().
+smt().
 hoare. simplify.
 call (_:true). call (_:true). call (_:true). rnd. rnd. skip. auto.
 skip. auto. auto.  hoare. simplify. 
@@ -123,6 +130,7 @@ section.
 declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
 declare module D <: ZKDistinguisher.
 
+(* rewindability assumption  *)
 declare axiom rewindable_V_plus2 : 
   exists (f : glob V -> sbits),
   injective f /\
@@ -140,7 +148,7 @@ declare axiom rewindable_V_plus2 :
 declare axiom summitup_ll  :  islossless V.summitup.
 declare axiom challenge_ll :  islossless V.challenge.
 declare axiom D_guess_ll : islossless D.guess.
-
+declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
 
 (* transformed simulator with independent coin flip *)
 local module Sim1'  = {
@@ -179,14 +187,13 @@ local module Sim1'  = {
 
 
 
-declare axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
 
 local lemma qrp_zk2_eq ya wa  : zk_relation ya wa =>
   equiv [ZKReal(HP, V, D).run ~ Sim1'.run
          : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl } /\ arg{1} = (ya, wa)
           ==> res{1} = res{2}.`2 ].
 move => isqr. proc.
-call jk.
+call D_guess_prop.
 inline*. sp.
 call (_:true).  simplify.  
 wp. simplify. call (_:true).
@@ -211,15 +218,15 @@ exists* bb{1}. elim*. progress.
 wp. case (bb_L = true).     
 rnd (fun (x : zmod) => (x * inv wa ))
       (fun (x : zmod) => (x * wa )). skip. progress.
-smt. apply (d_prop0). auto.
-  have : unit wa.  smt.
-  have : unit rR. smt.
+smt(@ZMR). apply (d_prop0). auto.
+  have : unit wa.  smt(@ZMR).
+  have : unit rR. smt(d_prop4).
 move => i1 i2.  apply d_prop3. apply ZModpRing.unitrMl. auto. auto.
-apply d_prop3. apply ZModpRing.unitrMl.  smt. smt. 
-smt. 
+apply d_prop3. apply ZModpRing.unitrMl.  smt(@ZMR). smt(d_prop4). 
+smt(@ZMR). 
 smt (@ZModpRing). 
-rnd. skip. progress. smt. smt. smt.
-smt. 
+rnd. skip. progress. smt(@ZMR). smt(). smt(@ZMR).
+smt(@ZMR). 
 qed.
 
 
@@ -241,7 +248,7 @@ elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]]. 
 exists* (glob V){1}. elim*. progress.
 call {1} (s2 V_L).
-skip. progress. smt.  smt.  
+skip. progress. smt().  smt().
 seq 1 1 : (={glob V,b',z,Ny,w, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
          /\ Ny{1} = a{1}
          /\ b0{1} = b{2}
@@ -255,19 +262,19 @@ exists* b'{1}. elim*. progress.
 case (b'_L = true).
 exists* b0{1}. elim*. progress.
 case (b0_L = true). 
-call jk. 
+call D_guess_prop. 
 wp.  simplify.
 case (b0{1} = b'{1}). 
 rcondf {1} 2. progress. call (_:true). skip. auto.
-call (_:true). skip. progress. smt.
+call (_:true). skip. progress. smt(@ZMR).
 rcondt {1} 2. progress. call (_:true). skip. auto.
-conseq (_: b0{1} <> b'{1} ==> true ). smt. smt.
+conseq (_: b0{1} <> b'{1} ==> true ). smt(). smt().
 elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  
 call {1} s7.
 call {1} summitup_ll.
 call {2} summitup_ll. skip. auto.
-conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt. smt.
+conseq (_: b0{1} <> b'{1} ==> !r{1}.`1 ). smt(). smt().
 call {1} (_: true ==> true). apply D_guess_ll.
 wp. 
 call {2} (_: true ==> true). apply D_guess_ll. simplify.
@@ -278,13 +285,13 @@ skip. auto.
 if{1}.
 elim rewindable_V_plus2.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].  call {1} s7. skip. auto.
-skip. smt.
+skip. smt().
 exists* b0{1}. elim*. progress.
 case (b0_L = false).
- call jk. wp.  simplify.
-rcondf {1} 2. progress. call (_:true). skip. smt.
-call (_:true). skip. progress. smt.
-conseq (_: b0{1} <> b'{1} ==>  !r{1}.`1 ). smt. smt.
+ call D_guess_prop. wp.  simplify.
+rcondf {1} 2. progress. call (_:true). skip. smt().
+call (_:true). skip. progress. smt(@ZMR).
+conseq (_: b0{1} <> b'{1} ==>  !r{1}.`1 ). smt(). smt().
 call {1} D_guess_ll.
 call {2} D_guess_ll. wp. simplify.
 rcondt {1} 2. progress. call (_:true). skip. auto.
@@ -302,8 +309,8 @@ local lemma ssim ya wa  : zk_relation ya wa =>
            /\  ((ya),wa) = (Ny{2},w{2}) 
        ==> (fst res{1}.`2) = res.`1{2} ].
 move => ii.
-conseq (qkok ya wa (fun x => true) ii). smt.
-progress. smt.
+conseq (qkok ya wa (fun x => true) ii). smt().
+progress. smt().
 qed.
 
 
@@ -312,16 +319,16 @@ local lemma sim1'not &m ya wa  :
 proof.
 have ->: Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m : ! res.`1]. 
 byequiv (_: ={glob V, glob D, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _) . proc. 
-call jk. progress.
+call D_guess_prop. progress.
 call (_:true). wp.  simplify.
-call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt. auto. auto.
+call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt(). auto. auto.
 byphoare. proc. inline*. simplify. 
 swap [2..3] 4. wp.
 seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
  auto. call D_guess_ll.
 call summitup_ll. wp. 
-call challenge_ll. rnd.  skip. smt. 
-rnd. skip. progress. smt. 
+call challenge_ll. rnd.  skip. smt(d_prop5). 
+rnd. skip. progress. smt (@DBool).
 exfalso. auto. auto.  auto. auto.
 qed.
 
@@ -330,7 +337,7 @@ local lemma sim1'notnot &m ya wa:
 proof.
 have ->: Pr[Sim1'.run(ya, wa) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m :  res.`1].
 byequiv (_: ={arg,glob D, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). proc.
-call jk. progress.
+call D_guess_prop. progress.
 call (_:true). wp.  simplify.
 call (_:true). inline*. wp.  rnd.  rnd. skip. progress.  auto. auto.
 byphoare. proc. inline*. simplify.
@@ -338,10 +345,9 @@ swap [2..3] 4. wp.
 seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
 auto. call D_guess_ll.
 call summitup_ll. wp.
-call challenge_ll. wp. rnd. skip. smt.
+call challenge_ll. wp. rnd. skip. progress. smt(d_prop5).
 rnd. skip. progress.
-case (b{hr}). smt.
-smt.
+smt (@DBool). 
 exfalso. auto. auto.  auto. auto.
 qed.
 
@@ -356,8 +362,7 @@ have <-: Pr[Sim1'.run(ya,wa) @ &m : ! res.`1] = inv 2%r.
 apply sim1'not.
 byequiv 
  (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> (fst res.`2){1} = res.`1{2}).
-conseq (ssim ya wa ii). progress. auto. smt. 
-
+conseq (ssim ya wa ii). progress. auto. smt(). 
 qed.
 
 local lemma simnresnotnot ya wa : zk_relation ya wa =>
@@ -368,7 +373,7 @@ rewrite H. clear H.
 have <-: Pr[Sim1'.run(ya,wa) @ &m :  res.`1] = inv 2%r.
 apply sim1'notnot.
 byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> (fst res.`2){1} = res.`1{2}). 
-conseq (ssim ya wa ii). auto. auto. smt.
+conseq (ssim ya wa ii). auto. auto. smt().
 qed.
 
   
@@ -389,22 +394,22 @@ have : Pr[ Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2 ]
  = Pr[ Sim1'.run(ya,wa) @ &m : !res.`1 /\ res.`2 ].
 byequiv (_: ={glob Sim1',arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _).  
 proc.  inline*.
-call jk. wp. 
+call D_guess_prop. wp. 
 call (_:true). wp. 
 call (_:true). wp. 
 rnd (fun x => !x). rnd. wp. skip. progress.
-smt. smt. auto. auto.
+smt(). smt(). auto. auto.
 have ->: Pr[Sim1'.run(ya, wa) @ &m : res.`2] =
  Pr[Sim1'.run(ya, wa) @ &m : res.`1 /\ res.`2] +
    Pr[Sim1'.run(ya, wa) @ &m : ! res.`1 /\ res.`2].
 rewrite Pr[mu_split res.`1]. 
 have ->: Pr[Sim1'.run(ya, wa) @ &m : res.`2 /\ res.`1]
- = Pr[Sim1'.run(ya, wa) @ &m : res.`1 /\ res.`2]. smt.
+ = Pr[Sim1'.run(ya, wa) @ &m : res.`1 /\ res.`2]. rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[Sim1'.run(ya, wa) @ &m : res.`2 /\ !res.`1]
- = Pr[Sim1'.run(ya, wa) @ &m : !res.`1 /\ res.`2]. smt.
+ = Pr[Sim1'.run(ya, wa) @ &m : !res.`1 /\ res.`2]. rewrite Pr[mu_eq]. smt(). auto.
 auto.
 move => q.
-rewrite - q. smt.
+rewrite - q. smt().
 qed.
  
 
@@ -417,17 +422,14 @@ proof.
 move => ii.
 have ->:     Pr[RD(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
  = Pr[Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2].
-
-
-
 byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> _). 
-conseq (qkok ya wa (fun x => x) _). progress;smt. auto. auto.
+conseq (qkok ya wa (fun x => x) _). progress;smt(). auto. auto.
 auto. rewrite (sd &m ya wa).
-rewrite (qrp_zk2_pr_l &m ya wa). smt. auto.
+rewrite (qrp_zk2_pr_l &m ya wa). auto. auto.
 qed.
     
 
-lemma sim1assc &m stat :  in_language zk_relation stat =>
+lemma sim1_succ &m stat :  in_language zk_relation stat =>
  Pr[Sim1(V).run(stat) @ &m : res.`1] = 1%r/2%r.
 proof. progress.
 elim H. move => w wrel.
@@ -437,26 +439,27 @@ byequiv (_: _ ==> (fst res{1} = fst res.`2{2})).
 proc. simplify.
  inline*. 
 call {2} D_guess_ll. wp. simplify.
-sim. auto.  smt.   smt. smt.
+sim. auto. smt(). auto. smt().
 byphoare (_: arg = (stat, w) ==> _). 
 conseq (simnresnotnot stat w  _). auto. auto.  auto.
 qed.
 
-lemma sim1_prop &m (p : qr_stat) (w : qr_wit) :
+
+lemma sim1_error &m (p : qr_stat) (w : qr_wit) :
    zk_relation p w =>
     `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1(V).run(p) @ &m : fst res] 
               - Pr[ ZKD(HP,V,D).main(p,w) @ &m : res ]| = 0%r. 
 progress.
 rewrite sim1zk.  auto.
-rewrite (sim1assc &m p ). exists w. auto.
+rewrite (sim1_succ &m p ). exists w. auto.
 simplify.
 have ->: Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] * 2%r / 2%r
  = Pr[ZKReal(HP, V, D).run(p, w) @ &m : res].
-smt.
+smt().
 have : Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] =
   Pr[ZKD(HP, V, D).main(p, w) @ &m : res] .
-byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (p,w) ==> _). proc. call jk. sim. smt. smt.  auto. smt.
+byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (p,w) ==> _). proc. call D_guess_prop. sim. smt(). auto. smt().
 qed.
 
 

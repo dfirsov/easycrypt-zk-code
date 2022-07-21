@@ -1,14 +1,17 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Aux.
 
+(* All generic definitions associated with sigma protocols.  *)
 require  GenericSigmaProtocol.
 
 
-require import ZModP.           (* standard library formalization of zmod fields, rings, etc.  *)
-clone include ZModRing.         (* for FiatShamir we must use ring since in ZModField QR is efficiently computable *)
+(* standard library formalization of zmod fields, rings, etc.  *)
+(* for FiatShamir we must use ring since in ZModField QR is efficiently computable *)
+require import ZModP.           
+clone import ZModRing as ZMR.         
 
-abbrev invertible = unit.       (* more intuitive synonym *)
-
+(* more intuitive synonym *)
+abbrev invertible = unit.       
 
 (* uniform distribution of invertible elements, could be constructed from DZmodP   *)
 op zmod_distr : zmod distr.
@@ -24,12 +27,12 @@ type qr_wit  = zmod.
 type qr_com  = zmod.
 type qr_resp = zmod.
 
-
+(* defining relations for completeness, soundness, and ZK *)
 op completeness_relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
 op soundness_relation = completeness_relation.
 op zk_relation = completeness_relation.
 
-
+(* Schnorr's verification function  *)
 op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
  let c = x.`1 in 
  let b = x.`2 in
@@ -37,8 +40,8 @@ op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
  unit c /\ unit p /\ if b then c * p = r * r 
                           else c = r * r.
 
-
-clone export GenericSigmaProtocol as FiatShamir with 
+(* cloning the generic definition with specific FiatShamir details  *)
+clone export GenericSigmaProtocol as FiatShamirProtocol with 
   type statement       <- qr_stat,
   type commitment      <- qr_com,  
   type witness         <- qr_wit,
@@ -51,7 +54,7 @@ clone export GenericSigmaProtocol as FiatShamir with
   op zk_relation           <- zk_relation.
 
 
-(* Honest Prover *)
+(* standard implementation of Honest Prover *)
 module HP : HonestProver = {
   var r, y, w : zmod
 
