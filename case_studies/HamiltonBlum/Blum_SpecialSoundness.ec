@@ -44,21 +44,31 @@ progress.
 have f : (forall (i : int), 0 <= i && i < size (zip (nseq (size l') true) X) =>
             ver (nth witness (zip (nseq (size l') true) X) i)).
 smt (all_nthP).
-have : ver (nth witness (zip (nseq (size l') true) X) (index false l')). apply f. smt.
-have ->:  (nth witness (zip (nseq (size l') true) X) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness X (index false l'))).  
-rewrite - nth_zip. smt.
-smt.
-smt.
+have : ver (nth witness (zip (nseq (size l') true) X) (index false l')). apply f. split.
+smt(index_ge0). progress. 
+rewrite size2_zip.
+rewrite size_nseq. smt(). smt(index_mem).
+have ->:  (nth witness <:bool * 'a>  (zip (nseq (size l') true) X) (index false l')) = ((nth (witness <: bool * 'a>).`1 (nseq (size l') true) (index false l')), (nth (witness <: bool * 'a>).`2 X (index false l'))).  
+rewrite - nth_zip. rewrite size_nseq. rewrite H3. smt(@List).
+smt (nth_zip).
+have ->: nth witness<:bool * 'a>.`1 (nseq (size l') true) (index false l') = true.
+rewrite nth_nseq_if. rewrite index_ge0. simplify.  rewrite index_mem. rewrite H. simplify. auto.
+rewrite (nth_change_dfl witness witness<: bool * 'a>.`2). rewrite index_ge0. simplify.
+smt(index_mem). auto.
 have f : (forall (i : int), 0 <= i && i < size (zip l' l) =>
             ver (nth witness (zip l' l) i)).
 smt (all_nthP).
 have : ver (nth witness (zip l' l) (index false l')).
-apply f. smt.
-have ->: (nth witness (zip l' l) (index false l'))
-  = ((nth witness l' (index false l')), (nth witness l (index false l'))). smt.
-have ->: nth witness l' (index false l')
- = false. smt.
-trivial.
+apply f. split.
+smt(index_ge0). progress. 
+rewrite size2_zip. smt(). smt(index_mem).
+have ->: (nth witness <:bool * 'a> (zip l' l) (index false l'))
+  = ((nth witness<:bool * 'a>.`1 l' (index false l')), (nth witness<:bool * 'a>.`2 l (index false l'))). 
+rewrite - nth_zip. smt(). smt (nth_zip).
+have ->: nth witness<:bool * 'a>.`1 l' (index false l') = false. 
+smt(@List).
+rewrite (nth_change_dfl witness witness<: bool * 'a>.`2). rewrite index_ge0. simplify.
+smt(index_mem). auto.
 qed.
 
 
@@ -99,7 +109,7 @@ progress. smt (permute_graph_prop2).
 have f2 : K = size w. elim p2. progress. rewrite H. auto.
 smt (lemma1).
 have f1 : size (prj_path w c) = K. elim p1.  elim p2. progress.
-rewrite lemma1. rewrite H0. rewrite H. smt. auto.
+rewrite lemma1. rewrite H0. rewrite H. smt(). auto.
 have f2 : size (prj_path w o1) = K. elim p1.  elim p2. progress.
 smt (lemma1).
 rewrite lemma8. 
@@ -108,14 +118,14 @@ elim p2. progress.
 rewrite H. elim p1. progress.
 have ->: size (zip c o1) = K * K. 
 rewrite size1_zip. rewrite H0. rewrite H8. auto. rewrite H6. auto.
-smt.
+smt().
 elim p2. progress.
 elim p2. progress.
 rewrite size1_zip.
-rewrite lemma1. rewrite H. rewrite H0. smt.
+rewrite lemma1. rewrite H. rewrite H0. smt().
 rewrite H1. rewrite H. auto.
 rewrite lemma1.
-rewrite H. rewrite H0. smt. apply H.
+rewrite H. rewrite H0. smt(). apply H.
 qed.
 end section.
 
@@ -187,9 +197,9 @@ proc*.
 inline*. wp.
 call (_:true). wp. simplify.
 skip.  move => &1  &2 h1. 
-split. smt.  
+split. smt().  
 move => h2. move => result_L result_R L1 l2 l3.  elim.
-have ->:  statement{2} = s. smt.
+have ->:  statement{2} = s. smt().
 clear h1 h2.  elim l3.
 move => e1 e2. rewrite e1.  clear e2 e1 l2 L1 result_L.
 elim.
@@ -197,7 +207,7 @@ case (result_R.`1.`2).
 rewrite /special_soundness_extract.
 elim result_R.`1.`3.
 elim result_R.`2.`3. progress. 
-smt. smt. smt. smt.
+smt(). smt(). smt(). smt().
 move => x p1 p2 p3 p4.
 simplify. move => p5.
 have : K <= size (prj_path x.`1 p1.`2). 
@@ -206,25 +216,25 @@ progress.
 have ->: size (prj_path x.`1 p1.`2) = K.
 smt (lemma1).
 auto.
-have : K <=  size x.`2.  smt.
+have : K <=  size x.`2.  smt().
 move => q g. 
 elim p4. move => zz1 . elim.
-have ->: result_R.`2.`2 = false. smt.
+have ->: result_R.`2.`2 = false. smt().
  move => zz2 zz3.
 elim zz2.  move => _. elim zz3.
 move => _ qq ll. 
-rewrite (fin_bind_real  x.`1 s). auto. smt.
-smt. smt. simplify.
+rewrite (fin_bind_real  x.`1 s). auto. smt().
+smt(). smt(). simplify.
 have ->: (nth witness <: commitment * opening> (zip (prj_path x.`1 result_R.`1.`1) x.`2)
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) x.`2)
-   (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt.
-rewrite nth_zip. smt. simplify.
+   (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt().
+rewrite nth_zip. smt(lemma1). simplify.
 have ->: (nth witness <: commitment * opening>  (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
-   (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt.
-rewrite nth_zip. smt. simplify. auto.
+   (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt().
+rewrite nth_zip. smt(lemma1). simplify. auto.
 progress. simplify.
 rewrite /special_soundness_extract.
 elim result_R.`1.`3.
@@ -234,20 +244,20 @@ move => x p1 p2 p3 p4.
 simplify .
 move => z.
 rewrite (fin_bind_real  p1.`1 s ).  auto. 
-smt. smt. smt. simplify. 
+smt(). smt(). smt(). simplify. 
 have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)
    (index false (prj_path p1.`1 (permute_graph x.`1 s))))
  = (nth (fst witness <:commitment * opening>, snd witness <:commitment * opening>) (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)
-   (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt.
+   (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt().
 rewrite nth_zip. 
-elim p4. move => q. elim. move => q1 q2. elim q1. smt. simplify.
+elim p4. move => q. elim. move => q1 q2. elim q1. smt(lemma1). simplify.
 have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
    (index false (prj_path p1.`1 (permute_graph x.`1 s)))) 
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>)  (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
-   (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt.
+   (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt().
 rewrite nth_zip. 
-elim p4. move => q. elim. move => q1 q2. elim q2. elim q1. progress. smt. simplify. auto.
-smt.
+elim p4. move => q. elim. move => q1 q2. elim q2. elim q1. progress. smt(lemma1). simplify. auto.
+smt().
 qed.
 
 
@@ -274,8 +284,8 @@ local lemma qq &m :
              (ss) @ &m : res] <= Pr[BindingExperiment(SpecialSoundnessBinder(S)).main() @ &m : res]  .
 byequiv;auto. 
 proc. inline*. wp.  call (_:true). skip. progress. 
-smt.
-smt.
+smt().
+smt().
 qed.
 
 
