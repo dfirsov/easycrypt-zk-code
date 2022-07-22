@@ -1,6 +1,6 @@
 # Fiat-Shamir protocol 
 
-The language of Fiat-Shamir protocol consists of quadratic residues. An element $s \in \mathbb{Z}/n\mathbb{Z}$ is a quadratic residue if there exists $w$ so that $s=w^2$ and $s$ is invertible.\footnote{In this section the multipication must be understood as a ring multiplication.} In Fiat-Shamir protocol the prover tries to convince a verifier that a statement is quadratic residue and it knows the witness.
+The language of Fiat-Shamir protocol consists of quadratic residues. An element $s \in \mathbb{Z}/n\mathbb{Z}$ is a quadratic residue if there exists $w$ so that $s=w^2$ and $s$ is invertible. Here, the multipication must be understood as a ring multiplication. In Fiat-Shamir protocol the prover tries to convince a verifier that a statement is quadratic residue and it knows the witness.
 
 ## Protocol description
 Let us give an informal protocol description. The protocol starts by the prover generating a random invertible ring element $r$ and sending its square $a = r^2$ to the verifier.  The verifier receives the commitment $a$ and replies with a random bit $b$ as a challenge.  The prover replies with $z = w^br$. Finally, the verifier accepts if $z^2 = s^ba$ and $a$ is invertible.
