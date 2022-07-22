@@ -49,7 +49,7 @@ apply (SchnorrProtocol.CompletenessTheory.Perfect.completeness_seq HP HV _ _ _ _
 proc.  skip.  auto.
 proc.  wp.  rnd.  skip.  progress. smt(duniform_ll challenge_set_size).
 proc.  wp.  skip. auto.
-proc. rnd. wp. skip.  progress. smt (dt_ll).
+proc. rnd. wp. skip.  progress. smt(dt_ll).
 progress.
 apply dl_completeness. auto. auto. auto.
 qed.
