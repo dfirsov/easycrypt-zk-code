@@ -22,10 +22,10 @@ axiom d_prop5 : weight zmod_distr = 1%r.
 
 
 (* synonyms for readability *)
-type qr_stat = zmod.
-type qr_wit  = zmod.
-type qr_com  = zmod.
-type qr_resp = zmod.
+type qr_stat = zmod.            (* statement *)
+type qr_wit  = zmod.            (* witness *)
+type qr_com  = zmod.            (* commitment *)
+type qr_resp = zmod.            (* response *)
 
 (* defining relations for completeness, soundness, and ZK *)
 op completeness_relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.

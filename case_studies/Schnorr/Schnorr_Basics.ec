@@ -5,31 +5,30 @@ import FDistr.
 require  GenericSigmaProtocol.
 
 
-type dl_prob = group.
-type dl_wit  = t.
-type dl_com = group.
-type dl_resp = t.
-type dl_chal = t.
+(* synonyms for readability  *)
+type dl_stat = group.           (* statement *)
+type dl_wit  = t.               (* witness *)
+type dl_com = group.            (* commitment *)
+type dl_resp = t.               (* response *)
+type dl_chal = t.               (* challenge *)
 
 
-(* Honest Vrifier  *)
-op dl_verify (p : dl_prob) (c : dl_com) (b : dl_chal) (r : dl_resp) : bool =
-  g ^ r = (p ^ b) * c.
-
-
-op verify_transcript = fun p (x : dl_com * dl_chal * dl_resp) => dl_verify p x.`1 x.`2 x.`3.
-
-
-op IsDL (p : dl_prob) (w : dl_wit) : bool = g ^ w = p.
-
+(* the language of Schnorr protocol consists of discrete logarithms  *)
+op IsDL (p : dl_stat) (w : dl_wit) : bool = g ^ w = p.
 
 op soundness_relation    = IsDL.
 op completeness_relation = IsDL.
 op zk_relation           = IsDL.
 
 
-clone export GenericSigmaProtocol as FiatShamir with 
-  type statement       <- dl_prob,
+(* transcript verification for Honest Vrifier  *)
+op verify_transcript (p : dl_stat) (x : dl_com * dl_chal * dl_resp) = 
+ let (c,b,r) = x in g ^ r = (p ^ b) * c.
+   
+
+(* instantiating generic definitions for Schnorr protocol  *)
+clone export GenericSigmaProtocol as SchnorrProtocol with 
+  type statement       <- dl_stat,
   type commitment      <- dl_com,  
   type witness         <- dl_wit,
   type response        <- dl_resp,
@@ -41,12 +40,13 @@ clone export GenericSigmaProtocol as FiatShamir with
   op zk_relation           <- zk_relation.
 
 
+(* Honest Prover *)
 module HP : HonestProver = {
- var pa : dl_prob
+ var pa : dl_stat
  var wa : dl_wit
  var r : t
 
- proc commitment(p : dl_prob, w : dl_wit) : dl_com = {  
+ proc commitment(p : dl_stat, w : dl_wit) : dl_com = {  
     (pa, wa) <- (p,w);
     r <$  dt;
     return g ^ r;
@@ -58,3 +58,5 @@ module HP : HonestProver = {
 }.
 
 
+(* Honest Verifier is derived automatically from "challenge_set" and "verify_transcript" *)
+(* print HV. *)

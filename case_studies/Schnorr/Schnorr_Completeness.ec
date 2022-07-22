@@ -6,42 +6,53 @@ import FDistr.
 require import Schnorr_Basics.
 
 
-
 section.
 
 
-local lemma dl_complete_h (p : dl_prob) (w : dl_wit) : 
-  IsDL p w =>
+local lemma dl_complete_h (p : dl_stat) (w : dl_wit) : 
+  completeness_relation p w =>
    hoare [ Completeness(HP,HV).run : arg = (p,w) ==> res ].
 progress.
 proc. inline*.  wp. 
 rnd. wp.  rnd.  wp. 
 skip. progress.
 rewrite /verify_transcript. simplify.
-rewrite /dl_verify. simplify. smt.
+rewrite /dl_verify. simplify. smt(@CyclicGroup).
 qed. 
 
+(* one-round completeness  *)
+lemma dl_completeness: forall (statement : dl_stat) (witness : dl_wit) &m,
+  completeness_relation statement witness =>
+     Pr[Completeness(HP, HV).run(statement, witness) 
+            @ &m : res] = 1%r.
 
-local lemma dl_complete_ph ya wa : IsDL ya wa
-   => phoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ] = 1%r.
-move => isdl.
+move => ya wa &m  isdl .
+ byphoare (_: arg = (ya, wa) ==> _);auto.
 proc*.
 seq 1 : true 1%r 1%r 1%r 0%r r.
 call (dl_complete_h ya wa). auto.
 conseq (_: true ==> true). inline*. sp.
 wp.  progress. rnd. simplify.
-conseq (_: true ==> true). smt.
+conseq (_: true ==> true). progress. apply duniform_ll. smt(challenge_set_size).
 wp.  rnd. skip. simplify.
-progress. smt. auto. auto. auto.
+smt(dt_ll). skip. auto. skip. auto. auto.
 qed.
 
 
-lemma dl_completeness: forall (statement : dl_prob) (witness : dl_wit) &m,
-  IsDL statement witness =>
-     Pr[Completeness(HP, HV).run(statement, witness) 
-            @ &m : res] = 1%r.
-progress. byphoare (_: arg = (statement, witness) ==> _);auto.
-conseq (dl_complete_ph  statement witness _). auto. 
+(* iterated completeness *)
+lemma dl_completeness_iter: forall (statement:dl_stat) (witness:dl_wit) &m n,
+        1 <= n =>
+       completeness_relation statement witness =>
+      Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
+progress.
+apply (SchnorrProtocol.CompletenessTheory.Perfect.completeness_seq HP HV _ _ _ _ _ &m).
+proc.  skip.  auto.
+proc.  wp.  rnd.  skip.  progress. smt(duniform_ll challenge_set_size).
+proc.  wp.  skip. auto.
+proc. rnd. wp. skip.  progress. smt (dt_ll).
+progress.
+apply dl_completeness. auto. auto. auto.
 qed.
+
   
 end section.
