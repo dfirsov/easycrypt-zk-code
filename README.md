@@ -1,6 +1,6 @@
 # Zero-Knowledge in EasyCrypt
 
-This repository contains the EasyCrypt code associated with the paper  "Zero-Knowledge in EasyCrypt".
+This repository contains the EasyCrypt code associated with the paper "D. Firsov, D. Unruh. [Zero-Knowledge in EasyCrypt](https://eprint.iacr.org/2022/926)" .
 
 Setup
 --------
@@ -57,5 +57,6 @@ Contents
 	- *Blum_Extractability.ec* -
 	- *Blum_ZeroKnowledge.ec* - 
 - *aux/* - miscellaneous useful results
+
 
 
