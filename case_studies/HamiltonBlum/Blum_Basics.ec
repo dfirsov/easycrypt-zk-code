@@ -5,26 +5,55 @@ require  GenericSigmaProtocol.
 require CommitmentSpecial.
 clone include CommitmentSpecial with type message <- bool.
 
+
+(* the number of vertices in the graph  *)
 op K : int.
 axiom K_pos : 0 < K.
 
-type graph = bool list.         (* K * K list representing K x K matrix *)
 
-type hc_prob = graph.
-type hc_wit  = int list.
-type hc_com  = commitment list.
+(* K * K list representing K x K adjacency matrix. For technical
+reasons it is simpler to work with flat representation of an adjacency
+matrix *)
+type graph = bool list.         
+type hc_stat = graph.           (* statement *)
+
+
+(* We represent a witness as a list of integers of size K. For example,
+witness := [1,2,3] represents a cycle "1 -> 2 -> 3 -> 1". *)
+type hc_wit  = int list.        (* witness *)
+
+
+(* Blum's protocol commitment consits of a list of K commitments   *)
+type hc_com  = commitment list. (* commitment *)
+
+
+(* Depending on the challenge the response is EITHER a permutation
+with list of openings OR a witness with a list of openings.  *)
 type hc_resp = (permutation * (opening list), 
                  hc_wit * (opening list)) sum.
 
+
+(* complete graph (all vertices connected to all other vertices)  *)
 op compl_graph     : int -> graph.
 op compl_graph_cyc : int -> int list = range 0.
 
+(* Intuitively (permute_graph g p)(i,j) = g(p i, p j). Below we
+declaratively describe the properties of permute_graph function.  *)
 op permute_graph (p : permutation) (g : graph) : graph.
-op permute_witness : permutation -> hc_wit -> hc_wit = map.
 
+
+(* Intuitively, "prj_path w g" returns entries which corresponds to the cycle represented by the witness "w".
+For example, prj (1,2,3) g := [g(1,2),g(2,3),g(3,1)].
+Below we declaratively describe the properties of prj_path function.
+*)
 op prj_path ['a]  : hc_wit -> 'a list -> 'a list.
 
-op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
+(* to permute a witness we just apply permutation point-wise  *)
+op permute_witness : permutation -> hc_wit -> hc_wit = map.
+
+
+(* transcript verification by Blum's Honest Verifier (see the description in the HamBlum/README.md *)
+op hc_verify (p : hc_stat) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
  with r = (Left x) => b /\ all Ver (zip (permute_graph x.`1 p) (zip c x.`2))
                         /\ size c = K * K
                         /\ size p = K * K
@@ -39,18 +68,19 @@ op hc_verify (p : hc_prob) (c : hc_com) (b : bool)  (r : hc_resp) : bool =
                            /\ perm_eq x.`1 (range 0 K)
                            /\ size p = K * K.
 
-op completeness_relation (g : hc_prob) (w : hc_wit) : bool  = 
+(* defining relations for completeness, soundness, and ZK *)
+op completeness_relation (g : hc_stat) (w : hc_wit) : bool  = 
      K = size w /\ 
      K * K = size g /\ 
      perm_eq w (range 0 K) /\ 
      nseq K true = prj_path w g.
-
 op soundness_relation = completeness_relation.
-
 op zk_relation = completeness_relation.
 
+
+(* cloning the generic definition with specific Blum details  *)
 clone export GenericSigmaProtocol as BlumProtocol with 
-  type statement       <- hc_prob,
+  type statement       <- hc_stat,
   type commitment      <- hc_com,  
   type witness         <- hc_wit,
   type response        <- hc_resp,
@@ -62,15 +92,16 @@ clone export GenericSigmaProtocol as BlumProtocol with
   op zk_relation           <- zk_relation.
  
 
-module HonestProver : HonestProver  = {
-  var g : graph                 (* n*n adj. matrix *)
+(* Honest Prover  *)
+module HP : HonestProver  = {
+  var g : graph                 
   var prm : permutation         
   var w : hc_wit                
   var fal : bool list           
   var pi_gwco : (commitment * opening) list
   var pi_w : hc_wit
   
-  proc commitment(p_a : hc_prob, w_a : hc_wit)  = {
+  proc commitment(p_a : hc_stat, w_a : hc_wit)  = {
     g <- p_a;
     w     <- w_a;
     prm   <$ perm_d K;
@@ -88,7 +119,7 @@ module HonestProver : HonestProver  = {
 }.
 
 
-
+(* Declarative specification of main functions: compl_graph, permute_graph, and prj_path.  *)
 axiom permute_graph_prop1 p n : permute_graph p (compl_graph n) = (compl_graph n).
 
 axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
@@ -110,12 +141,3 @@ axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
 axiom lemma7 w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
 
 axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
-
-
-
-
-
-
-
-
-

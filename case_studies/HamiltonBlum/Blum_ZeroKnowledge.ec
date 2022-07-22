@@ -19,8 +19,8 @@ clone import RewBasics as Rew with type sbits <- sbits.
 
 section.
 
-declare module V <: RewMaliciousVerifier{-HonestProver, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP'}.
-declare module D <: ZKDistinguisher{-HonestProver,  -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP' }.
+declare module V <: RewMaliciousVerifier{-HP, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP'}.
+declare module D <: ZKDistinguisher{-HP,  -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP' }.
 
 
 
@@ -28,8 +28,8 @@ declare axiom Sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.c
 declare axiom V_summitup_ll : islossless V.summitup. 
 declare axiom V_challenge_ll : islossless V.challenge.
 declare axiom D_guess_ll : islossless D.guess.
-declare axiom P_response_ll : islossless HonestProver.response.
-declare axiom P_commitment_ll : islossless HonestProver.commitment.
+declare axiom P_response_ll : islossless HP.response.
+declare axiom P_commitment_ll : islossless HP.commitment.
 declare axiom simn_simulate_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge 
   => islossless V0.summitup => islossless SimN(Sim1, V0).simulate.
 declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg} ==> ={res} ].
@@ -47,12 +47,12 @@ declare axiom rewindable_V_plus :
       
 lemma hc_statistical_zk stat wit  &m:
         zk_relation stat wit => 
-        let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
+        let real_prob = Pr[ZKReal(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res] in
           `|ideal_prob - real_prob| <= (2%r * negl + 20%r * negl2) + 2%r * (1%r- (1%r/2%r - negl2)) ^ OSS.N.
 proof.
 progress.
-apply (statistical_zk HonestProver Sim1  V D _ _ _ _ _ _ _ _ _ _  stat wit &m _). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll. apply P_commitment_ll.
+apply (statistical_zk HP Sim1  V D _ _ _ _ _ _ _ _ _ _  stat wit &m _). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll. apply P_commitment_ll.
 apply D_guess_ll. 
 proc*. call D_guess_prop. skip.  auto.
 move => x.
@@ -76,11 +76,11 @@ qed.
 
 lemma hc_statistical_zk_iter stat wit &m:
         zk_relation stat wit =>
-        let real_prob = Pr[ZKRealAmp(HonestProver, V, D).run(stat, wit) @ &m : res] in
+        let real_prob = Pr[ZKRealAmp(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimAmp(SimN(Sim1)), V, D).run(stat, wit) @ &m : res] in
           `|ideal_prob - real_prob| <= ZKT.n%r * ((2%r * negl + 20%r * negl2) + 2%r * (1%r- (1%r/2%r - negl2)) ^ OSS.N).
 progress.
-apply (zk_seq HonestProver (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  ((2%r * negl + 20%r * negl2) + 2%r * (1%r- (1%r/2%r - negl2)) ^ OSS.N) stat wit). 
+apply (zk_seq HP (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  ((2%r * negl + 20%r * negl2) + 2%r * (1%r- (1%r/2%r - negl2)) ^ OSS.N) stat wit). 
 progress.  
 apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
@@ -88,7 +88,7 @@ apply P_commitment_ll. apply D_guess_ll.
 apply D_guess_prop.
 smt.
 progress.
-apply (statistical_zk HonestProver Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _ _  stat wit &n _).
+apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _ _  stat wit &n _).
 apply Sim1_run_ll.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. 

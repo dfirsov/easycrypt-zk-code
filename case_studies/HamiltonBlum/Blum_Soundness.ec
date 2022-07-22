@@ -9,7 +9,7 @@ section.
 declare module P <: RewMaliciousProver {-HV}.
 
 declare axiom P_response_ll : islossless P.response.
-op ss : hc_prob.
+op ss : hc_stat.
 
 declare axiom P_rewindable : exists (f : (glob P) -> sbits),
   injective f /\
@@ -30,7 +30,7 @@ lemma hc_computational_soundness &m :
 proof.  progress.
 apply (Computational.computational_soundness P _ _ &m ss ).  apply P_response_ll.
 apply P_rewindable. auto.
-apply (computational_special_soundness_binding (SpecialSoundnessAdversary(P)) &m).
+apply (hc_computational_special_soundness_binding (SpecialSoundnessAdversary(P)) &m).
 qed.
 
 end section.

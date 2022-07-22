@@ -4,7 +4,7 @@ require import Aux Permutation Blum_Basics.
 
 
 section.
-    
+  
 
 local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :
   !soundness_relation g w /\
@@ -13,10 +13,9 @@ local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :
      perm_eq w (range 0 K)
   => false \in prj_path w g  .
 progress.
-
-  have : nseq (size w) true <> prj_path w g. smt.
+  have : nseq (size w) true <> prj_path w g. smt().
 progress.
-have f : size (prj_path w g) = size w. rewrite lemma1. smt. auto.
+have f : size (prj_path w g) = size w. rewrite lemma1. smt(). auto.
 apply (aux_lem (prj_path w g)  (size w)).
 auto. auto.
 qed.
@@ -46,8 +45,6 @@ have f : (forall (i : int), 0 <= i && i < size (zip (nseq (size l') true) X) =>
             ver (nth witness (zip (nseq (size l') true) X) i)).
 smt (all_nthP).
 have : ver (nth witness (zip (nseq (size l') true) X) (index false l')). apply f. smt.
-
-
 have ->:  (nth witness (zip (nseq (size l') true) X) (index false l')) = ((nth witness (nseq (size l') true) (index false l')), (nth witness X (index false l'))).  
 rewrite - nth_zip. smt.
 smt.
@@ -99,7 +96,6 @@ have f : x \in (zip (permute_graph p g) (zip c o1)). smt(lemma5).
 apply (allP Ver ( zip (permute_graph p g) (zip c o1))). auto. auto.
 have f1 : K <= size (permute_graph p g). elim p1.
 progress. smt (permute_graph_prop2).
-
 have f2 : K = size w. elim p2. progress. rewrite H. auto.
 smt (lemma1).
 have f1 : size (prj_path w c) = K. elim p1.  elim p2. progress.
@@ -113,7 +109,6 @@ rewrite H. elim p1. progress.
 have ->: size (zip c o1) = K * K. 
 rewrite size1_zip. rewrite H0. rewrite H8. auto. rewrite H6. auto.
 smt.
-
 elim p2. progress.
 elim p2. progress.
 rewrite size1_zip.
@@ -121,15 +116,12 @@ rewrite lemma1. rewrite H. rewrite H0. smt.
 rewrite H1. rewrite H. auto.
 rewrite lemma1.
 rewrite H. rewrite H0. smt. apply H.
-
 qed.
-
-
 end section.
 
 
 
-op my_extract (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
+op my_extract (p : hc_stat) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
  with r1 = Left  x, r2 = Right z => let n = K in let g = p  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
                                      permute_witness (inv p) w
@@ -139,15 +131,15 @@ op my_extract (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
  with r1 = Left  x, r2 = Left  z => witness
  with r1 = Right x, r2 = Right z => witness.
 
-op special_soundness_extract (p : hc_prob) (r1 r2 : transcript) : int list = 
+ 
+op special_soundness_extract (p : hc_stat) (r1 r2 : transcript) : int list = 
  my_extract p r1.`1  r1.`3 r2.`3.
 
 clone include SpecialSoundnessTheory  with  
   op special_soundness_extract <- special_soundness_extract.
 
 
-
-op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitment * opening)) * (bool * (commitment * opening))  =
+op hc_verify1 (p : hc_stat) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitment * opening)) * (bool * (commitment * opening))  =
  with r1 = Left  x, r2 = Right z => let n = K in let g = p  in let p = x.`1 in let o1 = x.`2 in 
                                     let w = z.`1 in let X = z.`2 in 
    ((true,  nth witness ((zip (prj_path w c)
@@ -164,8 +156,9 @@ op hc_verify1 (p : hc_prob) (c : hc_com)   (r1 r2 : hc_resp) : (bool * (commitme
  with r1 = Right x, r2 = Right z => ((witness, witness), (witness, witness)).
 
  
+ 
 module SpecialSoundnessAdvReduction (A : SpecialSoundnessAdversary)  = {
-  proc run(statement : hc_prob) : bool = {
+  proc run(statement : hc_stat) : bool = {
       var r1,r2,g,p1,p2;
       (r1, r2) <@ A.attack(statement);
       g    <- statement;
@@ -175,9 +168,8 @@ module SpecialSoundnessAdvReduction (A : SpecialSoundnessAdversary)  = {
 }.
 
 
-
-lemma computational_special_soundness:
-      forall (s : hc_prob) &m
+lemma hc_computational_special_soundness:
+      forall (s : hc_stat) &m
         (SpecialSoundnessAdversary <: SpecialSoundnessAdversary),
         let attack_prob =
           Pr[SpecialSoundnessAdversary.attack(s) @ &m :
@@ -216,7 +208,6 @@ smt (lemma1).
 auto.
 have : K <=  size x.`2.  smt.
 move => q g. 
-
 elim p4. move => zz1 . elim.
 have ->: result_R.`2.`2 = false. smt.
  move => zz2 zz3.
@@ -224,13 +215,11 @@ elim zz2.  move => _. elim zz3.
 move => _ qq ll. 
 rewrite (fin_bind_real  x.`1 s). auto. smt.
 smt. smt. simplify.
-
 have ->: (nth witness <: commitment * opening> (zip (prj_path x.`1 result_R.`1.`1) x.`2)
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) x.`2)
    (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt.
 rewrite nth_zip. smt. simplify.
-
 have ->: (nth witness <: commitment * opening>  (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
@@ -262,11 +251,12 @@ smt.
 qed.
 
 
+
 theory SSB.
 section.
 declare module S <: SpecialSoundnessAdversary.
 
-op ss : hc_prob.
+op ss : hc_stat.
 
 module SpecialSoundnessBinder(A : SpecialSoundnessAdversary) : Binder = {
   proc bind() = {
@@ -290,7 +280,7 @@ qed.
 
 
 
-lemma computational_special_soundness_binding &m :
+lemma hc_computational_special_soundness_binding &m :
           Pr[S.attack(ss) @ &m :
              valid_transcript_pair ss res.`1 res.`2 /\
              ! soundness_relation
@@ -303,7 +293,7 @@ have f :           Pr[S.attack(ss) @ &m :
                  ss
                   (special_soundness_extract ss res.`1 res.`2)] 
  <= Pr[SpecialSoundnessAdvReduction(S).run(ss) @ &m : res].
-apply (computational_special_soundness ss  &m S).
+apply (hc_computational_special_soundness ss  &m S).
 smt (qq).
 qed.
 
