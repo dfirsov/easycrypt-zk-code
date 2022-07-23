@@ -92,15 +92,15 @@ abstract theory Statistical.
     /\ (i{2}, MyP{2}, s{2}, e{2}) =
     ((stat{1}), fun (x : bool) => !x, 1, N{1})  ).
   wp.  call (_: ={glob P, glob HV}).
-  sim. skip. progress. smt. smt.
-  skip. progress.  smt. smt.
+  sim. skip. progress. smt(). smt().
+  skip. progress.  smt(). smt().
   auto.  auto.
   byphoare (_: arg = ((statement), fun (x : bool) => !x,
                                          1, (n - 1) + 1, true) ==> _).
   apply (asdsadq_le (Soundness(P,HV))). 
   proc.
   call verify_ll. call response_ll. call challenge_ll. call commitment_ll. skip. auto.
-  apply phs. auto. smt.
+  apply phs. auto. smt().
   auto. auto. 
   qed.
 
@@ -109,6 +109,4 @@ abstract theory Statistical.
 end Statistical.
 
 end SoundnessTheory.
-
-(* print SequentialCompositionSoundness. *)
 

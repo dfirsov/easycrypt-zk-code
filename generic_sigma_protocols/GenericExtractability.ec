@@ -38,8 +38,9 @@ proof. progress.
 have f1 : Pr[Extractor(P).extract(p) @ &m : soundness_relation p res] = 0%r.
   have <-: Pr[Extractor(P).extract(p) @ &m : false ] = 0%r.
   rewrite Pr[mu_false]. auto.
-rewrite Pr[mu_eq]. smt. auto.
-smt. qed. 
+rewrite Pr[mu_eq]. smt(). auto.
+smt(). 
+qed. 
 
 end section.
 
