@@ -3,15 +3,15 @@
 This repository contains the EasyCrypt code associated with the paper "D. Firsov, D. Unruh. [Zero-Knowledge in EasyCrypt](https://eprint.iacr.org/2022/926)" .
 
 ## Contents
-- *generic_sigma_protocols/* - generic formalization of properties and derivations associated with sigma protocols. Find more in `generic_sigma_protocols/README.md`
-- *case_studies/FiatShamir/* - instance of Fiat-Shamir protocol. Find more in `case_studies/FiatShamir/README.md` 
-- *case_studies/Schnorr/* - instance of Schnorr protocol. Find more in  `case_studies/Schnorr/README.md` 
-- *case_studies/HamiltonBlum/* - instance of Blum protocol. Find more in  `case_studies/HamiltonBlum/README.md` 
-- *aux/* - miscellaneous useful results
-- *checkall* - script for running the EasyCrypt proof-checker on the entire development.
-- *rewinding/* - copy of a rewinding library implemented by D. Firsov and D. Unruh.
-- *FORMALIZATION_CAVEATS.md* - description of formalization challenges and choices.
-- *MANUAL.md* - brief description of structure of the generic development.
+- *[generic_sigma_protocols/](generic_sigma_protocols)*  - generic formalization of properties and derivations associated with sigma protocols.
+- *[case_studies/FiatShamir/](case_studies/FiatShamir/)* - instance of Fiat-Shamir protocol.
+- *[case_studies/Schnorr/](case_studies/Schnorr/)* - instance of Schnorr protocol.
+- *[case_studies/HamiltonBlum/](case_studies/HamiltonBlum/)* - instance of Blum protocol. 
+- *[aux/](aux/)* - miscellaneous useful results
+- *[checkall](checkall)* - script for running the EasyCrypt proof-checker on the entire development.
+- *[rewinding/](rewinding/)* - copy of a rewinding library implemented by D. Firsov and D. Unruh.
+- *[FORMALIZATION_CAVEATS.md](FORMALIZATION_CAVEATS.md)* - description of formalization challenges and choices.
+- *[MANUAL.md](MANUAL.md)* - brief description of structure of the generic development.
 
 ## Setup
 * For this project we used the version of EasyCrypt (1.0) theorem prover with GIT hash: r2022.04-23-gb44893a5.
