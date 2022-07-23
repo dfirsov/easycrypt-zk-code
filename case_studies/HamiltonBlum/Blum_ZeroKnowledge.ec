@@ -86,7 +86,7 @@ apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. apply D_guess_ll.
 apply D_guess_prop.
-smt.
+smt(negl2_prop negl_prop N_pos @RealExp).
 progress.
 apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _ _  stat wit &n _).
 apply Sim1_run_ll.
@@ -95,8 +95,8 @@ apply P_commitment_ll.
 proc. 
 call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
-wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt.
-skip. smt.
+wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
+skip. smt().
 proc. 
 call D_guess_prop. sim.
 progress.
@@ -111,13 +111,13 @@ proc.
 call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll. 
-skip. smt. skip. smt.
+skip. smt(). skip. smt().
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. call D_guess_prop. sim. 
 proc. call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress. wp. 
-call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.  skip. smt.
-skip. smt. apply V_summitup_ll. auto.
+call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
+skip. smt(). apply V_summitup_ll. auto.
 progress.
 rewrite (sim1assc V D _ _ _ _  _  _ &m0 stat0). 
 apply V_summitup_ll.

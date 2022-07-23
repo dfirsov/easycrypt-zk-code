@@ -5,16 +5,11 @@ require  PrArg.
 require  AllCore Distr FSet StdRing StdOrder StdBigop List.
 
 require import Permutation Blum_Basics.
-(* import DJMM. *)
-
 
 clone import ZeroKnowledgeTheory as ZKT.
 
 clone import OneShotSimulator as OSS.
 
-(* clone import Statistical as HC_SZK. *)
-
-(* import OMZK. *)
 
 
 
@@ -121,7 +116,7 @@ call (_:true).  call (_:true). call (_:true). auto. wp.  auto.
 simplify. call V_summitup_ll. call V_challenge_ll. sp.
 conseq (_: true ==> true). progress.  
 call (_:true). sp. 
-seq 1 : (true). rnd. skip. auto. rnd.  skip. smt.
+seq 1 : (true). rnd. skip. auto. rnd.  skip. smt(@Distr).
 if. call (_:true). wp. simplify. rnd.
 conseq (_: true ==> true). progress. 
 smt (djoinmap_weight Com_lossless).
@@ -148,39 +143,6 @@ qed.
 end section.
 
 
-
-(*  module HP' : HonestProver  = { *)
-(*   var n : int  *)
-(*   var g : graph *)
-(*   var prm : permutation *)
-(*   var w : hc_wit *)
-(*   var fal : bool list       *)
-
-(*   var zpd_g, zpd_w : bool list *)
-(*   var pi_gco, pi_wco : (commitment * opening) list *)
-(*   var pi_gwco : (commitment * opening) list *)
-(*   var pi_w : hc_wit *)
-  
-(*   proc commitment(p_a : hc_stat, w_a : hc_wit) : hc_com = {    *)
-(*     (n,g) <- p_a; *)
-(*     w <- w_a; *)
-(*     prm <$ perm_d n;  *)
-(*     fal <- permute_graph prm g; *)
-(*     pi_w <- permute_witness prm w; *)
-(*     (zpd_g, zpd_w) <- (drop n (ip (prj pi_w) fal),  *)
-(*                             take n (ip (prj pi_w) fal)); *)
-(*     (pi_wco, pi_gco) <@ DJM.main1(zpd_w, zpd_g); *)
-(*     pi_gwco <-(pi (prj pi_w)) (pi_wco ++ pi_gco); *)
-
-(*     return (map fst pi_gwco);     *)
-(*   } *)
-    
-(*   proc response(b : bool) : hc_resp = { *)
-(*     return if b then Left (prm, map snd pi_gwco)  *)
-(*           else Right (pi_w, map snd pi_wco); *)
-(*  }  *)
-(* }. *)
-
 module HP'= HP.
 
 section.
@@ -202,7 +164,6 @@ declare axiom rewindable_V_plus :
   (forall (x: glob V),
     hoare[V.setState: b = f x ==> glob V = x]) /\
   islossless V.setState.
-
 
 
 declare axiom D_run_ll : islossless D.guess.
@@ -321,7 +282,6 @@ seq 1 1 : (p_a{2} = pa{2} /\ (g,w) = (pa,wa){2} /\
   g{2} = p_a{2} /\
   p_a{1} = pa{1} /\
   g{1} = p_a{1} /\
-
   pa{1} = pa{2} /\ ={glob V,wa, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2}).
 rnd. skip. progress.  
 if. auto. 
@@ -340,44 +300,36 @@ rnd
   (fun (f : permutation) => compose f (mk_perm HP'.w{2})) .
 wp. skip. progress.  rewrite /compose.
 simplify. 
-
 have ->: (prmR \o mk_perm wa{2} \o inv (mk_perm wa{2}))
  = (prmR \o (mk_perm wa{2} \o inv (mk_perm wa{2}))). 
-   apply fun_ext. move => x. rewrite /(\o). auto.
- 
-
+   apply fun_ext. move => x. rewrite /(\o). auto. 
 rewrite   (inv_prop1 (mk_perm wa{2}) K). 
-apply perm_d_in4. smt. 
-apply fun_ext. move => x. smt.
+apply perm_d_in4. smt(). 
+apply fun_ext. move => x. smt().
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite H1. simplify.
 rewrite /compose. rewrite perm_d_comp.  apply H1. smt(perm_d_in4).
-
- smt.
+auto.
 apply perm_d_comp. auto.  apply perm_d_in0. smt(perm_d_in4).
-
-
 rewrite /compose.
- 
 have ->: (prmL \o inv (mk_perm wa{2}) \o mk_perm wa{2})
  = (prmL \o (inv (mk_perm wa{2}) \o mk_perm wa{2})).
 apply fun_ext. move => x. rewrite /(\o). auto.
 rewrite   (inv_prop2 (mk_perm wa{2}) K). 
-apply perm_d_in4. smt. 
+apply perm_d_in4. smt(). 
 apply fun_ext. move => x.  rewrite /(\o). auto.
 rewrite permute_graph_prop1. rewrite permute_graph_prop1. auto. 
 rewrite permute_graph_prop1. rewrite - (permute_graph_prop1 prmL). auto.
 rewrite /permute_witness /compose. 
 rewrite map_comp.
 rewrite inv_prop3.
-elim ishc. progress. smt. smt.
-wp.   skip. progress. 
+elim ishc. progress. smt(). smt().
+wp. skip. progress. 
 rewrite H.  simplify. auto. 
 call jk.
 call (_:true). call (_:true). wp.  skip. progress.
 qed.
-
 
 
 module Sim1_2(V : MaliciousVerifier) = {
@@ -410,6 +362,7 @@ module Sim1_2(V : MaliciousVerifier) = {
 
 (* hiding props  *)
 op negl, negl2 : real.
+axiom negl_prop : 0%r <= negl.
 axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
 
 
@@ -482,7 +435,6 @@ seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
   (g,w) = (pa{2},wa{2}) /\
   g{2} = p_a{2} /\
-
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
   g{1} = p_a{1} /\
@@ -492,9 +444,7 @@ case (bb{1} = true).
 rcondt {1} 1. progress.  
 seq 4 4 : ((b{1} = b'{1}) = (b{2} = b'{2}) /\ ={pa,wa, result, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}). sim.
 call jk. skip. progress.
-
-
-rcondf {1} 1. progress. skip. smt.
+rcondf {1} 1. progress. skip. smt().
 seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
   g{2} = p_a{2} /\
@@ -613,7 +563,7 @@ call {1} (_:true ==> true). apply V_summitup_ll2.
 call {2} (_:true ==> true). apply V_summitup_ll2. 
 call {1} (_:true ==> true). proc. wp. skip. auto.
 call {2} (_:true ==> true). proc. wp. skip. auto.
-skip.  smt.
+skip.  smt().
 call jk.  inline*. call (_:true). wp.  skip. progress.
 qed.
 
@@ -642,8 +592,8 @@ rnd. wp. skip. progress.
 
 exists* b{1}. elim*. progress.
 rnd (fun b => b ^^ !b_L).
-skip. progress. smt. smt.
-smt.
+skip. progress. smt(). smt().
+smt().
 qed.
 
 
@@ -674,32 +624,32 @@ move => ishc.
 transitivity Sim1_3(V).simulate 
 (g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl, glob HP} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
-conseq (sim_2_3 g w ishc). smt. auto. 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
+conseq (sim_2_3 g w ishc). smt(). auto. 
 transitivity Sim1_4(V).simulate 
 (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_3_4. auto. auto.
 transitivity Sim1_5(V).simulate 
 (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_4_5. auto. auto.
 transitivity Sim1_6(V).simulate 
 (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_5_6. auto. auto.
 transitivity Sim1_7(V).simulate 
 (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_6_7. auto. 
 transitivity Sim1_8(V).simulate 
 (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt. smt.
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_7_8. auto. auto.
 conseq sim_8_9. auto. auto.
 qed.
@@ -753,11 +703,8 @@ import BRM.
 
 local lemma sim1_main &m pa wa:  zk_relation pa wa =>
    `|Pr[ Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ]
-
       / Pr[ Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 ]
-
          - Pr[ ZKD(HP,V,D).main(pa,wa) @ &m : res ]| 
-
   <= 2%r * negl + 20%r * negl2.
 proof. move => ishc.
 have ->: 
@@ -769,28 +716,32 @@ have ->:
    Pr[Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1 /\ res.`2]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ].
    byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = (pa, wa) /\ arg{1} = (pa, wa) ==> _). 
-conseq (sim_0_1 pa wa _ _ ).   simplify. progress. smt. auto. auto. auto.
+conseq (sim_0_1 pa wa _ _ ).   simplify. progress. smt(). auto. auto. auto.
 have h: 
    Pr[Sim1_0(V,D).simulate(pa,wa) @ &m : res.`1]
     = Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1].
-   byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = (pa, wa) /\ arg{1} = (pa, wa) ==> _). conseq (sim_0_1 pa wa _ _). smt. smt. auto. auto. auto.
+   byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = (pa, wa) /\ arg{1} = (pa, wa) ==> _). conseq (sim_0_1 pa wa _ _). smt(). smt(). auto. auto. auto.
 rewrite sim_9_pr3.
 apply (ler_trans (2%r * 
     `|Pr[Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2] -
         Pr[Sim1_9(V).simulate(pa,wa) @ &m : res.`2 /\ res.`1]| 
            + 20%r * negl2)).
-apply main_fin. smt. smt. smt. smt (negl2_prop). 
+apply main_fin.  split. rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
+rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
+rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
+smt (negl2_prop). 
 rewrite h. rewrite Pr[mu_sub]. auto. auto.
-apply pr_e1. smt.  
+apply pr_e1. 
+rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
 apply sim1ass.
-apply pr_e2. smt.
+apply pr_e2. 
+rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
 apply sim1ass.
 have ->: Pr[Sim1_9(V).simulate(pa, wa) @ &m : res.`2 /\ res.`1] =
  Pr[Sim1_2(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2].
-
 byequiv (_: (pa,wa) = arg{1} /\ arg{1} = arg{2} 
  /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). 
-symmetry. conseq (sim_2_9 pa wa ishc). smt. smt. auto. auto.
+symmetry. conseq (sim_2_9 pa wa ishc). smt(). smt(). auto. auto.
 smt (sim_1_2).
 qed.    
 
@@ -823,9 +774,8 @@ if {1}.
 elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 call {1} s7. call {2} dll. skip.  auto.
-call {2} dll. skip. auto. auto. smt.
+call {2} dll. skip. auto. auto. smt().
 qed.
-
 
 
 lemma sim1_prop &m (p : hc_stat) (ww : hc_wit) :
@@ -835,7 +785,6 @@ lemma sim1_prop &m (p : hc_stat) (ww : hc_wit) :
     `|Pr[RD(Sim1(V), D).run(p, ww) @ &m : fst res.`2 /\ res.`1] /
          Pr[Sim1(V).run(p) @ &m : fst res] 
               - Pr[ ZKD(HP,V,D).main(p,ww) @ &m : res ]| <= 2%r * negl + 20%r * negl2.
-
 progress.
 have ->: Pr[RD(Sim1(V), D).run(p, ww) @ &m : fst res.`2 /\ res.`1]
  = Pr[ Sim1_0(V,D).simulate(p,ww) @ &m : res.`1 /\ res.`2 ].
@@ -873,19 +822,13 @@ rcondf {1} 1. progress. skip. progress.
 rcondt {1} 1. progress. call {1} (_:true ==> true). 
 elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
-apply s7. skip. smt. 
+apply s7. skip. smt(). 
 case (b{2} = b'{2}). 
 call jk. skip.  progress. 
-call {1} H. call {2} H. skip. smt. auto. auto.
+call {1} H. call {2} H. skip. smt(). auto. auto.
 rewrite (sim110 p ww &m H).
 apply (sim1_main  &m  p ww). assumption.
 qed.
-
-
-
-
-
-
 
 
 lemma sim1assc &m stat : 
@@ -894,11 +837,10 @@ progress.
 have ->: Pr[Sim1(V).run(stat) @ &m : res.`1] = 
  Pr[Sim1_0(V,D).simulate(stat, witness) @ &m : res.`1] .
 rewrite (sim110 stat  witness &m).
-apply D_run_ll.
- 
+apply D_run_ll. auto.
 have f : `|Pr[Sim1_0(V, D).simulate(stat,  witness) @ &m : res.`1] - 1%r / 2%r|
  <= negl2. 
-apply sim1ass. auto.  smt.
+apply sim1ass. smt().
 qed.
 
 end section.
