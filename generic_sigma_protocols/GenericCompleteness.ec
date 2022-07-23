@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore List Distr.
+require import AllCore List Distr Real RealExp.
 require WhileNotBProc.
 
 require GenericBasics.
@@ -120,8 +120,8 @@ theory CompletenessTheory.
       /\ (i{2}, MyP{2}, s{2}, e{2}) =
          ((stat{1}, wit{1}), fun (x : bool) => !x, 1, N{1})).
     wp.  call (_: ={glob P, glob V}).
-    sim. skip. progress. smt. smt.
-    skip. progress. smt. auto. 
+    sim. skip. progress. smt(). smt().
+    skip. progress. smt(). auto. 
     auto.
     byphoare (_: arg = ((statement, witness), fun (x : bool) => !x,
                                            1, (n-1) + 1 , true) ==> _).
@@ -131,7 +131,7 @@ theory CompletenessTheory.
     call challenge_ll. 
     call commitment_ll. 
     skip. auto.
-    apply phs. auto. smt. 
+    apply phs. auto. smt(). 
     auto. auto. 
     qed.  
     end section.
@@ -176,14 +176,16 @@ theory CompletenessTheory.
        => 1 <= n
        => Pr[CompletenessAmp(P, V).run(statement, witness,n) @ &m : res] = 1%r.
     progress.
-    have f :   (1%r - 0%r) ^ n <=
+    have : (1%r - 0%r) ^ n <=
       Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res].
     apply (SC.completeness_seq P V verify_ll 
                challenge_ll response_ll commitment_ll _  
                statement witness n _ _ );auto. 
     move => &n.
     progress. rewrite completeness;auto.
-    smt.
+    have ->: (1%r - 0%r) ^ n = 1%r. smt(@RealExp).    
+    have : Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res] <= 1%r. rewrite Pr[mu_le1]. auto.
+    smt().
     qed.
 
     end section.
