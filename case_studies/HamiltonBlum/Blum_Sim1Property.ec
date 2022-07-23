@@ -1,16 +1,13 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
+  
+require import PrArg FSet StdRing StdOrder StdBigop.
+(*---*) import RField RealOrder.
 
-require  PrArg.  
-require  AllCore Distr FSet StdRing StdOrder StdBigop List.
 
 require import Permutation Blum_Basics.
-
 clone import ZeroKnowledgeTheory as ZKT.
-
 clone import OneShotSimulator as OSS.
-
-
 
 
 module ZKP(P : HonestProver, V : MaliciousVerifier) = {
@@ -27,12 +24,10 @@ module ZKP(P : HonestProver, V : MaliciousVerifier) = {
 module ZKP' = {
   proc run(Ny : hc_stat, w : hc_wit, b : bool) = {
     var c,r,prm,fal,pi_gwco,pi_w;
-
     prm <$ perm_d K;
     fal <- permute_graph prm Ny;
     pi_gwco <$ djoinmap Com fal;
     c <- (unzip1 pi_gwco);
-
     pi_w <- permute_witness prm w;
     r <- if b then Left (prm, unzip2 pi_gwco) else Right (pi_w, unzip2 (prj_path pi_w pi_gwco));
     return (c, r);
@@ -41,7 +36,7 @@ module ZKP' = {
 }.
 
 
-
+(* one-shot simulator  *)
 module Sim1(V : RewMaliciousVerifier)  = {
   proc sinit(p_a : hc_stat) : bool * (hc_com * hc_resp) = {
     var  g,bb,r;
@@ -50,7 +45,7 @@ module Sim1(V : RewMaliciousVerifier)  = {
     if (bb) {
        r <@ ZKP'.run(p_a, witness, bb);
     }else{
-       r <@ ZKP'.run(( compl_graph K), (compl_graph_cyc K), bb);
+       r <@ ZKP'.run(compl_graph K, compl_graph_cyc K, bb);
     }
     return (bb, r);
   }
@@ -68,9 +63,9 @@ module Sim1(V : RewMaliciousVerifier)  = {
   }
 }.
 
+
 section.
 declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
-
 
 declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom V_challenge_ll : islossless V.challenge.
@@ -78,6 +73,7 @@ declare axiom P_response_ll : islossless HP.response.
 declare axiom P_commitment_ll : islossless HP.commitment.
 
 
+(* rewindability assumption *)
 declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
   injective f /\
@@ -93,7 +89,7 @@ declare axiom rewindable_V_plus :
   islossless V.setState.
 
 
-
+(* Sim1 rewinds itself in case of bad-event *)
 lemma sim1_rew_ph : forall (x : (glob V) ),
     phoare[ Sim1(V).run :
              ((glob V)) = x
@@ -143,14 +139,19 @@ qed.
 end section.
 
 
-module HP'= HP.
-
 section.
-declare module V <: RewMaliciousVerifier {-HP, -HP', -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
-declare module D <: ZKDistinguisher {-HP, -HP'}.
+declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
+declare module D <: ZKDistinguisher {-HP}.
 
 declare axiom V_summitup_ll : islossless V.summitup.
+declare axiom D_run_ll : islossless D.guess.
+declare axiom V_summitup_ll2 : islossless V.summitup.
+declare axiom V_challenge_ll2 : islossless V.challenge.
 
+declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
+  ==> ={res} ].
+
+(* rewindability assumption  *)
 declare axiom rewindable_V_plus : 
   exists (f : glob V -> sbits),
   injective f /\
@@ -166,24 +167,8 @@ declare axiom rewindable_V_plus :
   islossless V.setState.
 
 
-declare axiom D_run_ll : islossless D.guess.
-declare axiom V_summitup_ll2 : islossless V.summitup.
-declare axiom V_challenge_ll2 : islossless V.challenge.
-
-
-local lemma zkp_hp'_hp (g : hc_stat) (w: hc_wit):  zk_relation g w =>
-  equiv [ ZKP(HP, V).run ~ ZKP(HP',V).run : (arg{2}.`1, arg{2}.`2) = (g,w)  /\ ={arg, glob V} ==> ={res} ].
-progress.
-proc. sim.
-qed.
-  
-
-
-
-(* one-time simulator  *)
 module Sim1_0(V : RewMaliciousVerifier, D : ZKDistinguisher) = {
   module ZKP_HP = ZKP(HP,V)
-  module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_stat) : bool * (hc_com * hc_resp) = {
     var  g,bb,r;
     g <- p_a;
@@ -192,7 +177,7 @@ module Sim1_0(V : RewMaliciousVerifier, D : ZKDistinguisher) = {
     if (bb) {
        r <@ ZKP_HP.run(p_a, witness, bb);
     }else{
-       r <@ ZKP_HP'.run((compl_graph K), (compl_graph_cyc K), bb);
+       r <@ ZKP_HP.run((compl_graph K), (compl_graph_cyc K), bb);
     }
     return (bb, r);
   }
@@ -211,7 +196,6 @@ module Sim1_0(V : RewMaliciousVerifier, D : ZKDistinguisher) = {
 
 module Sim1_1(V : MaliciousVerifier) = {
   module ZKP_HP = ZKP(HP,V)
-  module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_stat, w_a : hc_wit) = {
     var g,bb,r;
     g <- p_a;
@@ -221,7 +205,7 @@ module Sim1_1(V : MaliciousVerifier) = {
     if (bb) {
        r <@ ZKP_HP.run(p_a, w_a, bb);
     }else{
-        r <@ ZKP_HP'.run(( compl_graph K), w_a, bb);
+        r <@ ZKP_HP.run(( compl_graph K), w_a, bb);
         (* 
 Alternative:
 
@@ -268,7 +252,7 @@ ZKDB ~ Sim1
 
 *)
 
-declare axiom jk : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+
 
 local lemma sim_0_1 (g : hc_stat) (w: hc_wit):  K = size w => zk_relation g w =>
   equiv [ Sim1_0(V,D).simulate ~ Sim1_1(V).simulate : 
@@ -285,7 +269,7 @@ seq 1 1 : (p_a{2} = pa{2} /\ (g,w) = (pa,wa){2} /\
   pa{1} = pa{2} /\ ={glob V,wa, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2}).
 rnd. skip. progress.  
 if. auto. 
-call jk.
+call D_guess_prop.
 call (_:true).
 wp. inline*. wp.  call (_:true).
  wp.  rnd.  wp. rnd. wp. skip. progress.
@@ -293,11 +277,11 @@ rewrite H. simplify. auto.
 seq 1 1 : (={r,bb, glob V,pa,wa, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ !bb{1}).
 inline*. 
 seq  13 13 : (
-   !b1{1} /\ b1{1} = b1{2} /\ ={pa,c,wa, HP'.pi_w, HP'.pi_gwco,bb, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ !bb{1} ).
+   !b1{1} /\ b1{1} = b1{2} /\ ={pa,c,wa, HP.pi_w, HP.pi_gwco,bb, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ !bb{1} ).
 wp.  rnd. wp. 
 rnd  
- (fun (f : permutation) => compose f (inv (mk_perm HP'.w{2})))
-  (fun (f : permutation) => compose f (mk_perm HP'.w{2})) .
+ (fun (f : permutation) => compose f (inv (mk_perm HP.w{2})))
+  (fun (f : permutation) => compose f (mk_perm HP.w{2})) .
 wp. skip. progress.  rewrite /compose.
 simplify. 
 have ->: (prmR \o mk_perm wa{2} \o inv (mk_perm wa{2}))
@@ -327,14 +311,13 @@ rewrite inv_prop3.
 elim ishc. progress. smt(). smt().
 wp. skip. progress. 
 rewrite H.  simplify. auto. 
-call jk.
+call D_guess_prop.
 call (_:true). call (_:true). wp.  skip. progress.
 qed.
 
 
 module Sim1_2(V : MaliciousVerifier) = {
   module ZKP_HP = ZKP(HP,V)
-  module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_stat, w_a : hc_wit) = {
     var  g, bb, r;
     g <- p_a;
@@ -343,7 +326,7 @@ module Sim1_2(V : MaliciousVerifier) = {
     if (bb) {
        r <@ ZKP_HP.run(p_a, w_a, bb);
     }else{
-       r <@ ZKP_HP'.run(p_a, w_a, bb);
+       r <@ ZKP_HP.run(p_a, w_a, bb);
     }
     return (bb, r);
   }
@@ -403,7 +386,6 @@ The second probability is =1/2 by simple phoare analysis.
 
 local module Sim1_3(V : MaliciousVerifier) = {
   module ZKP_HP = ZKP(HP,V)
-  module ZKP_HP' = ZKP(HP',V)
   proc sinit(p_a : hc_stat, w_a : hc_wit) = {
     var  g,bb,r;
     g <- p_a;
@@ -443,7 +425,7 @@ rnd. skip. progress.
 case (bb{1} = true).
 rcondt {1} 1. progress.  
 seq 4 4 : ((b{1} = b'{1}) = (b{2} = b'{2}) /\ ={pa,wa, result, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}). sim.
-call jk. skip. progress.
+call D_guess_prop. skip. progress.
 rcondf {1} 1. progress. skip. smt().
 seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
@@ -453,8 +435,8 @@ seq 1 1 : (p_a{2} = pa{2} /\
   g{1} = p_a{1} /\
  (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2} /\ r{1} = r{2}).
 symmetry.
-call (zkp_hp'_hp g w ). simplify. skip. progress.
-call jk. call (_:true). call (_:true). wp. skip. progress.
+inline*. wp.  rnd. wp.  rnd. wp.  skip. auto.
+call D_guess_prop. call (_:true). call (_:true). wp. skip. progress.
 qed.
 
 
@@ -480,7 +462,7 @@ proc.
 seq 3 5 : (={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl, pa,wa,result} /\ (b{1} = b'{1}) = (b{2} = bb{2})).
 sim.
 inline*. sp. wp. rnd. wp. rnd. wp.  rnd. skip. progress.
-call jk. skip. progress.
+call D_guess_prop. skip. progress.
 qed.
 
 
@@ -503,7 +485,7 @@ local lemma sim_4_5:
   equiv [ Sim1_4(V).simulate ~ Sim1_5(V).simulate : 
                arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
 proc. 
-call jk. 
+call D_guess_prop. 
 inline*. sp. wp. call (_:true). 
 call (_:true).  wp. rnd. wp. rnd.  wp. rnd. skip.
 progress.
@@ -528,7 +510,7 @@ local module Sim1_6(V : MaliciousVerifier) = {
 local lemma sim_5_6: 
   equiv [ Sim1_5(V).simulate ~ Sim1_6(V).simulate : 
                arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
-proc. swap {1} 5 -1. call jk.  swap {2} 3 -1. call (_:true). inline*. wp.  call (_:true). wp.
+proc. swap {1} 5 -1. call D_guess_prop.  swap {2} 3 -1. call (_:true). inline*. wp.  call (_:true). wp.
 rnd.  wp.  rnd. wp.  rnd. wp. skip. progress.
 qed.
 
@@ -564,7 +546,7 @@ call {2} (_:true ==> true). apply V_summitup_ll2.
 call {1} (_:true ==> true). proc. wp. skip. auto.
 call {2} (_:true ==> true). proc. wp. skip. auto.
 skip.  smt().
-call jk.  inline*. call (_:true). wp.  skip. progress.
+call D_guess_prop.  inline*. call (_:true). wp.  skip. progress.
 qed.
 
 
@@ -587,9 +569,8 @@ local lemma sim_7_8:
   equiv [ Sim1_7(V).simulate ~ Sim1_8(V).simulate : 
                arg{1} = arg{2} /\ ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
 proc. swap {1} 3 4.
-seq 6 6 : (={rb}). call jk. call (_:true). inline*. wp. call (_:true). wp.  rnd. wp.
+seq 6 6 : (={rb}). call D_guess_prop. call (_:true). inline*. wp. call (_:true). wp.  rnd. wp.
 rnd. wp. skip. progress.
-
 exists* b{1}. elim*. progress.
 rnd (fun b => b ^^ !b_L).
 skip. progress. smt(). smt().
@@ -611,7 +592,7 @@ local module Sim1_9(V : MaliciousVerifier) = {
 local lemma sim_8_9: 
   equiv [ Sim1_8(V).simulate ~ Sim1_9(V).simulate : 
                arg{1} = arg{2} /\ ={glob V, glob HP,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
-proc. inline*. rnd. wp. call jk. progress. call (_:true). wp.  call (_:true). wp.  rnd. wp. 
+proc. inline*. rnd. wp. call D_guess_prop. progress. call (_:true). wp.  call (_:true). wp.  rnd. wp. 
 rnd.  wp. skip. progress.
 qed.
 
@@ -663,7 +644,7 @@ proc*.
 inline Sim1_9(V).simulate.
 wp . rnd {1}.
 simplify. sp.  
-inline*. wp. call jk. call (_:true). wp. call (_:true). wp.  rnd. wp. rnd. wp.  skip.
+inline*. wp. call D_guess_prop. call (_:true). wp. call (_:true). wp.  rnd. wp. rnd. wp.  skip.
 progress.
 qed.
 
@@ -681,7 +662,7 @@ local lemma sim_9_pr2 &m pa wa:
    = Pr[ Sim1_9(V).simulate(pa, wa) @ &m : res.`2 /\ !res.`1  ].
 proof. byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl, arg} ==> _).
 proc. seq 1 1 : (={rb}). 
-inline*. wp. call jk. wp. call (_:true). wp. call (_:true). wp. rnd.
+inline*. wp. call D_guess_prop. wp. call (_:true). wp. call (_:true). wp. rnd.
 wp. rnd. wp.  skip. progress. 
 rnd (fun x => !x). 
 skip. progress. auto. auto.
@@ -693,12 +674,6 @@ local lemma sim_9_pr3 &m pa wa:
    = 2%r * Pr[ Sim1_9(V).simulate(pa,wa) @ &m : res.`2 /\ res.`1  ].
 smt (sim_9_pr1 sim_9_pr2).
 qed.
-
-
-require import PrArg.  
-require import AllCore Distr FSet StdRing StdOrder StdBigop List.
-(*---*) import RField RealOrder Bigreal BRA.
-import BRM.
 
 
 local lemma sim1_main &m pa wa:  zk_relation pa wa =>
@@ -745,12 +720,10 @@ symmetry. conseq (sim_2_9 pa wa ishc). smt(). smt(). auto. auto.
 smt (sim_1_2).
 qed.    
 
-
-
                                       
 
 
-lemma sim110 p ww &m :    islossless D.guess =>
+local lemma sim110 p ww &m :    islossless D.guess =>
  Pr[Sim1(V).run(p) @ &m : res.`1] =
   Pr[ Sim1_0(V,D).simulate(p,ww) @ &m : res.`1 ].
 move => dll.
@@ -778,6 +751,7 @@ call {2} dll. skip. auto. auto. smt().
 qed.
 
 
+(* conditional indistinguishability  *)
 lemma sim1_error &m (p : hc_stat) (ww : hc_wit) :
    islossless D.guess =>
    islossless V.summitup =>
@@ -824,15 +798,15 @@ elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 apply s7. skip. smt(). 
 case (b{2} = b'{2}). 
-call jk. skip.  progress. 
+call D_guess_prop. skip.  progress. 
 call {1} H. call {2} H. skip. smt(). auto. auto.
 rewrite (sim110 p ww &m H).
 apply (sim1_main  &m  p ww). assumption.
 qed.
 
-
+(* probability of a "success"-event  *)
 lemma sim1_succ &m stat : 
- inv 2%r - negl2 <= Pr[Sim1(V).run(stat) @ &m : res.`1].
+ 1%r/2%r - negl2 <= Pr[Sim1(V).run(stat) @ &m : res.`1].
 progress.
 have ->: Pr[Sim1(V).run(stat) @ &m : res.`1] = 
  Pr[Sim1_0(V,D).simulate(stat, witness) @ &m : res.`1] .

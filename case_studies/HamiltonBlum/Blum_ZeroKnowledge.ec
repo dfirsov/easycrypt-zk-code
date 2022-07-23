@@ -2,12 +2,8 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr Int Aux DJoin.
 require import Permutation Blum_Basics Blum_Sim1Property.
 
-(* import DJMM. *)
 import OSS.
-
-
 clone import ZKT.SequentialComposition.
-
 clone import Statistical with op epsilon <- 2%r * negl + 20%r * negl2,
                               op sigma <- (1%r/2%r - negl2).
 
@@ -19,8 +15,8 @@ clone import RewBasics as Rew with type sbits <- sbits.
 
 section.
 
-declare module V <: RewMaliciousVerifier{-HP, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP'}.
-declare module D <: ZKDistinguisher{-HP,  -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP' }.
+declare module V <: RewMaliciousVerifier{-HP, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count}.
+declare module D <: ZKDistinguisher{-HP,-ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count}.
 
 
 
@@ -60,14 +56,15 @@ conseq (sim1_rew_ph V _ _ _ _ _  x.`1).  auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll. apply P_commitment_ll.
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress.
-apply (sim1_error V D  _ _  _ _ _  _ &m0 p w  _ );auto.  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. 
+apply (sim1_error V D  _ _  _ _ _  _ &m0 p w  _ );auto.  apply V_summitup_ll. 
 apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. 
-conseq D_guess_prop. auto. apply D_guess_ll. apply V_summitup_ll.
+conseq D_guess_prop. auto. apply (rewindable_A_plus V). apply rewindable_V_plus.  apply D_guess_ll. apply V_summitup_ll.
 progress.
-apply (sim1_succ V D _ _ _ _ _ _ &m0 stat0 ).  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
+apply (sim1_succ V D _ _ _ _ _ _ &m0 stat0 ).  apply V_summitup_ll. apply D_guess_ll. apply V_summitup_ll.
 apply V_challenge_ll. 
  progress. 
 conseq D_guess_prop. auto.
+apply (rewindable_A_plus V). apply rewindable_V_plus. 
 auto.
 qed.
 
@@ -106,7 +103,7 @@ apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. 
 apply (rewindable_A_plus V). apply rewindable_V_plus.  skip. auto. progress.
 rewrite (sim1_error V (Di(D, SimN(Sim1), V))).
-apply V_summitup_ll.  apply (rewindable_A_plus V). apply rewindable_V_plus.
+apply V_summitup_ll.  
 proc. 
 call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
@@ -114,6 +111,7 @@ wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.
 skip. smt(). skip. smt().
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. call D_guess_prop. sim. 
+apply (rewindable_A_plus V). apply rewindable_V_plus.
 proc. call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress. wp. 
 call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
@@ -121,12 +119,12 @@ skip. smt(). apply V_summitup_ll. auto.
 progress.
 rewrite (sim1_succ V D _ _ _ _  _  _ &m0 stat0). 
 apply V_summitup_ll.
-apply (rewindable_A_plus V).
-apply rewindable_V_plus. 
 apply D_guess_ll. 
 apply V_summitup_ll.
 apply V_challenge_ll.
 conseq D_guess_prop.  auto. 
+apply (rewindable_A_plus V).
+apply rewindable_V_plus. 
 auto. 
 qed.
 
