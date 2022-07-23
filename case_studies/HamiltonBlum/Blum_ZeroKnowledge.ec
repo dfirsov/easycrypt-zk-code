@@ -60,11 +60,11 @@ conseq (sim1_rew_ph V _ _ _ _ _  x.`1).  auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll. apply P_commitment_ll.
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 progress.
-apply (sim1_prop V D  _ _  _ _ _  _ &m0 p w  _ );auto.  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. 
+apply (sim1_error V D  _ _  _ _ _  _ &m0 p w  _ );auto.  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. 
 apply D_guess_ll. apply V_summitup_ll. apply V_challenge_ll. 
 conseq D_guess_prop. auto. apply D_guess_ll. apply V_summitup_ll.
 progress.
-apply (sim1assc V D _ _ _ _ _ _ &m0 stat0 ).  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
+apply (sim1_succ V D _ _ _ _ _ _ &m0 stat0 ).  apply V_summitup_ll. apply (rewindable_A_plus V). apply rewindable_V_plus. apply D_guess_ll. apply V_summitup_ll.
 apply V_challenge_ll. 
  progress. 
 conseq D_guess_prop. auto.
@@ -105,7 +105,7 @@ call (sim1_rew_ph V _ _ _ _ _ x.`1).  apply V_summitup_ll.
 apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. 
 apply (rewindable_A_plus V). apply rewindable_V_plus.  skip. auto. progress.
-rewrite (sim1_prop V (Di(D, SimN(Sim1), V))).
+rewrite (sim1_error V (Di(D, SimN(Sim1), V))).
 apply V_summitup_ll.  apply (rewindable_A_plus V). apply rewindable_V_plus.
 proc. 
 call D_guess_ll. sp.
@@ -119,7 +119,7 @@ while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress. wp.
 call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt(). apply V_summitup_ll. auto.
 progress.
-rewrite (sim1assc V D _ _ _ _  _  _ &m0 stat0). 
+rewrite (sim1_succ V D _ _ _ _  _  _ &m0 stat0). 
 apply V_summitup_ll.
 apply (rewindable_A_plus V).
 apply rewindable_V_plus. 

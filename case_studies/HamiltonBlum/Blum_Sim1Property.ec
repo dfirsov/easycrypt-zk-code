@@ -778,7 +778,7 @@ call {2} dll. skip. auto. auto. smt().
 qed.
 
 
-lemma sim1_prop &m (p : hc_stat) (ww : hc_wit) :
+lemma sim1_error &m (p : hc_stat) (ww : hc_wit) :
    islossless D.guess =>
    islossless V.summitup =>
    zk_relation p ww =>  
@@ -831,7 +831,7 @@ apply (sim1_main  &m  p ww). assumption.
 qed.
 
 
-lemma sim1assc &m stat : 
+lemma sim1_succ &m stat : 
  inv 2%r - negl2 <= Pr[Sim1(V).run(stat) @ &m : res.`1].
 progress.
 have ->: Pr[Sim1(V).run(stat) @ &m : res.`1] = 

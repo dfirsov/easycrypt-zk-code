@@ -32,13 +32,13 @@ The Schnorr protocol illustrates that the size of the challenge set affects zero
 
 ## Main results
 - *Schnorr_Basics.ec*
-	- module HP - honest prover
-	- op verify_transcript -  verification function of honest verifier
+	- `module HP` - honest prover.
+	- `op verify_transcript` -  verification function of honest verifier.
 - *Schnorr_Completeness.ec* 
-	- lemma "dl_completeness" - direct proof of one-round completeness.
-	- lemma "dl_completeness_iter" - automatic conclusion of iterated completeness from one-round completeness.
+	- `lemma dl_completeness` - direct proof of one-round completeness.
+	- `lemma dl_completeness_iter` - automatic conclusion of iterated completeness from one-round completeness.
 - *Schnorr_SpecialSoundness.ec* - direct proof of perfect special soundness.
-	- function "special_soundness_extract" - perfect witness extraction from two valid transcripts
+	- `op special_soundness_extract` - perfect witness extraction from two valid transcripts.
 - *Schnorr_Extractability.ec* 
-	- lemma "dl_statistical_PoK" - automatic conclusion of extractability from special soundness. 
+	- `lemma dl_statistical_PoK` - automatic conclusion of extractability from special soundness. 
 
