@@ -105,23 +105,23 @@ have ->: Pr[Xseq(C).run(p) @ &m : M p res]
 sp.  call (_:true). wp.  rnd.  rnd. skip. progress. auto. auto. 
 byequiv. proc. 
 seq 1 1 : (={glob C,p} /\ (c1c2{1} = (c1,c2){2})). 
-call sample_sample2. skip.  progress. smt.
+call sample_sample2. skip.  progress. smt().
 call (_:true). skip. progress. auto.  auto.
 qed.
+  
 
-    
 local lemma avr_lemma_1 &m M p : 
   Pr[ X(C).run(p) @ &m  : M res ] 
      = big predT (fun c1c2 => 
         (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs) .
-proof. rewrite -  sumE_fin. smt. 
+proof. rewrite -  sumE_fin. apply allpairs_uniq. apply allcs_uniq. apply allcs_uniq. smt().
 progress. 
 apply allpairsP. exists x. progress.
 
-have : mu1 d x.`1 <> 0%r.  smt.
+have : mu1 d x.`1 <> 0%r.  smt(@Distr).
 apply allcs_all. 
-apply allcs_all.  smt.
-smt.
+apply allcs_all.  smt(@Distr).
+smt().
 apply (avr _ _ _ C).
 qed.
 
@@ -133,7 +133,7 @@ lemma avr_lemma_2 &m M p :
         ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs).
 apply eq_big. auto.
 progress.
-rewrite - dprod1E. smt.
+rewrite - dprod1E. smt().
 qed.
 
 
@@ -146,7 +146,7 @@ rewrite  (big_mkcond N).
 apply eq_big.
 auto. simplify. progress.
 case (N i). auto.
-smt.
+simplify. rewrite Pr[mu_false]. simplify. auto.
 qed.
 
 op cartprod2 (l : 'a list)  = (allpairs (fun c1 c2 => (c1,c2)) l l).
@@ -180,7 +180,7 @@ local lemma avr_lemma_5 &m M p :
                    (cartprod2 allcs).
 rewrite (bigEM (fun (r : ct * ct) => r.`1 = r.`2)).
 rewrite /predC.  rewrite avr_lemma_4. 
-have f : forall (a b : real), a = b + a - b. smt.
+have f : forall (a b : real), a = b + a - b. smt().
 apply f.
 qed.
 
