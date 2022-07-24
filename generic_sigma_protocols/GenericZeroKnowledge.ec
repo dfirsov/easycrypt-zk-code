@@ -201,6 +201,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
 
 
 
+
   local module Y = {
     proc main(s:statement, w: witness) = {
      var summary, guess;
@@ -340,12 +341,12 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
      ).
   while (={s,w,glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l{2} <= HybOrcl.l0{2}  /\ HybOrcl.l0{2} < n  ). inline*.
   sp.
-  rcondf {1} 1 . progress. skip. smt.
-  rcondf {1} 1 . progress. skip. smt.    
+  rcondf {1} 1 . progress. skip. smt().
+  rcondf {1} 1 . progress. skip. smt().    
   sp. wp. call (_:true).
   call (_:true). call (_:true).
-  call (_:true). skip. progress. smt. 
-  wp. rnd. skip. progress.  smt. smt. smt. smt.
+  call (_:true). skip. progress. smt(). 
+  wp. rnd. skip. progress.  smt(@DInterval). smt(@DInterval n_pos). smt(). smt().
   rcondt {1} 1. progress. 
   seq 1 5 : (={s,w,HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
     HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n  /\ HybOrcl.l{2} <= n ).
@@ -355,13 +356,13 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   inline*.
   sp. wp.  
   call (_:true). call (_:true).
-  call (_:true). call (_:true). skip. progress. smt.  smt.
+  call (_:true). call (_:true). skip. progress. smt().  smt().
   while (={s,w,HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
     HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n).
   inline*. sp.
   rcondt {1} 1. progress. 
-  sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt. 
-  smt.    skip. progress. smt.
+  sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt(). 
+  smt(). skip. progress. smt().
   call D_guess_prop. skip.  
   auto. auto. auto.
   qed.
@@ -376,12 +377,12 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
      ).
   while (={s,w,glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\ HybOrcl.l{2} <= HybOrcl.l0{2}  /\ HybOrcl.l0{2} < n  ). inline*.
   sp.
-  rcondf {1} 1 . progress. skip. smt.
-  rcondf {1} 1 . progress. skip. smt.    
+  rcondf {1} 1 . progress. skip. smt().
+  rcondf {1} 1 . progress. skip. smt().    
   sp. wp. call (_:true).
   call (_:true). call (_:true).
-  call (_:true). skip. progress. smt. 
-  wp. rnd. skip. progress.  smt. smt. smt. smt.
+  call (_:true). skip. progress. smt(). 
+  wp. rnd. skip. progress.  smt(@DInterval). smt(@DInterval n_pos). smt(). smt().
   rcondt {1} 1. progress.  
   seq 1 2 : (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary,s,w} /\
     HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n  /\ HybOrcl.l{2} <= n).
@@ -390,13 +391,13 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   rcondt {1} 1. progress. 
   inline*.
   sp. wp.  
-  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt. smt.
+  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt(). smt().
   while (={HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary, s, w} /\
     HybOrcl.l0{2} < HybOrcl.l{2} /\ HybOrcl.l0{2} < n).
   inline*. sp.
   rcondt {1} 1. progress. 
-  sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt. 
-  smt.   skip. progress. smt.
+  sp.  wp.  call (_: ={glob V}). sim. sim. sim. sim. skip. progress. smt(). 
+  smt().   skip. progress. smt().
   call D_guess_prop. auto.
   auto. auto.
   qed.
@@ -436,13 +437,13 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   while (={s,w,glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
     i{1} = HybOrcl.l{2}). inline*.
   sp.
-  rcondf {1} 1 . progress. skip.   progress.  smt.
-  rcondf {2} 1 . progress. skip.   progress.  smt.
-  rcondf {1} 1 . progress. skip.   progress.  smt.
-  rcondf {2} 1 . progress. skip.   progress.  smt.
+  rcondf {1} 1 . progress. skip. progress. smt().
+  rcondf {2} 1 . progress. skip. progress. smt().
+  rcondf {1} 1 . progress. skip. progress. smt().
+  rcondf {2} 1 . progress. skip. progress. smt().
   sp. wp.  call (_:true). call (_:true). call (_:true). call (_:true).
   skip. progress.
-  wp. rnd. skip. progress. smt.
+  wp. rnd. skip. progress. smt(@DInterval n_pos).
   wp. 
   seq 1 1 : (={s,w,summary, glob V}).
   while (={s,w,glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
@@ -451,12 +452,12 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   inline HybOrcl(Ob, L(Ob)).orcl.
   wp. sp. if. progress. inline*. wp. 
   call (_: ={glob V}). sim. sim. sim. sim. 
-  wp. skip. progress. smt. smt. 
-  rcondt {1} 1. progress. skip. progress. smt.
-  rcondt {2} 1. progress. skip. progress. smt.
+  wp. skip. progress. smt(). smt(). 
+  rcondt {1} 1. progress. skip. progress. smt().
+  rcondt {2} 1. progress. skip. progress. smt().
   inline*. wp.
   call (_: ={glob V}). sim. sim. sim. sim. 
-  wp.  skip. progress. smt. smt.  
+  wp.  skip. progress. smt(). smt().  
   skip. progress.  
   call D_guess_prop. skip. auto.
   auto.
@@ -475,13 +476,13 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   while (={s,w,glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
     i{1} = HybOrcl.l{2}). inline*.
   sp.
-  rcondf {1} 1 . progress. skip.   progress.  smt.
-  rcondf {2} 1 . progress. skip.   progress.  smt.
-  rcondf {1} 1 . progress. skip.   progress.  smt.
-  rcondf {2} 1 . progress. skip.   progress.  smt.
+  rcondf {1} 1 . progress. skip.   progress.  smt().
+  rcondf {2} 1 . progress. skip.   progress.  smt().
+  rcondf {1} 1 . progress. skip.   progress.  smt().
+  rcondf {2} 1 . progress. skip.   progress.  smt().
   sp. wp.  call (_:true). call (_:true). call (_:true). call (_:true).
   skip. progress.
-  wp. rnd. skip. progress. smt.
+  wp. rnd. skip. progress. smt(@DInterval n_pos).
   wp. 
   seq 1 1 : (={s,w,summary, glob V, glob HybOrcl}).
   while (={s,w,glob V, glob P, HybOrcl.l, HybOrcl.l0, glob V, glob P, glob Sim, summary} /\
@@ -490,11 +491,11 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   inline HybOrcl(Ob, R(Ob)).orcl.
   wp. sp. if. progress. inline*. wp. 
   call (_: ={glob V, glob HybOrcl}). sim. sim. sim. sim. 
-  wp. skip. progress. smt. smt. 
-  rcondt {1} 1. progress. skip. progress. smt.
-  rcondt {2} 1. progress. skip. progress. smt.
+  wp. skip. progress. smt(). smt(). 
+  rcondt {1} 1. progress. skip. progress. smt().
+  rcondt {2} 1. progress. skip. progress. smt().
   inline*. wp. sp.  call (_:true). call (_:true). call (_:true). call (_:true).
-  skip. progress. smt. smt.
+  skip. progress. smt(). smt().
   skip. progress.  call D_guess_prop. skip. auto.
   auto.
   auto.
@@ -507,12 +508,12 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
         - Pr[Rn(Ob,A).main(ss,ww) @ &m : res]
       = n%r *(Pr[HybGame(A,Ob,L(Ob)).main(ss,ww) @ &m : res]
               - Pr[HybGame(A,Ob,R(Ob)).main(ss,ww) @ &m : res]).
-  apply (Hybrid_restr _ Ob A _ _ _ _ _ &m (fun _ _ _ r => r)). smt( n_pos).
+  apply (Hybrid_restr _ Ob A _ _ _ _ _ &m (fun _ _ _ r => r)). smt(n_pos).
   progress. proc. inline*.
   wp.  call (_:true). 
   while (Count.c = i /\ i <= n) . wp. 
-  call (_:true). wp.  skip.  progress. smt.
-  wp.  skip.  progress. smt.
+  call (_:true). wp.  skip.  progress. smt().
+  wp.  skip.  progress. smt(n_pos).
   proc. skip. auto. proc.
   call (sim_run_ll V). apply V_challenge_ll.
   apply V_summitup_ll. skip. auto.
@@ -521,10 +522,9 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   progress.
   proc. call D_guess_ll. sp.
   while (true) (n - i + 1). progress.
-  wp. call H. skip. progress. smt.
-  progress. skip. progress. smt.
+  wp. call H. skip. progress. smt(n_pos).
+  progress. skip. progress. smt(n_pos).
   qed.
-
 
 
   local module Ob1 = Obb(P,V,Sim).
@@ -606,7 +606,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   while (={glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s0,w0){2}
    /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
   wp.  call (_:true). call (_:true). call (_:true).  call (_:true).
-  skip. progress. wp.  rnd. skip. progress.   smt. (* smt. *)
+  skip. progress. wp.  rnd. skip. progress.   smt(). 
   sp.
   seq 2 2 : (={glob P, glob V,  glob HybOrcl, summary, s, w}).
   wp.  call (_: ={glob V}). sim. sim. sim. sim.
@@ -628,7 +628,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   while (={glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s0,w0){2}
    /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
   wp.  call (_:true). call (_:true). call (_:true).  call (_:true).
-  skip. progress. wp.  rnd. wp. skip. progress. smt. (*  smt.  *)
+  skip. progress. wp.  rnd. wp. skip. progress. smt(). 
   call D_guess_prop. skip. auto.
   auto. auto.
   case (`|Pr[MemoryPropsL.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
@@ -636,20 +636,19 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   move => q. 
   have zz : `|Pr[MemoryPropsL.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res] -
     Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| > deltoid. 
-  smt. clear q.
+  smt(). clear q.
   have ko : exists &n, deltoid < `|Pr[Amem.run1((ss,ww)) @ &n : res] - Pr[Amem.run2((ss,ww)) @ &n : res]|. 
   apply (oo_oo Amem _ _ _ (ss, ww) (ss, ww) &m). 
 
     proc. while (true) (n - HybOrcl.l). progress.
    wp. call V_summitup_ll. call P_response_ll. call V_challenge_ll. call P_commitment_ll.
-   skip. progress. smt. wp. conseq (_: _ ==> true). progress. smt.  rnd. skip. progress. smt.
+   skip. progress. smt(). wp. conseq (_: _ ==> true). progress. smt(). rnd. skip. progress. smt(@DInterval).
    proc. call D_guess_ll. while (true) (n - HybOrcl.l). progress. wp.  call (sim_run_ll V). apply V_challenge_ll.
-   apply V_summitup_ll. skip. smt.  wp.  call V_summitup_ll. call P_response_ll. call V_challenge_ll.
-   call P_commitment_ll. skip. progress. smt.
+   apply V_summitup_ll. skip. smt(). wp. call V_summitup_ll. call P_response_ll. call V_challenge_ll.
+   call P_commitment_ll. skip. progress. smt().
    proc. call D_guess_ll. while (true) (n - HybOrcl.l). progress. wp.  call (sim_run_ll V). apply V_challenge_ll.
-   apply V_summitup_ll. skip. smt.  wp.  call (sim_run_ll V). apply V_challenge_ll.
-   apply V_summitup_ll.  skip. progress. smt.
-    
+   apply V_summitup_ll. skip. smt(). wp. call (sim_run_ll V). apply V_challenge_ll.
+   apply V_summitup_ll.  skip. progress. smt().
   auto. auto.
   elim ko. move => &n. move => q.
   have ok : `|Pr[Amem.run1((ss, ww)) @ &n : res] - Pr[Amem.run2((ss, ww)) @ &n : res]| <= deltoid.
@@ -657,17 +656,17 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   byequiv. proc.         
   inline Dstar.guess. wp.
   seq 3 6: (={glob V,s,w} /\ summary{1} = summary0{2} /\  HybOrcl.l{1} =  HybOrcl.l{2}). sim. 
-  progress. smt. (* smt. smt. *)
+  progress. smt(). 
   call D_guess_prop. skip. auto.
   auto.  auto. 
   have -> : Pr[Amem.run2((ss, ww)) @ &n : res] = Pr[ZKReal(P, V, Dstar).run(ss, ww) @ &n : res].
   byequiv. proc.         
   inline Dstar.guess. wp.
   seq 6 9: (={glob V,s,w} /\ summary{1} = summary0{2} /\ HybOrcl.l{1} = HybOrcl.l{2}). sim. 
-  progress. smt. (* smt. smt. smt. *)
+  progress. smt(). 
   call D_guess_prop. skip. progress.
   auto.  auto. 
-  apply (zk_ass  &n ). smt. 
+  apply (zk_ass  &n). smt(). 
   qed.
 
 
@@ -707,19 +706,15 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   apply lll.  apply dlt.
   move => &n.
   apply (zk_ass &n).
-  have : n%r > 0%r. smt.
+  have : n%r > 0%r. smt(n_pos).
   progress.
   have : n%r * `|Pr[HybGame(A1, Ob1, L(Ob1)).main(ss, ww) @ &m : res] -
     Pr[HybGame(A1, Ob1, R(Ob1)).main(ss, ww) @ &m : res]| <=
-  n%r * deltoid .
-  smt.
-  smt.
+  n%r * deltoid.
+  smt().
+  smt().
   qed.
-
-
-
   end section.
-
   end SequentialComposition.
 
 
@@ -863,7 +858,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
          `|Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res] - 
             Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|
           = `|Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res]
-              - Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|. smt.
+              - Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]|. smt().
         have ->: Pr[ZKIdeal(Simulator'(Sim1), V, D).run(stat, wit) @ &m : res]
          = Pr[Iter(Sim1(V), D).run(false,stat,wit,N,fst) @ &m : res.`1].
         byequiv (_:  E{2} = fst  /\ N = ea{2} /\ fevent{2} = false  /\
@@ -914,7 +909,7 @@ apply D_guess_ll.
      seq 1 1 : (={glob V, glob Sim1, r,a,w, glob Count, glob HybOrcl}).
      sim. call D_guess_prop. skip.
      progress. auto. auto. auto.
-     apply N_pos. smt. auto.
+     apply N_pos. rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto. auto.
      qed.
      end section.
     end Computational.

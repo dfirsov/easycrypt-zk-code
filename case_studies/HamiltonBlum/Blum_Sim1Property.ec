@@ -263,9 +263,9 @@ inline Sim1_1(V).sinit.
 sp.
 seq 1 1 : (p_a{2} = pa{2} /\ (g,w) = (pa,wa){2} /\
   w_a{2} = wa{2} /\
-  g{2} = p_a{2} /\
+  g = p_a{2} /\
   p_a{1} = pa{1} /\
-  g{1} = p_a{1} /\
+  g = p_a{1} /\
   pa{1} = pa{2} /\ ={glob V,wa, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2}).
 rnd. skip. progress.  
 if. auto. 
@@ -416,10 +416,10 @@ sp.
 seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
   (g,w) = (pa{2},wa{2}) /\
-  g{2} = p_a{2} /\
+  g = p_a{2} /\
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
-  g{1} = p_a{1} /\
+  g = p_a{1} /\
    (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2}).
 rnd. skip. progress. 
 case (bb{1} = true).
@@ -429,10 +429,10 @@ call D_guess_prop. skip. progress.
 rcondf {1} 1. progress. skip. smt().
 seq 1 1 : (p_a{2} = pa{2} /\
   w_a{2} = wa{2} /\
-  g{2} = p_a{2} /\
+  g = p_a{2} /\
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
-  g{1} = p_a{1} /\
+  g = p_a{1} /\
  (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2} /\ r{1} = r{2}).
 symmetry.
 inline*. wp.  rnd. wp.  rnd. wp.  skip. auto.
