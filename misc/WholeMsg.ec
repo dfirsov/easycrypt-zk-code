@@ -48,11 +48,11 @@ seq 1 : (W'.m = m1) (1%r/2%r)  z (1%r/2%r) 0%r  ((glob T) = (glob T){m} /\ a = x
 rnd.  skip. progress. 
 rnd.  skip. progress. rewrite duniformE =>//=. 
 have : m1 <> m2. apply m1_and_m2_diff. progress.
-case(m1 = m2) => //. progress. rewrite eq_sym in H0. rewrite H0. smt. 
+case(m1 = m2) => //. progress. rewrite eq_sym in H0. rewrite H0. smt(). 
 have phr : phoare[ T.main : (glob T) = (glob T){m} /\ arg = (m1, x) ==> res ] = Pr[ T.main(m1,x) @ &m : res ].
 bypr. progress. byequiv. 
 proc*. call (_:true). skip.
-progress. auto. smt. smt. auto. auto.
+progress. auto. smt(). smt(). auto. auto.
 call phr. skip. progress.
 hoare. call (_:true). skip. progress. rewrite H =>//=. 
 rewrite /z =>//.   
@@ -69,11 +69,11 @@ seq 1 : (W'.m = m2) (1%r/2%r)  z (1%r/2%r) 0%r  ((glob T) = (glob T){m} /\ a = x
 rnd.  skip. auto. 
 rnd.  skip. progress. rewrite duniformE =>//=.  
 have : m1 <> m2. apply m1_and_m2_diff. progress.
-case(m1 = m2) => //. progress. rewrite H0. smt. 
+case(m1 = m2) => //. progress. rewrite H0. smt(). 
 have phr : phoare[ T.main : (glob T) = (glob T){m} /\ arg = (m2, x) ==> res ] = Pr[ T.main(m2,x) @ &m : res ].
 bypr. progress. byequiv. 
 proc*. call (_:true). skip.
-progress. smt. smt. auto. auto.
+progress. smt(). smt(). auto. auto.
 call phr. skip. progress.
 hoare. call (_:true). skip. progress. rewrite H =>//. 
 rewrite /z =>//.   

@@ -21,15 +21,3 @@ axiom perm_d_in3 n p : p \in perm_d n => perm_eq (map p  (range 0 n)) (range 0 n
 axiom inv_prop1 p n :  p \in perm_d n => p \o (inv p) = (fun x => x).
 axiom inv_prop2 p n :  p \in perm_d n => (inv p) \o p = (fun x => x). 
 axiom inv_prop3 p : perm_eq p (range 0 (size p)) => map (inv (mk_perm p)) p = range 0 (size p).
-
-
-
-
-(* lemma perm_d_in1 p n w : p \in perm_d n => perm_eq w (range 0 n) => p \o (mk_perm w) \in perm_d n. *)
-(* smt. qed. *)
-
-
-(* lemma perm_d_in2 p n w : p \in perm_d n => perm_eq w (range 0 n) => p \o (inv (mk_perm w)) \in perm_d n. *)
-(* smt. qed. *)
-
-

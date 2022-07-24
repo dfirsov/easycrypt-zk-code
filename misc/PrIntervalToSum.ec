@@ -8,17 +8,18 @@ type rt, iat.
 lemma big_reindex f (c e : int) :  big predT f (range 0 e) 
  = big predT (fun i => f (i - c)) (range c (e + c)) .
 rewrite (big_reindex predT f (fun x => x - c) (fun x => x + c) ).
-smt.
+smt().
 have ->: (predT \o transpose Int.(+) (-c)) = predT.
-smt.
+smt().
 have ->: (f \o transpose Int.(+) (-c)) = (fun (i : int) => f (i - c)).
-smt.
+smt().
 have ->: (map (transpose Int.(+) c) (range 0 e)) = 
   range c (e + c).
-have ->: (transpose Int.(+) c) = (+) c. smt.
+have ->: (transpose Int.(+) c) = (+) c. smt().
 rewrite - (range_add 0 e c). auto.
 auto.
 qed.
+
 
 module type RunMain = {
   proc run(i:iat) : rt
@@ -37,11 +38,11 @@ local lemma zzz &m : forall (a : iat) (f : (glob A) -> int)
         (fun i => Pr[ A.run(a) @ &m : f (glob A) = i /\ P a res (glob A) ])
         (range s (s + e + 1)).
 move => a f P s. apply ge0ind.
-smt.
+smt().
 progress . 
 have ->: Pr[A.run(a) @ &m : s <= f (glob A)  <= s /\ P a res (glob A)]
   = Pr[A.run(a) @ &m : s  = f (glob A) /\ P a res (glob A)].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 have ->: bigi predT 
               (fun (i : int) => Pr[A.run(a) @ &m : f (glob A) = i /\ P a res (glob A)]) 
               s (s + 1)
@@ -53,23 +54,22 @@ have ->:
   Pr[A.run(a) @ &m : s <= f (glob A) <= s + (n + 1) /\ P a res (glob A)]
   = Pr[A.run(a) @ &m : (s <= f (glob A) <= s + n) /\ P a res (glob A)
           \/ f (glob A) = s + (n + 1) /\ P a res (glob A) ].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[A.run(a) @ &m : (s <= f (glob A) <= s + n) /\ P a res (glob A)
           \/ f (glob A) = s + (n + 1) /\ P a res (glob A) ]
  = Pr[A.run(a) @ &m : (s <= f (glob A) <= s + n) /\ P a res (glob A) ]
  + Pr[A.run(a) @ &m : f (glob A) = s + (n + 1) /\ P a res (glob A) ].
-rewrite Pr[mu_disjoint]. progress. smt.
+rewrite Pr[mu_disjoint]. progress. smt().
 auto.
 have ->: bigi predT (fun (i : int) => Pr[A.run(a) @ &m : f (glob A) = i /\ P a res (glob A)] ) s (s + (n + 1) + 1)
  = Pr[A.run(a) @ &m : s <= f (glob A) <= s + n /\ P a res (glob A)] +
 Pr[A.run(a) @ &m : f (glob A) = s + (n + 1) /\ P a res (glob A)].
-rewrite (big_int_recr). smt.  simplify.
+rewrite (big_int_recr). smt().  simplify.
 rewrite H0. auto. 
 have ->: (s + n + 1) = (s + (n + 1)).
-smt.
+smt().
 auto. auto.
 qed.
-
 
 
 lemma pr_interval_to_sum_lemma &m : forall (a : iat) 
@@ -84,16 +84,14 @@ lemma pr_interval_to_sum_lemma &m : forall (a : iat)
 proof. progress.
 case (s <= e). move => sep.
 have : exists e', 0 <= e' /\ e = s + e'.
-smt. elim. progress.
+smt(). elim. progress.
 apply (zzz &m a). auto. 
 progress.
-
-
-rewrite range_geq. smt. 
+rewrite range_geq. smt(). 
 rewrite big_nil.
 have ->:  Pr[A.run(a) @ &m : (s <= f (glob A) && f (glob A) <= e) /\ P a res (glob A)]
  = Pr[A.run(a) @ &m : false ].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 rewrite Pr[mu_false]. auto.
 qed.
 
