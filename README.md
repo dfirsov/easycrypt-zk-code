@@ -7,7 +7,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
 - *[case_studies/FiatShamir/](case_studies/FiatShamir/)* - instance of Fiat-Shamir protocol.
 - *[case_studies/Schnorr/](case_studies/Schnorr/)* - instance of Schnorr protocol.
 - *[case_studies/HamiltonBlum/](case_studies/HamiltonBlum/)* - instance of Blum protocol. 
-- *[aux/](aux/)* - miscellaneous useful results
+- *[misc/](misc/)* - miscellaneous useful results
 - *[checkall](checkall)* - script for running the EasyCrypt proof-checker on the entire development.
 - *[rewinding/](rewinding/)* - copy of a rewinding library implemented by D. Firsov and D. Unruh.
 - *[FORMALIZATION_CAVEATS.md](FORMALIZATION_CAVEATS.md)* - description of formalization challenges and choices.
@@ -26,8 +26,8 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
       '(easycrypt-load-path
        (quote
         ( "DEVELOPMENT_PATH/rewinding" 
-          "DEVELOPMENT_PATH/aux"
-          "DEVELOPMENT_PATH/aux/program_logic"
+          "DEVELOPMENT_PATH/misc"
+          "DEVELOPMENT_PATH/misc/program_logic"
           "DEVELOPMENT_PATH/generic_zero_knowledge")))
 
   
