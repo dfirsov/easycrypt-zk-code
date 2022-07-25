@@ -31,14 +31,14 @@ It is important to note that since |challenge_set = Z_p| is big then |1/(size ch
 The Schnorr protocol illustrates that the size of the challenge set affects zero-knowledge and proof of knowledge differently. The small challenge set is good for zero-knowledge property since the simulator has more odds of guessing the verifier's challenge; on the other hand, the small challenge set makes extractor less efficient (and vice versa for the big challenge set).
 
 ## Main results
-- *Schnorr_Basics.ec*
+- *[Schnorr_Basics.ec](Schnorr_Basics.ec)*
 	- `module HP` - honest prover.
 	- `op verify_transcript` -  verification function of honest verifier.
-- *Schnorr_Completeness.ec* 
+- *[Schnorr_Completeness.ec](Schnorr_Completeness.ec)* 
 	- `lemma dl_completeness` - direct proof of one-round completeness.
 	- `lemma dl_completeness_iter` - automatic conclusion of iterated completeness from one-round completeness.
-- *Schnorr_SpecialSoundness.ec* - direct proof of perfect special soundness.
+- *[Schnorr_SpecialSoundness.ec](Schnorr_SpecialSoundness.ec)* - direct proof of perfect special soundness.
 	- `op special_soundness_extract` - perfect witness extraction from two valid transcripts.
-- *Schnorr_Extractability.ec* 
+- *[Schnorr_Extractability.ec](Schnorr_Extractability.ec)* 
 	- `lemma dl_statistical_PoK` - automatic conclusion of extractability from special soundness. 
 
