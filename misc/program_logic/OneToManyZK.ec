@@ -180,14 +180,14 @@ have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
 proc. call D_ll. call Sim1_ll.  auto. auto. auto.
   have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]
    + Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2]. rewrite Pr[mu_split E res.`2]. 
-  simplify. smt. smt.
+  simplify. auto. smt().
   have : 0%r <=
 bigi predT
   (fun (i : int) =>
      (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) ^ i *
      Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) 0 ea.
-  apply (big_geq0  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). smt.
-  smt. 
+  apply (big_geq0  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). rewrite Pr[mu_ge0]. rewrite Pr[mu_le1]. auto.
+  smt(). 
 case (Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1] 
       = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]  
         * (zkp + eps')).
@@ -204,14 +204,13 @@ rewrite coeffeq.
 rewrite mulr_suml.
 rewrite mulr_suml.
 rewrite - big_split.
-simplify. smt.
-
+simplify. smt().
 progress. rewrite H4. auto.
 move => H5.
 have : Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1] 
         = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]  
           * (zkp - eps').
-smt.
+smt().
 progress. rewrite /(\o).
 rewrite zk_step2. 
 rewrite H. simplify.
@@ -225,7 +224,7 @@ rewrite coeffeq.
 rewrite mulr_suml.
 rewrite mulr_suml.
 rewrite - big_split_min.
-simplify. smt.
+simplify. smt().
 progress. rewrite H4.
 auto.
 qed.
@@ -267,7 +266,7 @@ seq 1 1 :   (a0{2} = a{2} /\
   (Top.fevent, p, w,  ea, Top.E) /\
    (glob Sim1){1} = (glob Sim1){2} /\ r1{1} = r0{2}).
 call (_: ={glob Sim1}). simplify. sim.
-skip. progress.  smt.
+skip. progress.  smt().
 wp. call whp_axp.
 skip. progress. auto. auto.
 have : coeff <= 1%r. 
@@ -278,14 +277,14 @@ have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
   byphoare. proc.  call D_ll. call Sim1_ll. auto. auto. auto.
   have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]
    + Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2]. rewrite Pr[mu_split E res.`2]. 
-  simplify. smt. smt.
+  simplify. auto. smt().
   have : 
 bigi predT
   (fun (i : int) =>
      (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) ^ i *
      Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) 0 ea <= 1%r.
-  apply (big_leq1  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). smt.
-  smt.
+  apply (big_leq1  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto.
+  smt().
 move => H6.
 have : exists eps', 0%r <= eps' <= eps /\ `|Pr[W1(Sim1,D).run((E, (p), 1, ea,
                  (fevent, witness)),w) @ &m :
@@ -297,9 +296,10 @@ auto.  assumption. auto. auto. auto.
 elim.
 move => eps' [eps'p1 epsp2].
 apply (ler_trans (coeff * eps')).
-smt.
-smt.
+smt().
+smt().
 qed.
+
 
 
 local lemma zk_almost_final &m p w eps ea coeff zkp :
@@ -320,7 +320,7 @@ move => H1 H2 h3 H3.
 have ie1 : `|Pr[ Iter(Sim1, D).run(fevent, p,w,ea,E) 
            @ &m : E res.`2 /\  res.`1 ]  
          - coeff * zkp| <= eps.
-apply (zk_non_final &m p eps ea coeff zkp);auto. smt.
+apply (zk_non_final &m p eps ea coeff zkp);auto. smt().
 apply ots. assumption. 
 rewrite H3. 
 split.
@@ -331,8 +331,8 @@ have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
 proc. call D_ll. call Sim1_ll.  auto. auto. auto.
   have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]
    + Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2]. rewrite Pr[mu_split E res.`2]. 
-  simplify. smt. smt.
-  apply (big_geq0  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). smt.
+  simplify. auto. smt().
+  apply (big_geq0  Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] _ ea). rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto.
 progress.  
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
   = 1%r - Pr[W0(Sim1,D).run(p,w) @ &m :  E res.`2].
@@ -341,8 +341,8 @@ have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
 proc. call D_ll. call Sim1_ll.  auto. auto. auto.
   have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]
    + Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2]. rewrite Pr[mu_split E res.`2]. 
-  simplify. smt. smt.
-apply big_leq1. smt.
+  simplify. auto. smt().
+apply big_leq1. rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto.
 auto.
 qed.
 
@@ -365,14 +365,18 @@ have <-: 1%r = Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2].
   byphoare. proc. call D_ll. call Sim1_ll. auto. auto. auto.
   rewrite Pr[mu_split (E res.`2)]. simplify. rewrite - r. 
   simplify. auto.
-have ->: 1%r ^ ea = 1%r. smt.
-smt.
+have ->: 1%r ^ ea = 1%r. smt(@Real).
+have : 0%r <= Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : E res.`2 /\ res.`1] <= 1%r.
+rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto.
+smt().
 progress.
-have f : 0%r < Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2].  smt.
+have f : 0%r < Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2].  
+have : Pr[MW.W0(Sim1, D).run(p, w) @ &m : E res.`2] >= 0%r. rewrite Pr[mu_ge0]. auto.
+smt().
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2] ^ ea
  = 1%r - (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : !E res.`2] ^ ea).
-smt.
-rewrite - big_formula_p. smt. auto. progress.
+smt().
+rewrite - big_formula_p. rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto. progress.
 have ->: (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2])
  = Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2].
 have ->: 1%r = Pr[W0(Sim1,D).run(p,w) @ &m :  true].
@@ -380,8 +384,16 @@ byphoare.
 proc.  call D_ll. call Sim1_ll. auto. auto. auto.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
  + Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]. rewrite Pr[mu_split ! E res.`2].
-simplify. smt. smt.
+simplify. auto. smt().
 apply (zk_almost_final &m);auto. 
+qed.
+
+local lemma pow_ler (a b : real) :  0%r <= a => 0%r <= b => forall n, 0 <= n => a <= b => a ^n <= b ^n.
+move => ap bp. 
+apply ge0ind.  progress. smt(). progress. smt(@Real).
+progress. rewrite exprS.  auto.  rewrite exprS.  auto. 
+have f : forall (a b c d : real), 0%r <= a => 0%r <= b => 0%r <= c=> 0%r <= d=>  a <= b => c <= d => a*c <= b * d. smt().
+apply f. auto. auto. smt(@RealExp).  smt(@RealExp).  auto. smt().
 qed.
 
 
@@ -395,7 +407,8 @@ local lemma zk_final_le &m p w p0 eps ea zkp:
            @ &m : E res.`2 /\ res.`1 ] - zkp| 
               <= eps + (1%r-p0) ^ ea.
 progress.
-have fff : p0 <= 1%r. smt.
+have fff : p0 <= 1%r. 
+apply (ler_trans Pr[MW.W0(Sim1, D).run(p, w) @ &m : E res.`2]). auto. rewrite Pr[mu_le1]. auto.
 have f1 : `|Pr[ Iter(Sim1, D).run(fevent, p,w,ea,E) 
            @ &m : E res.`2 /\ res.`1 ]  
          - zkp| 
@@ -406,12 +419,23 @@ have ->: 1%r = Pr[W0(Sim1,D).run(p,w) @ &m :  true].
 byphoare. proc. call D_ll. call Sim1_ll. auto. auto. auto.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : true] = Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
  + Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]. rewrite Pr[mu_split ! E res.`2]. 
-simplify. smt. smt.
+simplify. auto. smt().
 apply (zk_final &m).
 have f2 : 
- (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) <= (1%r - p0). smt.
+ (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) <= (1%r - p0). smt().
 have f3 : (1%r - Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2]) ^ ea <= (1%r - p0) ^ ea.
-apply multn2;auto. smt. auto. auto. auto. smt.
+apply multn2;auto. split.
+have : Pr[W0(Sim1, D).run(p, w) @ &m : E res.`2] <= 1%r. rewrite Pr[mu_le1]. auto.
+smt(). smt(). auto. auto. auto. 
+apply (ler_trans (eps + (1%r - Pr[W0(Sim1, D).run(p, w) @ &m : E res.`2]) ^ ea)). auto.
+have : (1%r - Pr[W0(Sim1, D).run(p, w) @ &m : E res.`2]) <= (1%r - p0).
+smt(). 
+progress.
+have : (1%r - Pr[MW.W0(Sim1, D).run(p, w) @ &m : E res.`2]) ^ ea <=
+ (1%r - p0) ^ ea.
+apply pow_ler. 
+have : Pr[MW.W0(Sim1, D).run(p, w) @ &m : E res.`2] <= 1%r. rewrite Pr[mu_le1]. auto.
+smt(). smt(). auto. auto. smt().
 qed.
 
 
@@ -435,14 +459,15 @@ have f1 : `|Pr[ Iter(Sim1, D).run(fevent,p,w,ea,E)
 apply (zk_final_le &m p w p0 eps ea zkp );auto.
 apply (kkk Pr[Iter(Sim1, D).run(fevent, p, w,  ea, E) @ &m : res.`1]
 Pr[Iter(Sim1, D).run(fevent, p, w,  ea, E) @ &m :
-         E res.`2 /\ res.`1]). smt.
+         E res.`2 /\ res.`1]). 
+rewrite Pr[mu_ge0]. simplify. rewrite Pr[mu_sub]. auto. auto.
 rewrite Pr[mu_split E res.`2] .
 have ->: Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : res.`1 /\ E res.`2]
  = Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : E res.`2 /\ res.`1 ].
-smt.
+rewrite Pr[mu_eq]. auto. auto.
  have -> : Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : res.`1 /\ ! E res.`2] = 
    Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2 /\ res.`1]. rewrite Pr[mu_eq]. auto. auto.
-  have arthf : forall (a b : real), a + b - a = b. smt.
+  have arthf : forall (a b : real), a + b - a = b. smt().
   rewrite (arthf Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : E res.`2 /\ res.`1] Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2 /\ res.`1]).
 rewrite Pr[mu_sub]. auto. auto.
 auto.  
@@ -455,19 +480,19 @@ have bf2 : Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2]
        have : Pr[W0(Sim1, D).run(p, w) @ &m : true] 
                 - Pr[W0(Sim1, D).run(p, w) @ &m : !E res.`2] 
                  = Pr[W0(Sim1, D).run(p, w) @ &m : E res.`2]. 
-    rewrite Pr[mu_split E res.`2]. simplify. smt. smt. 
+    rewrite Pr[mu_split E res.`2]. simplify. smt(). smt(). 
   have ->: Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2] 
      = Pr[ W(Sim1).whp(E,(p),1,ea,(fevent,witness)) @ &m : ! E res ].
    byequiv. proc*.  inline Iter(Sim1, D).run. sp. wp. inline Iter(Sim1, D).WI.run.
  sp. wp. call {1} D_ll. 
-  conseq (_: _==> r1{1} = r0{2}). smt.
+  conseq (_: _==> r1{1} = r0{2}). smt().
 call (_: ={glob Sim1}).  sim. skip. progress. auto. auto.
-apply (final_zz_le (Sim1) Sim1_ll _ &m). apply Sim1_rew_ph. smt. auto. 
+apply (final_zz_le (Sim1) Sim1_ll _ &m). apply Sim1_rew_ph. apply Estart. auto.
 have ->: Pr[Sim1.run(p) @ &m : ! E res] 
   = Pr[W0(Sim1, D).run(p, w) @ &m : ! E res.`2].
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).
-  skip. progress. auto. auto. auto.
-smt. auto. auto. auto. smt.
+  skip. smt().
+auto. auto. auto. smt().
 qed.
 
 
@@ -483,8 +508,8 @@ have ->: Pr[Sim1.run(p) @ &m : E res]
   = Pr[W0(Sim1, D).run(p, w) @ &m :  E res.`2].
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).
   skip. progress. auto. auto. auto.
-progress.
-smt. auto.  auto. apply (zk_final_clean' &m p w p0 eps ea zkp).
+progress. 
+smt(). auto.  auto. apply (zk_final_clean' &m p w p0 eps ea zkp).
 qed.
 end section.
 

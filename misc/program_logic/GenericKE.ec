@@ -316,7 +316,7 @@ have ->: big (fun (r : ct * ct) => r.`1 = r.`2)
          mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)])
           allcs.
 have ->: big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) allcs = big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) 
-    (map fst (filter (fun x => fst x = snd x) (cartprod2 allcs))). rewrite cart2_diag_unzip1. smt. auto.
+    (map fst (filter (fun x => fst x = snd x) (cartprod2 allcs))). rewrite cart2_diag_unzip1. apply allcs_uniq. auto.
 rewrite big_mapT. 
 rewrite - big_filter. rewrite  /(\o). auto.
  rewrite x0. auto.
