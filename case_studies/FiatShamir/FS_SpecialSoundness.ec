@@ -26,7 +26,7 @@ rewrite /qr_verify. simplify.
 progress. 
 rewrite /special_soundness_extract.  
 have -> : statement
-   = ((inv  transcript1.`1))  * (transcript1.`3) * (transcript1.`3 ). smt.
+   = ((inv  transcript1.`1))  * (transcript1.`3) * (transcript1.`3 ). smt(@ZMR).
 rewrite H1.
 rewrite H7.  smt(@ZMR). 
 rewrite /valid_transcript_pair. rewrite /verify_transcript.
