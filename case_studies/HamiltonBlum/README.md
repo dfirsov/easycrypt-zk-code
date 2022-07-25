@@ -41,25 +41,25 @@ The proof of the properties for the described ``one-shot'' simulator are not tri
 of the commitment scheme.
 
 ## Main results
-- *Blum_Basics.ec*
+- *[Blum_Basics.ec](Blum_Basics.ec)*
 	- `module HP` - honest prover.
 	- `op verify_transcript` -  verification function of honest verifier.
-- *Blum_Completeness.ec* 
+- *[Blum_Completeness.ec](Blum_Completeness.ec)* 
 	- `lemma hc_completeness` - direct proof of one-round completeness.
 	- `lemma hc_completeness_iter` - automatic conclusion of iterated completeness from one-round completeness.
-- *Blum_SpecialSoundness.ec* - direct proof of perfect special soundness.
+- *[Blum_SpecialSoundness.ec](Blum_SpecialSoundness.ec)* - direct proof of perfect special soundness.
 	- `op special_soundness_extract` - function for witness extraction from two valid transcripts.
 	- `module SpecialSoundnessAdvReduction` - adversary who breaks binding of a commitment scheme if function `special_soundness_extract` fails to return a valid witness.
 	- `lemma hc_computational_special_soundness_binding` - proof that `SpecialSoundnessAdvReduction` succeeds in breaking binding if witness extraction fails.  
-- *Blum_Extractability.ec*
+- *[Blum_Extractability.ec](Blum_Extractability.ec)*
 	- `lemma hc_computational_PoK` - automatic conclusion of computational extractability from special soundness.
-- *Blum_Soundness.ec*
+- *[Blum_Soundness.ec](Blum_Soundness.ec)*
 	- `lemma hc_computational_soundness` - automatic conclusion of computational soundness from extractability.
-- *Blum_Sim1Property.ec*
+- *[Blum_Sim1Property.ec](Blum_Sim1Property.ec)*
 	- `module Sim1` - one-time simulator
 	- `lemma sim1_rew_ph` - Sim1 rewinds itself in case of bad-event
 	- `lemma sim1_succ` - probability of success-event
 	- `lemma sim1_error` -  conditional indistinguishability
-- *Blum_ZeroKnowledge.ec* 
+- *[Blum_ZeroKnowledge.ec](Blum_ZeroKnowledge.ec)* 
 	- `lemma hc_statistical_zk` - automatic one-round zero-knowledge from Sim1 properties
 	- `lemma hc_statistical_zk_iter` - automatic iterated zero-knowledge from one-round zero-knowledge 
