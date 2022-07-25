@@ -40,16 +40,16 @@ seq  1 1 : (={M.c} /\ r{1} = r0{2} /\ myd{1} = myd0{2} /\ e0{2} = e{2} /\ myd0{2
 while (={M.c,myd,MyP} /\ r{1} = r0{2} /\ myd{1} = myd0{2} /\ e0{2} = e{2} 
    /\ MyP{1} = MyP0{2} /\ MyP{2} = MyP0{2}
    /\ e{1} - 1 = e0{2} ).
-wp. rnd. skip. progress. smt.  skip. progress. smt. smt.
+wp. rnd. skip. progress. smt().  skip. progress. smt(). smt().
 sp. simplify.
 case (MyP{1} r{1}).
-rcondf {1} 1. progress. skip. smt.
-rcondf {2} 1. progress. skip. progress. smt.
+rcondf {1} 1. progress. skip. smt().
+rcondf {2} 1. progress. skip. progress. smt().
 skip. progress.
 unroll {1} 1.
 if. progress.  
 rcondf {1} 3. progress.
-wp. rnd. skip. progress. smt.
+wp. rnd. skip. progress. smt().
 wp. rnd. skip. progress. 
 rcondf {1} 1. progress. skip. progress.
 qed.
@@ -63,12 +63,12 @@ progress.
 have <-: Pr[M.whp_if_end(MyP{m},d{m}, s{m}, e{m}, r{m}) @ &m : P res] = p.
 byphoare (_: arg = (MyP{m},d{m}, s{m}, e{m}, r{m}) ==> _).
 conseq H. auto. auto. byequiv.
-conseq whp_split_if_end. smt. auto. auto. auto.
+conseq whp_split_if_end. smt(). auto. auto. auto.
 qed.
 
 
 lemma lll (b a c : real) : a <= b => b <= c => a <= c.
-smt. qed.
+smt(). qed.
 
     
 lemma whp_split_if_end_le MyP s e r p myd P :  
@@ -81,7 +81,7 @@ byphoare (_: arg = (MyP{m},myd{m},s{m}, e{m}, r{m}) ==> _).
 conseq H. auto. auto. 
 apply (lll Pr[M.whp_if_end(MyP,myd,s, e, r) @ &m : P res] ).
 byequiv.
- conseq whp_split_if_end. smt. auto. auto. auto. apply zz.
+ conseq whp_split_if_end. smt(). auto. auto. auto. apply zz.
 qed.
 
 
@@ -90,15 +90,15 @@ lemma asdsad (p : real) r myda MyPa:
   (mu myda (fun (x : rt) => ! MyPa x) = p) =>
   MyPa r = false => forall e, 0 <= e => 
   phoare[ M.whp_if_end : arg = (MyPa,myda, 1,e,r) ==> !MyPa res ] = (p ^ (e+1)).
-proof. move => iipr ipr. apply ge0ind. smt.
+proof. move => iipr ipr. apply ge0ind. smt().
 progress. simplify.
   progress. proc.
 inline*. sp.
-rcondf 1. skip. smt.
+rcondf 1. skip. smt().
 sp. 
-rcondt 1. skip. progress. smt.
+rcondt 1. skip. progress. smt().
 swap 1 1.  rnd.  simplify.
-wp.  skip.  progress. smt.
+wp.  skip.  progress. smt(@Real).
 progress. proc.
   have phf: phoare[ M.whp : arg = (MyPa,myda, 1, n+1, r) ==> !MyPa res] = (p ^(n+1)).
  apply (whp_split_if_end'  MyPa 1 n r  (p^(n+1)) (fun x => !MyPa x) myda (H0 H) ).
@@ -107,14 +107,14 @@ inline*. sp.
 seq 1 :  (MyP = MyPa /\ myd = myda  /\ (!MyPa r0 => M.c <= e + 1)).
  while (MyP = MyP0 /\ MyP = MyPa /\ myd = myda /\ e = e0 /\ (!MyPa r0 => M.c <= e0 + 1)).
 wp. 
-rnd.  skip. progress. smt. skip. progress. smt. sp.  skip. progress. 
+rnd.  skip. progress. smt(). skip. progress. smt(). sp.  skip. progress. 
  call phf. skip.  auto.
-rcondt 1. skip. progress. smt.  
+rcondt 1. skip. progress. smt().  
 wp. simplify.  rnd.  simplify.
 skip. progress. 
 hoare. 
-rcondf 1. skip.  progress.  smt.
-simplify. skip. auto. smt.
+rcondf 1. skip. progress. smt().
+simplify. skip. auto. progress. smt(@Real).
 qed.
 
 
@@ -123,15 +123,15 @@ lemma asdsad_le (p : real) MyPa r d:
     MyPa r = false => forall e, 0 <= e => 
   phoare[ M.whp_if_end : arg = (MyPa, d,1,e,r) ==> !MyPa res ]
      <= (p ^ (e+1)).
-proof. move => dpr ipr. apply ge0ind. smt.
+proof. move => dpr ipr. apply ge0ind. smt().
 progress. simplify.
   progress. proc.
 inline*. sp.
-rcondf 1. skip. smt.
+rcondf 1. skip. smt().
 sp. 
-rcondt 1. skip. progress. smt.
+rcondt 1. skip. progress. smt().
 swap 1 1.  rnd.  simplify.
-wp.  skip.  progress. smt. 
+wp.  skip.  progress. smt(@Real). 
 progress. proc.
   have phf: phoare[ M.whp : arg = (MyPa,d,1, n+1, r) ==> !MyPa res] <= (p ^(n+1)).
  apply (whp_split_if_end_le MyPa 1 n r (p^(n+1)) d (fun x => !MyPa x) (H0 H) ).
@@ -140,14 +140,14 @@ inline*. sp.
 seq 1 :  (d = myd /\ MyP = MyPa /\ myd = myd0 /\ (!MyP r0 => M.c <= e + 1)).
  while (d = myd /\ myd = myd0 /\ MyP = MyP0 /\ e = e0 /\ (!MyP r0 => M.c <= e0 + 1)).
 wp. 
-rnd.  skip. progress. smt. skip. progress. smt. sp.  skip. progress. 
+rnd.  skip. progress. smt(). skip. progress. smt(). sp.  skip. progress. 
  call phf. skip.  auto.
-rcondt 1. skip. progress. smt. 
+rcondt 1. skip. progress. smt(). 
 wp. simplify.  rnd.  simplify.
 skip. progress.
 hoare. 
-rcondf 1. skip.  progress.  smt.
-simplify. skip. auto. smt.
+rcondf 1. skip.  progress. smt().
+simplify. skip. auto. smt(@Real).
 qed.
 
 

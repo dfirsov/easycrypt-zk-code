@@ -61,20 +61,19 @@ op MyPred : rrt -> bool.
 declare module A <: HasRun {-W, -DW}.
 
 declare axiom A_ll : islossless A.run.
-
 declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] = 1%r.
 
 
 
 lemma A_rew_h x : hoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] .
 bypr. progress. 
-have <- : Pr[A.run(z{m}) @ &m : false ] = 0%r. smt.
+have <- : Pr[A.run(z{m}) @ &m : false ] = 0%r. rewrite Pr[mu_false]. auto.
 have : 1%r = Pr[A.run(z{m}) @ &m : !(!MyPred res => (glob A) = (glob A){m}) ]
   + Pr[A.run(z{m}) @ &m : !MyPred res => (glob A) = (glob A){m} ].
    have <- :  Pr[A.run(z{m}) @ &m : true ] = 1%r. byphoare. apply  A_ll. auto. auto.
-rewrite Pr[mu_split (!MyPred res => (glob A) = (glob A){m}) ]. smt.
+rewrite Pr[mu_split (!MyPred res => (glob A) = (glob A){m}) ]. smt().
 have ->: Pr[A.run(z{m}) @ &m : (!MyPred res => (glob A) = (glob A){m}) ] = 1%r. byphoare (_: (glob A) = (glob A){m} ==> _). apply (A_rew_ph). auto. auto.
-smt.
+rewrite Pr[mu_false]. smt().
 qed.
 
 
@@ -86,49 +85,57 @@ lemma asdistr_rew2 : forall (D : (glob A) -> irt -> rrt distr) ,
                          /\ (glob A){2} = (glob A){m} /\ arg{2} = a 
                          ==>  res{1} =  res{2} /\ (!MyPred res{2}  =>(glob A){2} = (glob A){m}) ].
 progress.
-bypr (res{1}, true) (res{2}, !MyPred res{2} => (glob A){2} = (glob A){m}). progress.  smt.
+bypr (res{1}, true) (res{2}, !MyPred res{2} => (glob A){2} = (glob A){m}). progress. smt().
 progress. 
-
 have ->: Pr[SF.sampleFrom(d{1}) @ &1 : (res, true) = a0]
  = Pr[SF.sampleFrom(d{1}) @ &1 : res = a0.`1 /\ a0.`2 = true].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[A.run(z{2}) @ &2 : (res, (!MyPred res => (glob A) = (glob A){m})) = a0]
  = Pr[A.run(z{2}) @ &2 : res  = a0.`1 /\ (!MyPred res => (glob A) = (glob A){m})  = a0.`2].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 case (a0.`2 = true).
 progress. rewrite H3. simplify.
 have -> : Pr[A.run(z{2}) @ &2 :
    res = a0.`1 /\ (!MyPred res => (glob A) = (glob A){m}) = true]
  = Pr[A.run(z{2}) @ &2 :
    res = a0.`1].
-
   have kj: Pr[A.run(z{2}) @ &2 : res = a0.`1 /\ (!MyPred res => (glob A) = (glob A){m}) = false] = 0%r.
    have : Pr[A.run(z{2}) @ &2 : !(!MyPred res => (glob A) = (glob A){m})] = 0%r.
    rewrite - H2.
    byphoare (_: (glob A) = (glob A){2} ==> _ ). hoare.  simplify.
     have f : forall ga, phoare[ A.run : (glob A) = ga ==>  (!MyPred res => (glob A) = ga) ] = 1%r.
     move => ga. apply A_rew_ph.  apply A_rew_h. auto. auto.
-     smt.
-smt.
+    progress.
+     have : Pr[A.run(arg{2}) @ &2 :
+   res = a0.`1 /\ (! MyPred res => (glob A) = (glob A){m}) = false] <= 0%r. rewrite - H4. rewrite Pr[mu_sub]. smt(). auto.
+  have : Pr[A.run(arg{2}) @ &2 :
+   res = a0.`1 /\ (! MyPred res => (glob A) = (glob A){m}) = false] >= 0%r. rewrite Pr[mu_ge0]. auto. smt().
+  have ->: Pr[A.run(arg{2}) @ &2 : res = a0.`1] = Pr[A.run(arg{2}) @ &2 :
+   res = a0.`1 /\ (! MyPred res => (glob A) = (glob A){m}) = true] + Pr[A.run(arg{2}) @ &2 :
+   res = a0.`1 /\ (! MyPred res => (glob A) = (glob A){m}) = false]. rewrite Pr[mu_split (! MyPred res => (glob A) = (glob A){m})].
+smt(). rewrite kj. smt().
 byequiv (_: ={glob A} /\ arg{2} = z{2} /\ (glob A){2} = (glob A){m} /\ arg{1} = D (glob A){m} z{2} ==> _).
 exists* z{2}. elim*. progress.
 proc*.
 call  (asdistr A D H &m arg_R ).
 auto. progress. auto.
 move => hp.
-have hpp : a0.`2 = false. smt.
+have hpp : a0.`2 = false. smt().
 clear hp.
 rewrite hpp.
-  have ->: Pr[SF.sampleFrom(d{1}) @ &1 : res = a0.`1 /\ false] = 0%r.
-  smt.
+  have ->: Pr[SF.sampleFrom(d{1}) @ &1 : res = a0.`1 /\ false] = 0%r. simplify.
+  rewrite Pr[mu_false]. auto.
   have ->: Pr[A.run(z{2}) @ &2 : res = a0.`1 /\ (!MyPred res => (glob A) = (glob A){m}) = false] = 0%r.
    have : Pr[A.run(z{2}) @ &2 : !(!MyPred res => (glob A) = (glob A){m}) ] = 0%r.
    rewrite - H2.
    byphoare (_: (glob A) = (glob A){2} ==> _ ). hoare.  simplify.
     have f : forall ga, phoare[ A.run : (glob A) = ga ==> (!MyPred res => (glob A) = ga) ] = 1%r.
     move => ga. apply A_rew_ph. apply A_rew_h.  auto. auto.
-     smt.
-auto.
+    move => q.
+    have : Pr[A.run(arg{2}) @ &2 :
+   res = a0.`1 /\ (! MyPred res => (glob A) = (glob A){m}) = false] <= 0%r. rewrite - q. rewrite Pr[mu_sub]. smt(). auto. 
+    have : Pr[A.run(arg{2}) @ &2 :
+   res = a0.`1 /\ (! MyPred res => (glob A) = (glob A){m}) = false] >= 0%r. rewrite Pr[mu_ge0]. smt(). auto.  smt(). auto.
 qed.
 
 
@@ -148,9 +155,8 @@ sp.
 exists* (glob A){2} . elim*. progress.
 while (={p,r,e} /\ DW.c{1} = W.c{2} /\ d{1} = da (glob A){m} ia /\ i{2} = ia /\   p{1} = MyPred /\ (!p{1} r{2} => ={glob A} /\ (glob A){2} = (glob A){m}) ).
 wp.
-
 call (asdistr_rew2  da H &m ia).
-skip. progress.    smt.  smt.  smt. smt. skip. progress. smt.
+skip. progress;smt(). skip. progress. smt().
 progress. 
 qed.
 
@@ -161,13 +167,13 @@ lemma final_zz &m (p : real)  i e ra :  MyPred ra = false => 0 <= e =>
   => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] = (p ^ (e)).
 case (e = 0).
 progress.
-have ->: Pr[A.run(i) @ &m : ! MyPred res] ^ 0 = 1%r. smt.
+have ->: Pr[A.run(i) @ &m : ! MyPred res] ^ 0 = 1%r. smt(@Real).
 byphoare (_: e = 0 /\ s = 1 /\ MyPred ra = false /\ r = ra ==> _).
 simplify. proc. 
 sp.
-rcondf 1. skip. progress. skip. smt. smt. auto.  auto. 
+rcondf 1. skip. progress. skip. smt(). smt(). auto.  auto. 
 move => ez sf ep.
-have :  exists e', e' + 1 = e /\ 0 <= e'. smt.
+have :  exists e', e' + 1 = e /\ 0 <= e'. smt().
 elim. progress.
 have exD :  exists (D : (glob A) -> irt -> rrt distr),
       forall &m (M : rrt -> bool) (a : irt),
@@ -183,11 +189,9 @@ while (={e,r} /\ p{1} = MyP{2} /\ DW.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline
 skip. progress. 
 skip. progress. auto. auto.
 byphoare(_: arg = (MyPred,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
-
 have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPred x) =
   Pr[A.run(i) @ &m : ! MyPred res].
 rewrite H0. auto.
-
 conseq (asdsadq (Pr[A.run(i) @ &m : ! MyPred res]) MyPred  ra (D (glob A){m} i) lf sf e' H ). auto.
 auto.
 qed.
@@ -202,9 +206,9 @@ progress.
 byphoare (_: e = 0 /\ s = 1 /\ p ra = false /\ r = ra ==> _).
 simplify. proc.
 sp.
-rcondf 1. skip. progress. skip. smt. smt. auto.  auto. 
+rcondf 1. skip. progress. skip. smt(@Real). smt(). auto.  auto. 
 move => ez sf ep.
-have :  exists e', e' + 1 = e /\ 0 <= e'. smt.
+have :  exists e', e' + 1 = e /\ 0 <= e'. smt().
 elim. progress.
 have exD :  exists (D : (glob A) -> irt -> rrt distr),
       forall &m (M : rrt -> bool) (a : irt),
@@ -220,7 +224,6 @@ while (={e,r} /\ p{1} = MyP{2} /\ DW.c{1} = M.c{2} /\ d{1} = myd{2}). wp. inline
 skip. progress. 
 skip. progress. auto. auto.
 byphoare(_: arg = (MyPred,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
-
 have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPred x) <= pr. rewrite H1. auto.
 conseq (asdsadq_le pr MyPred ra (D (glob A){m} i) lf sf e' H ). auto.
 auto.

@@ -31,7 +31,7 @@ lemma qr_soundness &m s:
 progress.
 apply (SST.Perfect.statistical_soundness P _).
 apply rewindable_P_plus.
-apply P_response_ll.
+apply P_response_ll. apply P_commitment_ll.
 apply qr_perfect_special_soundness. auto.
 qed.
 

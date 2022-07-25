@@ -18,6 +18,7 @@ type ct, pt, rt, irt, auxt, sbits.
 
 op d : ct distr.
 axiom duni : is_uniform d.
+axiom dll : is_lossless d.
 
 op allcs : ct list.
 axiom allcs_uniq : uniq allcs.
@@ -81,6 +82,7 @@ section.
 declare module A <: Adv.
 
 declare axiom A_ll : islossless A.run.
+declare axiom A_init_ll : islossless A.init.
 
 declare axiom rewindable_A_plus : 
   exists (f : glob A -> sbits),
@@ -165,8 +167,8 @@ call (_:true).  call (_:true).
 wp. 
 rnd. skip. progress. auto. auto.
 rewrite (averaging C1' &m (M p) p d).
-rewrite - sumE_fin. smt. 
-smt.
+rewrite - sumE_fin. apply allcs_uniq. 
+smt(allcs_all).
 have ->: 
   (fun (c : ct) => mu1 d c * Pr[C1.main(c, p) @ &m : M p (c, res)]) =
   (fun (x : ct) => mu1 d x * Pr[C1'.main(x, p) @ &m : M p res]).
@@ -202,7 +204,14 @@ byequiv. proc. inline*. swap {2} 4 -3. swap {2} 9 -7. wp.
 call (_:true). wp.  call (_:true). wp.  call (_:true).
 wp. call (_:true). call (_:true). wp. rnd. rnd. skip. progress.
 auto. auto.
-apply (rew_with_init A' A' &m (fun (r :  irt * (ct * rt)) => M p (r.`2.`1, (r.`2.`2, r.`1)) )).
+apply (rew_with_init A' A' _ _ _ _ _ &m (fun (r :  irt * (ct * rt)) => M p (r.`2.`1, (r.`2.`2, r.`1)) )).
+proc*.  sim. proc*. sim.
+elim rewindable_A_plus. progress.
+exists f. progress. 
+byphoare (_: (glob A) = (glob A){m0} ==> _). apply H0. auto. auto.
+byphoare (_: arg = f x ==> _). conseq (H3 x). auto. auto. auto.
+proc. call A_ll. rnd.  skip. smt(dll).
+conseq A_init_ll.
 qed.
    
 
@@ -261,11 +270,11 @@ apply ler_sum. progress.
    have : Pr[C2.rest(p, a) @ &m : M p (a.`1, res.`1) /\ M p (a.`2, res.`2)] <=
             Pr[C1.main(a.`1,p) @ &m : M p (a.`1, res)].
     rewrite H.
-      have ->: a = (a.`1,a.`1).  smt. simplify.
+      have ->: a = (a.`1,a.`1).  smt(). simplify.
       apply (avr_lemma_7_app &m M p ). 
-     smt.
+     smt().
 have f3  : forall (a b c : real), b <= c => a - b >= a - c.
-smt.
+smt().
 apply f3.
 apply f2.
 qed.
@@ -335,7 +344,7 @@ have ff : Pr[X1.run(p) @ &m : M p (res.`1, res.`2)] ^ 2
      <= Pr[Xseq(C2).run(p) @ &m : M p (res.`1.`1, res.`2.`1) 
                                      /\ M p (res.`1.`2, res.`2.`2)].
 apply x2.
-smt. 
+smt(). 
 apply (avr_lemma_10_app &m M p).
 qed.
 
@@ -399,15 +408,15 @@ have ->: Pr[InitRun2(A).run(p) @ &m :
    SuccExtr p res.`1 res.`2] = Pr[InitRun2(A).run(p) @ &m :
    res.`1.`1 <> res.`2.`1 /\ AccRun p res.`1 /\ AccRun p res.`2 /\
    SuccExtr p res.`1 res.`2].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[InitRun2(A).run(p) @ &m :
    (res.`1.`1 <> res.`2.`1 /\ AccRun p res.`1 /\ AccRun p res.`2) /\
    !SuccExtr p res.`1 res.`2] = Pr[InitRun2(A).run(p) @ &m :
    res.`1.`1 <> res.`2.`1 /\ AccRun p res.`1 /\ AccRun p res.`2 /\
    !SuccExtr p res.`1 res.`2].
-rewrite Pr[mu_eq]. smt. auto.
-smt.
-smt.
+rewrite Pr[mu_eq]. smt(). auto.
+smt().
+smt().
 qed.
 
 
@@ -415,11 +424,11 @@ qed.
 
 
 lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
-smt. qed.
+smt(@RealExp). qed.
 
 
 lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
-smt. qed.
+smt(@RealExp). qed.
 
 
 lemma final_eq_step2 &m AccRun SuccExtr p negl : 
@@ -438,8 +447,8 @@ have f2 :     Pr[InitRun2(A).run(p) @ &m :
        res.`1.`1 <> res.`2.`1 /\
   AccRun p res.`1 /\ AccRun p res.`2 /\ SuccExtr p res.`1 res.`2]
    <= 0%r. rewrite - H0.
-   rewrite Pr[mu_sub]. smt. auto. 
-  smt.
+   rewrite Pr[mu_sub]. smt(). auto. 
+  smt(@Distr).
 have f1 :    0%r 
     >= (Pr[ InitRun1(A).run(p) @ &m  :  AccRun p res ]^2
          - (1%r/(size allcs)%r) * Pr[ InitRun1(A).run(p) @ &m  :  AccRun p res ])
@@ -449,7 +458,7 @@ apply (final_eq_step1 &m). assumption.
 clear f2. clear H.
 have f3 : Pr[InitRun1(A).run(p) @ &m : AccRun p res] ^ 2 
      <= 1%r / (size allcs)%r * Pr[InitRun1(A).run(p) @ &m : AccRun p res] + negl.
-smt.
+smt().
 clear f1.
 clear H0.
 have : Pr[InitRun1(A).run(p) @ &m : AccRun p res] <=
@@ -459,7 +468,12 @@ clear f3. simplify.
 move => f4.
 apply (ler_trans (sqrt (Pr[InitRun1(A).run(p) @ &m : AccRun p res] / (size allcs)%r + negl))).
 auto.
-apply qqq1. smt.
+apply qqq1. 
+have : Pr[InitRun1(A).run(p) @ &m : AccRun p res] <= 1%r. rewrite Pr[mu_le1]. auto.
+have : Pr[InitRun1(A).run(p) @ &m : AccRun p res] >= 0%r. rewrite Pr[mu_ge0]. auto.
+have : 0 <= size allcs. smt(@List).
+have : forall a b , 0%r <= a <= 1%r => b >= 0%r => a/b <= 1%r/b. smt(@Real).
+smt().
 qed.
 
 

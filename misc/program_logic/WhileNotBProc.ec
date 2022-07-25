@@ -46,16 +46,16 @@ seq  1 1 : (={M.c, glob A} /\ r{1} = r0{2} /\ e0{2} = e{2} /\ i{1} = i0{2} /\ i{
 while (={M.c,MyP, glob A} /\ r{1} = r0{2} /\ e0{2} = e{2} /\ i{1} = i0{2} /\ i{2} = i0{2}
    /\ MyP{1} = MyP0{2} /\ MyP{2} = MyP0{2}
    /\ e{1} - 1 = e0{2} ).
-wp. call (_:true).   skip. progress. smt.  skip. progress. smt. smt.
+wp. call (_:true).   skip. progress. smt(). skip. progress. smt(). smt().
 sp. simplify.
 case (MyP{1} r{1}).
-rcondf {1} 1. progress. skip. smt.
-rcondf {2} 1. progress. skip. progress. smt.
+rcondf {1} 1. progress. skip. smt().
+rcondf {2} 1. progress. skip. progress. smt().
 skip. progress.
 unroll {1} 1.
 if. progress.  
 rcondf {1} 3. progress.
-wp. call (_:true). skip. progress. smt.
+wp. call (_:true). skip. progress. smt().
 wp. call (_:true). skip. progress. 
 rcondf {1} 1. progress. skip. progress.
 qed.
@@ -70,12 +70,12 @@ progress.
 have <-: Pr[M(A).whp_if_end(i{m}, MyP{m}, s{m}, e{m}, r{m}) @ &m : P res] = p.
 byphoare (_: arg = (i{m}, MyP{m}, s{m}, e{m}, r{m}) ==> _).
 conseq H. auto. auto. byequiv.
-conseq whp_split_if_end. smt. auto. auto. auto.
+conseq whp_split_if_end. smt(). auto. auto. auto.
 qed.
 
 
 lemma lll (b a c : real) : a <= b => b <= c => a <= c.
-smt. qed.
+smt(). qed.
 
     
 lemma whp_split_if_end_le MyP i s e r p P :  
@@ -88,7 +88,7 @@ byphoare (_: arg = (i{m},MyP{m},s{m}, e{m}, r{m}) ==> _).
 conseq H. auto. auto. 
 apply (lll Pr[M(A).whp_if_end(i, MyP,s, e, r) @ &m : P res] ).
 byequiv.
- conseq whp_split_if_end. smt. auto. auto. auto. apply zz.
+conseq whp_split_if_end. smt(). auto. auto. auto. apply zz.
 qed.
 
 
@@ -102,7 +102,7 @@ byphoare (_: arg = ((i,MyP,s,e,r)) ==> _).
   conseq H.  progress.  auto.
 apply (lll Pr[M(A).whp_if_end(i, MyP, s, e, r) @ &m : P res] ). auto.
 byequiv.
- symmetry. conseq whp_split_if_end. smt. auto. auto. auto. 
+symmetry. conseq whp_split_if_end. smt(). auto. auto. auto. 
 qed.
 
 
@@ -111,16 +111,16 @@ lemma asdsad (p : real) ia r MyPa:
    (phoare[ A.run : arg = ia ==> !MyPa res ] = p) =>
   MyPa r = false => forall e, 0 <= e => 
   phoare[ M(A).whp_if_end : arg = (ia, MyPa, 1,e,r) ==> !MyPa res ] = (p ^ (e+1)).
-proof. move => iipr ipr. apply ge0ind. smt.
+proof. move => iipr ipr. apply ge0ind. smt().
 progress. simplify.
   progress. proc.
 inline*. sp.
-rcondf 1. skip. smt.
+rcondf 1. skip. smt().
 sp. 
-rcondt 1. skip. progress. smt.
+rcondt 1. skip. progress. smt().
 swap 1 1.  
 have f : phoare[ A.run : arg = ia ==> ! MyPa res] = (p^1). 
-simplify.  conseq iipr. smt.
+simplify.  conseq iipr. smt(@Real).
  call f. sp. skip. auto.
   simplify.
 progress. proc.
@@ -131,32 +131,30 @@ inline*. sp.
 seq 1 :  (i =  ia /\ MyP = MyPa /\ (!MyPa r0 => M.c <= e + 1)).
  while (i = ia /\ i = i0 /\ MyP = MyP0 /\ MyP = MyPa /\ e = e0 /\ (!MyPa r0 => M.c <= e0 + 1)).
 wp. 
-call (_:true).  skip. progress. smt. skip. progress. smt. sp.  skip. progress. 
+call (_:true).  skip. progress. smt(). skip. progress. smt(). sp.  skip. progress. 
  call phf. skip.  auto.
-rcondt 1. skip. progress. smt.  
+rcondt 1. skip. progress. smt().  
 wp. simplify.  call iipr.  simplify.
 skip. progress. 
 hoare. 
-rcondf 1. skip.  progress.  smt.
-simplify. skip. auto. smt.
+rcondf 1. skip.  progress. smt().
+simplify. skip. auto. smt(@Real).
 qed.
 
 lemma asdsad_le (p : real) ia r MyPa: 
    (phoare[ A.run : arg = ia ==> !MyPa res ] <= p) =>
   MyPa r = false => forall e, 0 <= e => 
   phoare[ M(A).whp_if_end : arg = (ia, MyPa, 1,e,r) ==> !MyPa res ] <= (p ^ (e+1)).
-proof. move => iipr ipr. apply ge0ind. smt.
+proof. move => iipr ipr. apply ge0ind. smt().
 progress. simplify.
   progress. proc.
 inline*. sp.
-rcondf 1. skip. smt.
+rcondf 1. skip. smt().
 sp. 
-rcondt 1. skip. progress. smt.
+rcondt 1. skip. progress. smt().
 swap 1 1.  
 have f : phoare[ A.run : arg = ia ==> ! MyPa res] <= (p^1). 
-conseq iipr. smt.
-
-
+conseq iipr. smt(@Real).
 call f. sp. skip. auto.
   simplify.
 progress. proc.
@@ -167,31 +165,30 @@ inline*. sp.
 seq 1 :  (i = ia /\ MyP = MyPa /\ (!MyPa r0 => M.c <= e + 1)).
  while (i = ia /\ i = i0 /\ MyP = MyP0 /\ MyP = MyPa /\ e = e0 /\ (!MyPa r0 => M.c <= e0 + 1)).
 wp. 
-call (_:true).  skip. progress. smt. skip. progress. smt. sp.  skip. progress. 
+call (_:true).  skip. progress. smt(). skip. progress. smt(). sp.  skip. progress. 
  call phf. skip.  auto.
-rcondt 1. skip. progress. smt.  
+rcondt 1. skip. progress. smt().  
 wp. simplify.  call iipr.  simplify.
 skip. progress. 
 hoare. 
-rcondf 1. skip.  progress.  smt.
-simplify. skip. auto. smt.
+rcondf 1. skip.  progress.  smt().
+simplify. skip. auto. smt(@Real).
 qed.
 
 lemma asdsad_ge (p : real) ia r MyPa: 
    (phoare[ A.run : arg = ia ==> !MyPa res ] >= p) =>
   MyPa r = false => forall e, 0 <= e => 
   phoare[ M(A).whp_if_end : arg = (ia, MyPa, 1,e,r) ==> !MyPa res ] >= (p ^ (e+1)).
-proof. move => iipr ipr. apply ge0ind. smt.
+proof. move => iipr ipr. apply ge0ind. smt().
 progress. simplify.
   progress. proc.
 inline*. sp.
-rcondf 1. skip. smt.
+rcondf 1. skip. smt().
 sp. 
-rcondt 1. skip. progress. smt.
+rcondt 1. skip. progress. smt().
 swap 1 1.  
 have f : phoare[ A.run : arg = ia ==> ! MyPa res] >= (p^1). 
-conseq iipr. smt.
-
+conseq iipr. smt(@Real).
 call f. sp. skip. auto.
   simplify.
 progress. proc.
@@ -202,14 +199,14 @@ inline*. sp.
 seq 1 :  (i = ia /\ MyP = MyPa /\ (!MyPa r0 => M.c <= e + 1)).
  while (i = ia /\ i = i0 /\ MyP = MyP0 /\ MyP = MyPa /\ e = e0 /\ (!MyPa r0 => M.c <= e0 + 1)).
 wp. 
-call (_:true).  skip. progress. smt. skip. progress. smt. sp.  skip. progress. 
+call (_:true).  skip. progress. smt(). skip. progress. smt(). sp.  skip. progress. 
  call phf. skip.  auto.
-rcondt 1. skip. progress. smt.  
+rcondt 1. skip. progress. smt().  
 wp. simplify.  call iipr.  simplify.
 skip. progress. 
 hoare. 
-rcondf 1. skip.  progress.  smt.
-simplify. skip. auto. smt.
+rcondf 1. skip.  progress. smt().
+simplify. skip. auto. smt(@Real).
 qed.
 
 

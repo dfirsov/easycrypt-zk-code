@@ -81,6 +81,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 
    declare module P <: RewMaliciousProver{-HV}.    
    declare axiom P_response_ll : islossless P.response.
+   declare axiom P_commitment_ll : islossless P.commitment.
 
 
    (* rewindability assumption *)
@@ -144,13 +145,14 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    proof. rewrite -  (ex_a_eq_f &m p aux).
    move => f. simplify.
     rewrite -  (ex_a_eq_f &m p aux (fun x => x) ).
-   apply (final_eq_step1 (A(P)) _ _ &m (fun pq (r : challenge * (response * commitment)) => 
+   apply (final_eq_step1 (A(P)) _ _ _ &m (fun pq (r : challenge * (response * commitment)) => 
      hc_verify (fst pq) r.`2.`2 r.`1 r.`2.`1) (fun (pq :statement * unit) 
         (r1 r2 : challenge * (response * commitment)) => soundness_relation (fst pq) 
           (special_soundness_extract (fst pq) (r1.`2.`2, r1.`1, r1.`2.`1) (r2.`2.`2, r2.`1, r2.`2.`1)))
      (p, aux)
     deltoid
    _). proc. call P_response_ll;auto. 
+       proc. call P_commitment_ll;auto.   
    simplify. 
    apply (rewindable_A_plus P rewindable_P_plus). 
   auto. 
@@ -321,6 +323,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 
 
     declare axiom P_response_ll : islossless P.response.  
+    declare axiom P_commitment_ll : islossless P.commitment.  
     declare axiom perfect_special_soundness p : 
      (forall t1 t2, valid_transcript_pair p t1 t2 =>
          soundness_relation p (special_soundness_extract p t1 t2)).
@@ -336,7 +339,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
      have -> : 0%r = Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m : false]. rewrite Pr[mu_false]. auto.
-    rewrite Pr[mu_eq]. progress. smt(perfect_special_soundness). auto. apply (Computational.computational_extractability P P_response_ll _ &m p 0%r). apply rewindable_P_plus. rewrite f. auto.
+    rewrite Pr[mu_eq]. progress. smt(perfect_special_soundness). auto. apply (Computational.computational_extractability P P_response_ll _ _ &m p 0%r). apply P_commitment_ll. apply rewindable_P_plus. rewrite f. auto.
     qed.
      
     
@@ -346,7 +349,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
            <= ((1%r/ (size (challenge_set))%r)).     
      proof. progress. 
      have ->: inv (size challenge_set)%r = sqrt 0%r + inv (size challenge_set)%r. smt().
-     apply (computational_soundness P P_response_ll _ &m p  0%r H _). apply rewindable_P_plus.
+     apply (computational_soundness P P_response_ll _ _ &m p  0%r H _). apply P_commitment_ll. apply rewindable_P_plus.
      have -> : Pr[ SpecialSoundnessAdversary(P).attack(p) @ &m :
                     valid_transcript_pair p res.`1 res.`2 /\
                     ! soundness_relation p (special_soundness_extract p res.`1 res.`2)] = 0%r.  
