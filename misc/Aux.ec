@@ -1,4 +1,102 @@
-require import AllCore List DJoin Distr.
+require import DJoin.
+require import AllCore Distr FSet StdRing StdOrder StdBigop List RealExp.
+(*---*) import RField RealOrder Bigreal BRA. 
+require import Int. 
+
+    
+
+
+lemma big_reindex f (c e : int) :  big predT f (range 0 e) 
+ = big predT (fun i => f (i - c)) (range c (e + c)) .
+rewrite (big_reindex predT f (fun x => x - c) (fun x => x + c) ).
+smt().
+have ->: (predT \o transpose Int.(+) (-c)) = predT.
+smt().
+have ->: (f \o transpose Int.(+) (-c)) = (fun (i : int) => f (i - c)).
+smt().
+have ->: (map (transpose Int.(+) c) (range 0 e)) = 
+  range c (e + c).
+have ->: (transpose Int.(+) c) = (+) c. smt().
+rewrite - (range_add 0 e c). auto.
+auto.
+qed.
+
+
+
+lemma big_formula_p p  : 0%r <= p <= 1%r => forall n, 0 <= n  =>
+ bigi predT (fun (i : int) => p^i * (1%r-p) ) 0 n = 1%r - p^ n.
+move => pa.  apply ge0ind. 
+progress. smt().
+progress.
+have ->: 1%r - p ^ 0 = 0%r. smt(@Real).
+smt(@List).
+progress.
+rewrite big_int_recr. auto. simplify.
+rewrite H0. auto.  smt(@Real).
+qed.
+
+
+lemma big_formula_1mp p  : 0%r <= p <= 1%r => forall n, 0 <= n  =>
+ bigi predT (fun (i : int) => (1%r-p)^i * p) 0 n = 1%r - (1%r-p)^ n.
+smt (big_formula_p).
+qed.
+
+
+
+lemma big_split_min ['a]:
+  forall (P0 : 'a -> bool) (F1 F2 : 'a -> real) (s : 'a list),
+    big P0 (fun (i : 'a) => F1 i - F2 i) s = big P0 F1 s - big P0 F2 s.
+proof.  progress.
+have ->:  - big P0 F2 s
+ =  (big P0 (fun x => - (F2 x) ) s).
+apply (big_ind2 (fun (x : real) y => (- x) = y) ) .
+smt(). smt().
+progress.
+apply big_split.
+qed.
+
+
+lemma multn p  : 0%r <= p <= 1%r => forall n, 0 <= n => 0%r <= p^n <= 1%r.
+move => cs.  apply ge0ind. smt().
+smt(@Real).
+simplify. progress. smt(@Real).
+smt(@Real).
+qed.
+
+
+lemma multn2 (p q : real)  :  0%r <= p <= q => forall n, 0 <= n => p^n <= q^n.
+move => cs.  apply ge0ind. smt().
+smt(@Real).
+simplify. progress. 
+have ->: p ^ (n + 1) = p * p^n. smt(@Real).
+have ->: q ^ (n + 1) = q * q^n. smt(@Real).
+smt(@RealExp).
+qed.
+
+
+lemma big_geq0 p  : 0%r <= p <= 1%r => forall n, 
+ 0%r <= bigi predT (fun (i : int) => (1%r-p) ^ i * p) 0 n.
+move => cs n.
+case (0 <= n). move=> ma.
+rewrite  big_formula_1mp.  auto. auto. smt (multn).
+move => q. 
+have : n < 0. smt().
+move => qq.
+rewrite big_geq. smt(). auto.
+qed.
+
+
+lemma big_leq1 p  : 0%r <= p <= 1%r => forall n, 
+ bigi predT (fun (i : int) => (1%r-p) ^ i * p) 0 n <= 1%r.
+move => cs n.
+case (0 <= n). move=> ma.
+rewrite  big_formula_1mp.  auto. auto. smt(@RealExp).
+move => q. 
+have : n < 0. smt().
+move => qq.
+rewrite big_geq. smt(). auto.
+qed.
+
 
 
 lemma djoinmap_weight (d : 'a -> 'b distr) :  forall l,
@@ -56,49 +154,9 @@ smt(). simplify. smt().
 qed.
 
 
-lemma take_const ['a 'b] (c : 'b) f : forall (l : 'a list) ,
- all (fun x => f (c, x)) l =
-   all f  (zip (nseq (size l) c) l).
-proof. 
-elim. smt().
-progress. 
-have ->: 1 + size l = size l + 1. smt().
-rewrite nseqS. smt(@List).
-simplify. smt().
+
+lemma ler_trans1 (a b c : real) : a <= b => b <= c => a <= c. by smt().
 qed.
-
-lemma take_nseq ['a ] (c : 'a) : forall n ,
-  (take n (nseq n c)) = nseq n c.
-apply ge0ind. smt(@List).
-smt(@List).
-smt(@List).
-qed.
-
-
-
-type  ('a, 'b) sum = [Left of 'a | Right of 'b].
-
-op is_right (s: ('a, 'b) sum) :  bool =
-    with s = Left _ => false
-    with s = Right _ => true.
-
-op is_left (s: ('a, 'b) sum) :  bool =
-    with s = Left _ => true
-    with s = Right _ => false.
-
-op proj_left (s: ('a, 'b) sum) : 'a =
-    with s = Left x => x
-    with s = Right _ => witness.
-
-op proj_right (s: ('a, 'b) sum) : 'b =
-    with s = Left _ => witness
-    with s = Right x => x.
-
-
-lemma andI (a b : bool) : a => b => a /\ b.
-auto.
-qed.
-
 
 lemma oip1 (a b c eps : real) :  (0%r <= eps) =>
   `|a / b - c| <= eps
@@ -125,7 +183,6 @@ smt(@Real).
 qed.
 
 
-
 lemma oip3 (a b c eps : real) :  (0%r < b) => (0%r <= eps) =>
   `|a / b - c| <= eps => 
   exists (p : real),  0%r <= p <= eps  
@@ -134,94 +191,12 @@ lemma oip3 (a b c eps : real) :  (0%r < b) => (0%r <= eps) =>
 smt (oip1 oip2).
 qed.
 
-
-
 lemma oip4 (a c p : real) :  
   (0%r <= p) =>
    a = c - p \/  a = c + p
    => `|a - c| = p.
 smt().
 qed.
-
-
-require import AllCore Distr FSet StdRing StdOrder StdBigop List.
-(*---*) import RField RealOrder Bigreal BRA.
-require import Int.
-
-
-lemma big_formula_p p  : 0%r <= p <= 1%r => forall n, 0 <= n  =>
- bigi predT (fun (i : int) => p^i * (1%r-p) ) 0 n 
- = 1%r - p^ n.
-move => pa.  apply ge0ind. 
-progress. smt().
-progress.
-have ->: 1%r - p ^ 0 = 0%r. smt(@Real).
-smt(@List).
-progress.
-rewrite big_int_recr. auto. simplify.
-rewrite H0. auto.  smt(@Real).
-qed.
-
-lemma big_formula_1mp p  : 0%r <= p <= 1%r => forall n, 0 <= n  =>
- bigi predT (fun (i : int) => (1%r-p)^i * p) 0 n = 1%r - (1%r-p)^ n.
-smt (big_formula_p).
-qed.
-
-
-lemma multn p  : 0%r <= p <= 1%r => forall n, 0 <= n => 0%r <= p^n <= 1%r.
-move => cs.  apply ge0ind. smt().
-smt(@Real).
-simplify. progress. smt(@Real).
-smt(@Real).
-qed.
-
-require import RealExp.
-lemma multn2 (p q : real)  :  0%r <= p <= q => forall n, 0 <= n => p^n <= q^n.
-move => cs.  apply ge0ind. smt().
-smt(@Real).
-simplify. progress. 
-have ->: p ^ (n + 1) = p * p^n. smt(@Real).
-have ->: q ^ (n + 1) = q * q^n. smt(@Real).
-smt(@RealExp).
-qed.
-
-
-lemma big_split_min ['a]:
-  forall (P0 : 'a -> bool) (F1 F2 : 'a -> real) (s : 'a list),
-    big P0 (fun (i : 'a) => F1 i - F2 i) s = big P0 F1 s - big P0 F2 s.
-proof.  progress.
-have ->:  - big P0 F2 s
- =  (big P0 (fun x => - (F2 x) ) s).
-apply (big_ind2 (fun (x : real) y => (- x) = y) ) .
-smt(). smt().
-progress.
-apply big_split.
-qed.
-
-
-lemma big_geq0 p  : 0%r <= p <= 1%r => forall n, 
- 0%r <= bigi predT (fun (i : int) => (1%r-p) ^ i * p) 0 n.
-move => cs n.
-case (0 <= n). move=> ma.
-rewrite  big_formula_1mp.  auto. auto. smt (multn).
-move => q. 
-have : n < 0. smt().
-move => qq.
-rewrite big_geq. smt(). auto.
-qed.
-
-
-lemma big_leq1 p  : 0%r <= p <= 1%r => forall n, 
- bigi predT (fun (i : int) => (1%r-p) ^ i * p) 0 n <= 1%r.
-move => cs n.
-case (0 <= n). move=> ma.
-rewrite  big_formula_1mp.  auto. auto. smt(@RealExp).
-move => q. 
-have : n < 0. smt().
-move => qq.
-rewrite big_geq. smt(). auto.
-qed.
-
 
 
 lemma ots' (a c : real) : 
@@ -263,11 +238,6 @@ smt().
 qed.
 
 
-lemma phase1_2 ['a] p (l : 'a list) n : 
- all p l
-  =>  all p (take n l) .
-smt(@List).
-qed.
 
 lemma aux_lem : forall l n,  
   size l = n =>
@@ -276,10 +246,6 @@ lemma aux_lem : forall l n,
 elim. smt(@List). smt(@List).
 qed.
 
-lemma phase1_3 ['a 'b] (l1 : 'a list) (l2 : 'b list) n : 
- take n (zip l1 l2) = zip (take n l1) (take n l2).
-rewrite take_zip. auto.
-qed.
 
 
 section.

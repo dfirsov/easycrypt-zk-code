@@ -5,7 +5,7 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
 require import DProd.
-
+require import Averaging.
 
 
 
@@ -21,27 +21,22 @@ Note: we use following lemmas:
 type ct,rt,pt.
 
 op d : ct distr.
-
-
-clone import ProdSampling with type t1 <- ct,
-                               type t2 <- ct.
-
-
-
 op allcs : ct list.
+
+
 axiom allcs_uniq : uniq allcs.
-axiom allcs_all x : mu1 d x <> 0%r => x \in  allcs.
+axiom allcs_all x : mu1 d x <> 0%r => x \in allcs.
 
 module type Comp = {
   proc rest (p : pt, c1c2 : ct * ct) : rt
 }.
 
-
 module type Run = {
   proc run (p : pt, c : ct) : rt
 }.
 
-module X(C : Comp) = {
+(* parallel sampling  *)
+module Xpar(C : Comp) = {
   proc run(p : pt) = {
     var c1c2, r;
     c1c2 <$ d `*` d;
@@ -50,7 +45,7 @@ module X(C : Comp) = {
   }
 }.
 
-
+(* sequential sampling  *)
 module Xseq(C : Comp) = {
   proc run(p : pt) = {
     var c1,c2, r;
@@ -62,8 +57,12 @@ module Xseq(C : Comp) = {
 }.
 
 
-require import Averaging.
+
 section.
+
+
+local clone import ProdSampling with type t1 <- ct,
+                               type t2 <- ct.
 
 
 local clone import Avg as A with type at <- ct * ct,
@@ -71,7 +70,7 @@ local clone import Avg as A with type at <- ct * ct,
                       type rt <- (ct * ct) * rt.
 
 
-module C'(C : Comp) = {
+local module C'(C : Comp) = {
   proc main(c1c2:ct*ct,i2 : pt) = {
     var r;
     r <@ C.rest(i2,c1c2);
@@ -80,12 +79,12 @@ module C'(C : Comp) = {
 }.
 
 
-lemma avr &m M  p:  forall (C <: Comp),
-  Pr[ X(C).run(p) @ &m  : M res ] 
+local lemma avr &m M  p:  forall (C <: Comp),
+  Pr[ Xpar(C).run(p) @ &m  : M res ] 
      = sum (fun c1c2 => 
       (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]).
 progress.
-have ->: Pr[X(C).run(p) @ &m : M res] = Pr[WorkAvg(C'(C)).main(d `*` d, p) @ &m : M res.`1].
+have ->: Pr[Xpar(C).run(p) @ &m : M res] = Pr[WorkAvg(C'(C)).main(d `*` d, p) @ &m : M res.`1].
 byequiv. proc. inline*. wp. call (_:true).
 wp. rnd. wp.  skip.  progress. auto. auto. 
 rewrite (averaging (C'(C))).
@@ -125,8 +124,8 @@ declare module C <: Comp.
 
 
 lemma x_xseq &m M p: 
-   Pr[X(C).run(p) @ &m : M p res] = Pr[Xseq(C).run(p) @ &m : M p res].
-have ->: Pr[X(C).run(p) @ &m : M p res] 
+   Pr[Xpar(C).run(p) @ &m : M p res] = Pr[Xseq(C).run(p) @ &m : M p res].
+have ->: Pr[Xpar(C).run(p) @ &m : M p res] 
     = Pr[X'(C).run(p) @ &m : M p res]. byequiv. proc.  inline*.
 sp.  call (_:true). wp.  rnd.  skip. progress. auto. auto. 
 have ->: Pr[Xseq(C).run(p) @ &m : M p res] 
@@ -140,7 +139,7 @@ qed.
   
 
 local lemma avr_lemma_1 &m M p : 
-  Pr[ X(C).run(p) @ &m  : M res ] 
+  Pr[ Xpar(C).run(p) @ &m  : M res ] 
      = big predT (fun c1c2 => 
         (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs) .
 proof. rewrite -  sumE_fin. apply allpairs_uniq. apply allcs_uniq. apply allcs_uniq. smt().
@@ -155,7 +154,7 @@ apply (avr _ _ _ C).
 qed.
 
 
-lemma avr_lemma_2 &m M p : 
+local lemma avr_lemma_2 &m M p : 
      big predT (fun c1c2 => 
         (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs)
    = big predT (fun (c1c2 : ct * ct) => 
@@ -182,7 +181,7 @@ op cartprod2 (l : 'a list)  = (allpairs (fun c1 c2 => (c1,c2)) l l).
 
 
 local lemma avr_lemma_4 &m M p : 
-  Pr[ X(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
+  Pr[ Xpar(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
      = big (fun (r : ct * ct) => r.`1 <> r.`2) 
            (fun (c1c2 : ct * ct) => 
              ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
@@ -198,7 +197,7 @@ qed.
 
 
 local lemma avr_lemma_5 &m M p : 
-  Pr[ X(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
+  Pr[ Xpar(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
      = big predT  (fun (c1c2 : ct * ct) => 
                   ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
                    Pr[ C.rest(p,c1c2) @ &m :  M (c1c2,res) ]) 
@@ -215,8 +214,8 @@ qed.
 
 
 lemma avr_lemma_6 &m M p : 
-  Pr[ X(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
-     = Pr[ X(C).run(p) @ &m  : M res ] 
+  Pr[ Xpar(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
+     = Pr[ Xpar(C).run(p) @ &m  : M res ] 
      - big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) => 
                   ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
                    Pr[ C.rest(p,c1c2) @ &m :  M (c1c2,res) ]) 

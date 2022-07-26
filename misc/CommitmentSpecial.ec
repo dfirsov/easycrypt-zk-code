@@ -3,7 +3,6 @@ require import AllCore Distr.
 
 type commitment, opening, message.
 
-
 op Com  : message -> (commitment * opening) distr.
 op Ver : message * (commitment * opening) -> bool.
 
@@ -19,7 +18,6 @@ module BindingExperiment (B:Binder) = {
     proc main() : bool = {
       var c, m, m', d, d', v, v';
 
-      (* x                 <@ S.gen(); *)
       (c, m, d, m', d') <@ B.bind();
       v                 <- Ver (m, (c, d));
       v'                <- Ver (m', (c, d'));

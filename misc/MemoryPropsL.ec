@@ -1,7 +1,6 @@
-require import AllCore Distr DBool.
+require import AllCore Distr DBool Aux.
 
-
-
+require import RandomFacts RealSeries List.
 require import Reflection ReflectionComp.
 require WholeMsg.
 
@@ -13,18 +12,13 @@ clone import ReflComp with type at1 <- at1,
                            type rt2 <- bool.
 
 
-
-
 section.
+
 declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
 
-require import RandomFacts RealSeries List.
 
-lemma ler_trans1 (a b c : real) : a <= b => b <= c => a <= c. by smt().
-qed.
-
-lemma www &m p :   
+local lemma www &m p :   
     exists (D1 : at1 -> (glob A) -> (unit * (glob A)) distr)
       (D2 : at2 -> unit * (glob A) -> (glob A) distr),
       (forall &m (M : unit * (glob A) -> bool) i1,
@@ -166,8 +160,7 @@ rewrite H1. smt().
 qed.
 
 
-
-lemma ZzZ &m M i1 i2 p: 
+lemma exists_mem_init_run_glob &m M i1 i2 p: 
        p < Pr[ RCR(A).main(i1,i2) @ &m : M (glob A) ] 
    => 0%r <= p
    => exists &n, p < Pr[ A.ex2(i2, tt) @ &n  : M (glob A)] .
@@ -200,17 +193,14 @@ smt().
   have : 0%r < Pr[A.ex1(i1) @ &m : false]. rewrite - q. apply f33. rewrite Pr[mu_false]. auto.
 elim f3. progress.
 exists &n.
-rewrite -  (H0 &n M tt i2). auto.
+rewrite - (H0 &n M tt i2). auto.
 qed.
-
-
 end section.
 
 section.
 
 declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
-
 
 
 local module A' = {
@@ -220,21 +210,19 @@ local module A' = {
     r <@ A.ex2(x);
     return r;
   }
-
 }.
 
-lemma ZzZ_res &m M i1 i2 p: 
+lemma exists_mem_init_run_res &m M i1 i2 p: 
         0%r <= p =>
        p < Pr[ RCR(A).main(i1,i2) @ &m : M res.`2 ] 
    => exists &n, p < Pr[ A.ex2(i2, tt) @ &n  : M res] .
 move => j.
-
 have -> : Pr[ RCR(A).main(i1,i2) @ &m : M res.`2 ]  = Pr[ RCR(A').main(i1,i2) @ &m : M A'.r ] .
 byequiv. proc. inline*.
 wp.  call (_:true). wp.  call (_:true). skip. auto. auto. auto.
 progress.
 have f : exists &n, p < Pr[ A'.ex2(i2, tt) @ &n  : M A'.r ] .
-apply (ZzZ A' _ &m (fun (x : glob A') => M x.`1) i1 i2 p). 
+apply (exists_mem_init_run_glob A' _ &m (fun (x : glob A') => M x.`1) i1 i2 p). 
 proc*. call A_run_ll. skip. auto. simplify.  apply H. auto. 
 elim f. progress. exists &n.
 have <-: Pr[A'.ex2(i2, tt) @ &n : M A'.r] = 
@@ -242,7 +230,7 @@ have <-: Pr[A'.ex2(i2, tt) @ &n : M A'.r] =
 byequiv.  proc*. inline*. sp.  wp. call (_:true). skip. auto. auto.
 auto. auto.
 qed.
- 
+
 end section.
    
 
@@ -299,7 +287,6 @@ module P(A : IR1R2) = {
 }.
 
 
-
 section.
 
 declare module A <: IR1R2.
@@ -307,32 +294,32 @@ declare module A <: IR1R2.
 declare axiom A_init_ll : islossless A.init.
 declare axiom A_run2_ll : islossless A.run2.
 
-op f (x : real) : real = 1%r/2%r * (1%r + x).
-op fop (x : real) : real = 2%r * x - 1%r.
+local op f (x : real) : real = 1%r/2%r * (1%r + x).
+local op fop (x : real) : real = 2%r * x - 1%r.
 
-lemma f_pr1 (a b : real) : a <= b => f a <= f b.
+local lemma f_pr1 (a b : real) : a <= b => f a <= f b.
 smt().
 qed.
 
 
-lemma f_pr2 (a b : real) : f a <= f b => a <= b.
+local lemma f_pr2 (a b : real) : f a <= f b => a <= b.
 smt().
 qed.
 
-lemma f_pr3 (a  : real) : f (fop a) = a.
+local lemma f_pr3 (a  : real) : f (fop a) = a.
 smt().
 qed.
 
-lemma f_pr4 (a  : real) : fop (f a) = a.
+local lemma f_pr4 (a  : real) : fop (f a) = a.
 smt().
 qed.
 
 
-lemma f_pr5 (a b : real) : a <= b => fop a <= fop b.
+local lemma f_pr5 (a b : real) : a <= b => fop a <= fop b.
 smt().
 qed.
 
-lemma f_pr6 (a b : real) : fop a <= fop b =>  a <= b.
+local lemma f_pr6 (a b : real) : fop a <= fop b =>  a <= b.
 smt().
 qed.
 
@@ -349,7 +336,7 @@ local module A'' = {
 }.
 
 
-lemma d_b3 &m p M ii1 ii2 : p < Pr[ P(A).init_main12(ii1,ii2) @ &m : M res ] 
+local lemma d_b3 &m p M ii1 ii2 : p < Pr[ P(A).init_main12(ii1,ii2) @ &m : M res ] 
    => 0%r <= p
    => exists &n, p < Pr[ P(A).main12(ii2) @ &n : M  res ].
 have ->: 
@@ -361,7 +348,7 @@ progress. if. auto. call (_:true). skip.  auto.
 wp.  call (_:true). skip.  auto. auto. auto. 
 progress.
 have : exists &n, p < Pr[ A''.ex2(ii2, tt) @ &n  : M res].
-apply (ZzZ_res A'' _ &m M ii1 ii2 p). 
+apply (exists_mem_init_run_res A'' _ &m M ii1 ii2 p). 
 proc. call A_init_ll. skip. auto.
 auto.  auto.
 elim. progress.
@@ -376,7 +363,7 @@ progress.
 qed.
 
 
-clone import WholeMsg as WM with type message <- bool,
+local clone import WholeMsg as WM with type message <- bool,
                             op m1 <- false,
                             op m2 <- true,
                             type ain <- at1*at2
@@ -416,7 +403,7 @@ local module T2 = {
 
 
 
-lemma d_b1 ii1 ii2 &m : Pr[ P(A).init_main12(ii1,ii2) @ &m : res ] 
+local lemma d_b1 ii1 ii2 &m : Pr[ P(A).init_main12(ii1,ii2) @ &m : res ] 
   = f (Pr[ P(A).main1(ii1,ii2) @ &m : res ] - Pr[ P(A).main2(ii1,ii2) @ &m : res ]) .
 have ->: Pr[ P(A).init_main12(ii1,ii2) @ &m : res ] 
  = Pr[ W(T).main(ii1,ii2) @ &m : res ].
@@ -449,7 +436,7 @@ smt().
 qed.
 
 
-lemma d_b2  (ii2 : at2)  &m : Pr[ P(A).main12(ii2) @ &m : res ] 
+local lemma d_b2  (ii2 : at2)  &m : Pr[ P(A).main12(ii2) @ &m : res ] 
   = f (Pr[ A.run1(ii2) @ &m : res ] - Pr[ A.run2(ii2) @ &m : res ]) .
 have ->: Pr[ P(A).main12(ii2) @ &m : res ]
  = Pr[ W(T2).main(witness,ii2) @ &m : res ].
@@ -483,9 +470,9 @@ smt().
 qed.
 
 
-lemma o_o ii1 ii2 &m p: 
+lemma exists_mem_diff ii1 ii2 &m p: 
        0%r <= p =>
-       p <  Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 
+       p < Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 
                Pr[ P(A).main2(ii1,ii2) @ &m : res ]
    => exists &n, p < Pr[ A.run1(ii2) @ &n : res ] - Pr[ A.run2(ii2) @ &n : res ].
 progress.
@@ -501,8 +488,6 @@ smt(). elim f4. progress.
 exists &n.
 smt(d_b2).
 qed.
-
-
    
 end section.
 
@@ -531,8 +516,7 @@ local module A' = {
   }
 }.
 
-
-lemma oo_oo ii1 ii2 &m p: 
+lemma exists_mem_abs_diff ii1 ii2 &m p: 
        0%r <= p =>
        p <  `|Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 
                Pr[ P(A).main2(ii1,ii2) @ &m : res ]|
@@ -541,7 +525,7 @@ proof.
 case (Pr[ P(A).main1(ii1,ii2) @ &m : res ] >
                Pr[ P(A).main2(ii1,ii2) @ &m : res ]).
 progress.
-have f : exists &n, p < Pr[ A.run1(ii2) @ &n : res ] - Pr[ A.run2(ii2) @ &n : res ]. apply (o_o A _ _ ii1 ii2 &m). 
+have f : exists &n, p < Pr[ A.run1(ii2) @ &n : res ] - Pr[ A.run2(ii2) @ &n : res ]. apply (exists_mem_diff A _ _ ii1 ii2 &m). 
 apply A_init_ll1. apply A_run2_ll1.
 auto.
 smt(). smt().
@@ -553,7 +537,7 @@ have ->: Pr[P(A).main1(ii1, ii2) @ &m : res]
 proc. inline*. wp.  sim. auto. auto.
 progress.
 have g : Pr[P(A').main2(ii1, ii2) @ &m : res] <= Pr[P(A').main1(ii1, ii2) @ &m : res]. smt().
-have f : exists &n, p < Pr[ A'.run1(ii2) @ &n : res ] - Pr[ A'.run2(ii2) @ &n : res ]. apply (o_o A' _ _ ii1 ii2 &m). 
+have f : exists &n, p < Pr[ A'.run1(ii2) @ &n : res ] - Pr[ A'.run2(ii2) @ &n : res ]. apply (exists_mem_diff A' _ _ ii1 ii2 &m). 
 apply A_init_ll1. 
 proc.  call A_run1_ll1. skip. auto. 
 auto. smt().

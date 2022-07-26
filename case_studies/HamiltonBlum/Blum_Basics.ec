@@ -6,6 +6,7 @@ require CommitmentSpecial.
 clone include CommitmentSpecial with type message <- bool.
 
 
+
 (* the number of vertices in the graph  *)
 op K : int.
 axiom K_pos : 0 < K.
@@ -29,6 +30,8 @@ type hc_com  = commitment list. (* commitment *)
 
 (* Depending on the challenge the response is EITHER a permutation
 with list of openings OR a witness with a list of openings.  *)
+type  ('a, 'b) sum = [Left of 'a | Right of 'b]. 
+
 type hc_resp = (permutation * (opening list), 
                  hc_wit * (opening list)) sum.
 

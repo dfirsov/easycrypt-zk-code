@@ -638,7 +638,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
     Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| > deltoid. 
   smt(). clear q.
   have ko : exists &n, deltoid < `|Pr[Amem.run1((ss,ww)) @ &n : res] - Pr[Amem.run2((ss,ww)) @ &n : res]|. 
-  apply (oo_oo Amem _ _ _ (ss, ww) (ss, ww) &m). 
+  apply (exists_mem_abs_diff Amem _ _ _ (ss, ww) (ss, ww) &m). 
 
     proc. while (true) (n - HybOrcl.l). progress.
    wp. call V_summitup_ll. call P_response_ll. call V_challenge_ll. call P_commitment_ll.
