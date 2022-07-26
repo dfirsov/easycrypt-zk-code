@@ -4,7 +4,7 @@ timeout=20
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./misc -I ./misc/program_logic -I ./generic_sigma_protocols -timeout $timeout $1;
+  if easycrypt -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic_sigma_protocols -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;
@@ -16,10 +16,10 @@ check() {
 
 # list of files to check
 
-check misc/program_logic/GenericKE.ec
-check misc/program_logic/OneToManyZK.ec
-check misc/program_logic/WhileCycle.ec
-check misc/program_logic/WhileNoSuccess.ec
+check misc/while_props/GenericKE.ec
+check misc/while_props/OneToManyZK.ec
+check misc/while_props/WhileCycle.ec
+check misc/while_props/WhileNoSuccess.ec
 
 
 ## Generic sigma protocol defs/results

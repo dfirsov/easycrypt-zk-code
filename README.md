@@ -27,7 +27,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
        (quote
         ( "DEVELOPMENT_PATH/rewinding" 
           "DEVELOPMENT_PATH/misc"
-          "DEVELOPMENT_PATH/misc/program_logic"
+          "DEVELOPMENT_PATH/misc/while_props"
           "DEVELOPMENT_PATH/generic_sigma_protocols")))
 
   
