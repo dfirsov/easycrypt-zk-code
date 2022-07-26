@@ -129,9 +129,9 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   }.
 
 
-  require HybridArgumentWithParameter MemoryPropsL.
+  require HybridArgumentWithParameter MemoryProps.
 
-  clone import MemoryPropsL with type at2 <- statement * witness,
+  clone import MemoryProps with type at2 <- statement * witness,
                                  type at1 <- statement * witness.
 
 
@@ -597,7 +597,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
                  - Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res]| <= deltoid.
   move => dlt zk_ass.
   have ->: Pr[HybGame(A1,Ob1,L(Ob1)).main(ss,ww) @ &m : res] =
-           Pr[MemoryPropsL.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res].
+           Pr[MemoryProps.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res].
   rewrite www. rewrite ww. rewrite w.
   byequiv. proc. 
   inline Amem.run1. inline Amem.init.
@@ -619,7 +619,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   call D_guess_prop. skip. auto.
   auto. auto. 
   have ->: Pr[HybGame(A1,Ob1,R(Ob1)).main(ss,ww) @ &m : res] =
-           Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res].
+           Pr[MemoryProps.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res].
   rewrite yyy. rewrite yy. rewrite y.
   byequiv. proc. 
   inline Amem.run2. inline Amem.init.
@@ -631,11 +631,11 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   skip. progress. wp.  rnd. wp. skip. progress. smt(). 
   call D_guess_prop. skip. auto.
   auto. auto.
-  case (`|Pr[MemoryPropsL.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
-  Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| <= deltoid). auto.
+  case (`|Pr[MemoryProps.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
+  Pr[MemoryProps.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| <= deltoid). auto.
   move => q. 
-  have zz : `|Pr[MemoryPropsL.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res] -
-    Pr[MemoryPropsL.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| > deltoid. 
+  have zz : `|Pr[MemoryProps.P(Amem).main1((ss,ww),(ss,ww)) @ &m : res] -
+    Pr[MemoryProps.P(Amem).main2((ss,ww),(ss,ww)) @ &m : res]| > deltoid. 
   smt(). clear q.
   have ko : exists &n, deltoid < `|Pr[Amem.run1((ss,ww)) @ &n : res] - Pr[Amem.run2((ss,ww)) @ &n : res]|. 
   apply (exists_mem_abs_diff Amem _ _ _ (ss, ww) (ss, ww) &m). 
