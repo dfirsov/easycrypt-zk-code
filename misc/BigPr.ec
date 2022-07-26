@@ -62,13 +62,42 @@ module Xseq(C : Comp) = {
 }.
 
 
-axiom avr &m M  p:  forall (C <: Comp),
+require import Averaging.
+section.
+
+
+local clone import Avg as A with type at <- ct * ct,
+                      type at2 <- pt,
+                      type rt <- (ct * ct) * rt.
+
+
+module C'(C : Comp) = {
+  proc main(c1c2:ct*ct,i2 : pt) = {
+    var r;
+    r <@ C.rest(i2,c1c2);
+    return (c1c2,r);
+  }
+}.
+
+
+lemma avr &m M  p:  forall (C <: Comp),
   Pr[ X(C).run(p) @ &m  : M res ] 
      = sum (fun c1c2 => 
       (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]).
+progress.
+have ->: Pr[X(C).run(p) @ &m : M res] = Pr[WorkAvg(C'(C)).main(d `*` d, p) @ &m : M res.`1].
+byequiv. proc. inline*. wp. call (_:true).
+wp. rnd. wp.  skip.  progress. auto. auto. 
+rewrite (averaging (C'(C))).
+have ->: (fun (x : ct * ct) => mu1 (d `*` d) x * Pr[C'(C).main(x, p) @ &m : M res])
+ = (fun (c1c2 : ct * ct) =>
+     mu1 (d `*` d) c1c2 * Pr[C.rest(p, c1c2) @ &m : M (c1c2, res)]).
+apply fun_ext. move => x.
+have ->: Pr[C'(C).main(x, p) @ &m : M res] = Pr[C.rest(p, x) @ &m : M (x, res)].
+byequiv. proc*. inline*. wp.  sp. call (_:true). skip. progress. auto. auto.
+auto. auto.
+qed.
 
-
-section.
 
 
 local module X'(C : Comp) = {

@@ -19,8 +19,6 @@ section.
 declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
 
-
-
 require import RandomFacts RealSeries List.
 
 lemma ler_trans1 (a b c : real) : a <= b => b <= c => a <= c. by smt().

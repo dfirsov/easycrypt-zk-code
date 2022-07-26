@@ -26,7 +26,6 @@ module type RunMain = {
 }.
 
 
-
 section.
 
 declare module A <: RunMain.

@@ -1,6 +1,7 @@
 pragma Goals:printall.
 require import Distr DBool AllCore List.
 
+
 type message, ain.
 
 op m1, m2 : message.
@@ -23,7 +24,6 @@ module W(T : Tail) = {
 
 
 section.
-
 
 declare module T <: Tail.
 
