@@ -4,7 +4,7 @@
 	 - `lemma exists_mem_init_run_res` - proof that if `p < Pr[A.init(); r <@ A.run() @&m: r]` then there exists a memory `&n` so that `p < Pr[r <@ A.run() @&n: r]`. Same could be derived for other relations (i.e., `<=, >=, >`).
 	 - `lemma exists_mem_diff` - same but for differences of `Pr`-expressions.
  - [*PrIntervalToSum.ec*](PrIntervalToSum.ec) 
-	 - `lemma pr_interval_to_sum_lemma` -  probability expression of the form `Pr[r <- A.run() : s <= r <= e]` can be represented as a finite sum.
+	 - `lemma pr_interval_to_sum_lemma` -  probability expression of the form `Pr[r <@ A.run() : s <= r <= e]` can be represented as a finite sum.
  - [*HybridArgumentWithParameter.ec*](MeansWithParameter.ec) - Formalization of a "hybrid argument technique".  This file is a **copy** from the EasyCrypt standard library development which adds a universally quantified parameter to the adversary.  
  - [*MeansWithParameter.ec*](MeansWithParameter.ec) - Dependency of a hybrid argument development which  formalizes the finite version of the "averaging technique". This file is a **copy** from the EasyCrypt standard library which adds a universally quantified parameter to the "tail" of the computation.  
  - [*while_props*](while_props/) - Variety of properties of `while`-cycles.
