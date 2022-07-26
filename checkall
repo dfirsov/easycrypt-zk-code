@@ -16,6 +16,11 @@ check() {
 
 # list of files to check
 
+check misc/program_logic/GenericKE.ec
+check misc/program_logic/OneToManyZK.ec
+check misc/program_logic/WhileCycle.ec
+check misc/program_logic/WhileNoSuccess.ec
+
 
 ## Generic sigma protocol defs/results
 check generic_sigma_protocols/GenericSigmaProtocol.ec

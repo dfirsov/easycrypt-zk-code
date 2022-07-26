@@ -12,6 +12,8 @@ clone import ReflComp with type at1 <- at1,
                            type rt2 <- bool.
 
 
+
+                           
 section.
 
 declare module A <: RewEx1Ex2.
@@ -369,7 +371,6 @@ local clone import WholeMsg as WM with type message <- bool,
                             type ain <- at1*at2
 proof*.
 realize m1_and_m2_diff. auto. qed.
-
 
 
 local module T = {

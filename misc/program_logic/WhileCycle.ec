@@ -1,18 +1,13 @@
 pragma Goals:printall.
 require import Int.
 
+require import Aux.
+
 type rrt, irt, sbits, dt, de.
 
 op MyPred : rrt -> bool.
 
 op df : irt -> rrt -> de -> dt.
-
-
-(* op pair_sbits : sbits * sbits -> sbits. *)
-(* op unpair: sbits -> sbits * sbits. *)
-(* axiom ips: injective pair_sbits.  *)
-(* axiom unpair_pair x : unpair (pair_sbits x) = x. *)
-
 
 module type Dist = {
   proc guess(r:dt) : bool
@@ -36,9 +31,6 @@ clone import WhileNoSuccess as IFB with
   op  MyPred <- MyPred,
   op pair_sbits <- pair_sbits,
   op unpair <- unpair.
-  (* op pair_sbits <- pair_sbits, *)
-  (* op unpair <- unpair *)
-
 
 import IM.
 
@@ -472,7 +464,7 @@ local lemma whp_cap_fin_sum'' &m  ia (ea : int) r wa:
          (range 0 ea). 
 proof. progress.
 rewrite (whp_cap_fin_sum' &m);auto.
-rewrite (PIT.big_reindex (fun (i : int) =>
+rewrite (Aux.big_reindex (fun (i : int) =>
      Pr[A.run(ia) @ &m : ! MyPred res] ^ i * Pr[W0(A,D).run(ia,wa) @ &m : MyPred res.`2 /\  res.`1]) 2 ea). auto.
 qed.
 

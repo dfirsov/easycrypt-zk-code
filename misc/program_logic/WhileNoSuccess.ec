@@ -15,6 +15,8 @@ clone import WhileSplit as IM with type sbits <- sbits,
                                    type rrt <- rrt,
                                    type irt <- irt.
 
+
+
 require RewBasics.
 clone import RewBasics as RW with type sbits <- sbits,
                                   type iat   <- iat,
@@ -34,13 +36,7 @@ clone import ReflectionTemp.Refl as Re with
 
 
                                   
-require WhileNotB.                                  
-clone import WhileNotB as WNB with type rt <- rrt.
-
-
 section.
-
-
 
 module DW = {
   var c : int
@@ -192,7 +188,8 @@ byphoare(_: arg = (MyPred,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
 have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPred x) =
   Pr[A.run(i) @ &m : ! MyPred res].
 rewrite H0. auto.
-conseq (asdsadq (Pr[A.run(i) @ &m : ! MyPred res]) MyPred  ra (D (glob A){m} i) lf sf e' H ). auto.
+conseq (asdsadq (Pr[A.run(i) @ &m : ! MyPred res]) MyPred  ra (D (glob A){m} i) lf sf e' H ).
+auto.
 auto.
 qed.
 
@@ -242,19 +239,6 @@ byphoare (_: arg = i ==> _). apply ph1. auto. auto.
 rewrite H. simplify.
 apply (final_zz_le &m p  i e r sf ep ff).
 qed.
-
-
-
-(* lemma final_zz_lei &m (pr : real) MyPa i e ra :  MyPa ra = false => 0 <= e => *)
-(*    (forall &m, Pr[ A.run(i) @ &m : !MyPa res ]  <= pr) => *)
-(*    Pr[ W(A).whpi(MyPa,i, 1,e,ra) @ &m : !MyPa res ] <= (pr ^ e). *)
-(* progress. *)
-(* byphoare (_: arg = (MyPa, i, 1, e, ra) ==> _). *)
-(* proc.  *)
-(* call (final_zz_ph_le pr MyPa i e ra _ _ _).  *)
-(* bypr. smt. *)
-(* call (_:true). skip. auto. auto. auto. *)
-(* qed. *)
 
 
 lemma final_zz_ph &m p i e r :  MyPred r = false => 0 <= e =>
