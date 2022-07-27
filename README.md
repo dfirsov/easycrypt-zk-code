@@ -9,7 +9,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
 - *[case_studies/HamiltonBlum/](case_studies/HamiltonBlum/)* - instance of Blum protocol. 
 - *[misc/](misc/)* - miscellaneous useful results.
 - *[checkall](checkall)* - script for running the EasyCrypt proof-checker on the entire development.
-- *[rewinding/](rewinding/)* - copy of a rewinding library implemented by D. Firsov and D. Unruh.
+- *[rewinding/](rewinding/)* - **copy** of a rewinding library implemented by D. Firsov and D. Unruh.
 - *[FORMALIZATION_CAVEATS.md](FORMALIZATION_CAVEATS.md)* - description of formalization challenges and choices.
 - *[MANUAL.md](MANUAL.md)* - brief description of structure of the generic development.
 

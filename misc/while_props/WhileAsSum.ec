@@ -22,8 +22,8 @@ module type Run = {
 op pair_sbits : sbits * sbits -> sbits.
 op unpair: sbits -> sbits * sbits.
 
-require WhileNoSuccess.
-clone import WhileNoSuccess as IFB with 
+require import WhileNoSuccess.
+clone import IterIfNoSucc as IFB with 
   type rrt <- rrt,
   type irt <- irt,
   type iat <- (rrt -> bool) * irt * int * int * rrt,
@@ -32,7 +32,7 @@ clone import WhileNoSuccess as IFB with
   op pair_sbits <- pair_sbits,
   op unpair <- unpair.
 
-import IM.
+(* import IM. *)
 
 require PrIntervalToSum.
 clone import PrIntervalToSum as PIT with type rt <- bool * rrt,

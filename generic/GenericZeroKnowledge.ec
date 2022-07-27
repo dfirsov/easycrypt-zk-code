@@ -794,7 +794,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
 
 
   local module Simulator'(S : Simulator1)(V : RewMaliciousVerifier)  = {
-    module M = MW.IFB.IM.W(S(V))
+    module M = MW.IFB.W(S(V))
     proc simulate(statement : statement) : summary = {
          var r;
          r <@ M.whp(fst,statement,1,N,(false,witness));
@@ -846,7 +846,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
      seq 1 1 : (={glob V,statement,witness,summary,glob Sim1, glob Count, glob HybOrcl}).
      inline*. sp.  wp. 
      sim.
-     while (c{1} = MW.IFB.IM.W.c{2} /\ r{1} = r0{2} /\ ={glob V, glob Sim1} 
+     while (c{1} = MW.IFB.W.c{2} /\ r{1} = r0{2} /\ ={glob V, glob Sim1} 
             /\ statement0{1} = i{2} /\ e{2} = N /\ p{2} = fst).
      wp.  call (_: ={glob V}).
      sim. sim. sim. sim.
@@ -863,11 +863,11 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
          = Pr[Iter(Sim1(V), D).run(false,stat,wit,N,fst) @ &m : res.`1].
         byequiv (_:  E{2} = fst  /\ N = ea{2} /\ fevent{2} = false  /\
           statement{1} = Ny{2} /\ witness{1} = w{2} /\
-            ={glob Count, glob HybOrcl, glob Sim1, glob HonestProver,  glob V, glob MW.IFB.IM.W} ==> _)  ;auto.  proc.
+            ={glob Count, glob HybOrcl, glob Sim1, glob HonestProver,  glob V, glob MW.IFB.W} ==> _)  ;auto.  proc.
         inline Iter(Sim1(V), D).WI.run. wp.  sp. simplify.
          call D_guess_prop.
         simplify. inline Simulator'(Sim1,V).simulate. wp. sp.
-        call (_: ={glob Sim1, glob V, glob MW.IFB.IM.W}).  sim. skip. progress.
+        call (_: ={glob Sim1, glob V, glob MW.IFB.W}).  sim. skip. progress.
         progress.
         have ->: Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res]
           = Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ].
@@ -885,7 +885,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
      res.`1] = Pr[Iter(Sim1', D).run(false, stat, wit, OneShotSimulator.N,
                           fun (p : bool * summary) => p.`1) @ &m :
      res.`1]. byequiv (_: ={glob D, glob V, glob Sim1, arg, glob Count, glob HybOrcl} ==> _). proc.   inline*.  wp.  call D_guess_prop. simplify. sp. simplify.
-wp. while (={MW.IFB.IM.W.c, glob Sim1, glob V,p,i,e,glob Count,r1}).
+wp. while (={MW.IFB.W.c, glob Sim1, glob V,p,i,e,glob Count,r1}).
 sim.  skip. progress. auto. auto.
 
 

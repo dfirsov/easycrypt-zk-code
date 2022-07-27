@@ -1,6 +1,6 @@
 pragma Goals:printall.
 require import AllCore List Distr.
-require WhileNotBProc.
+require import WhileNoSuccess.
 
 require GenericCompleteness.
 clone include GenericCompleteness. (* inherit defs.  *)
@@ -66,7 +66,7 @@ abstract theory Statistical.
   declare axiom response_ll   : islossless P.response.
   declare axiom commitment_ll : islossless P.commitment.
 
-  local clone import WhileNotBProc as WNBP with type rt <- bool,
+  local clone import IterUntilSucc as WNBP with type rt <- bool,
                                                 type iat <- statement.
 
   declare axiom soundness &n statement:

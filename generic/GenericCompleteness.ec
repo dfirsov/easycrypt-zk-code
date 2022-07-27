@@ -1,6 +1,6 @@
 pragma Goals:printall.
 require import AllCore List Distr Real RealExp.
-require WhileNotBProc.
+require import WhileNoSuccess.
 
 require GenericBasics.
 clone include GenericBasics. (* inherit defs.  *)
@@ -89,7 +89,7 @@ theory CompletenessTheory.
     declare axiom response_ll   : islossless P.response.
     declare axiom commitment_ll : islossless P.commitment.
 
-    local clone import WhileNotBProc as WNBP with type rt <- bool,
+    local clone import IterUntilSucc as WNBP with type rt <- bool,
                                                   type iat <- statement * witness.
 
 

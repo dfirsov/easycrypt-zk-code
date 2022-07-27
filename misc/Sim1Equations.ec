@@ -16,8 +16,8 @@ op unpair: sbits -> sbits * sbits.
 
 
 
-require WhileCycle.
-clone import WhileCycle as MW with type irt    <- prob,
+require WhileAsSum.
+clone import WhileAsSum as MW with type irt    <- prob,
                                    type rrt   <- event * sbits,
                                    type sbits <- sbits,
                                    type dt <- prob * wit * sbits,
@@ -30,7 +30,8 @@ clone import WhileCycle as MW with type irt    <- prob,
   
                          
 import MW.IFB.
-import MW.IFB.IM.
+
+(* import MW.IFB.IM. *)
 
 module W0 = W0.
   
@@ -437,6 +438,7 @@ apply pow_ler.
 have : Pr[MW.W0(Sim1, D).run(p, w) @ &m : E res.`2] <= 1%r. rewrite Pr[mu_le1]. auto.
 smt(). smt(). auto. auto. smt().
 qed.
+
 
 
 local lemma zk_final_clean' &m p w p0 eps ea zkp:

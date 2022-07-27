@@ -18,7 +18,7 @@ check() {
 
 check misc/ExtractabilityEquations.ec
 check misc/Sim1Equations.ec
-check misc/while_props/WhileCycle.ec
+check misc/while_props/WhileAsSum.ec
 check misc/while_props/WhileNoSuccess.ec
 
 
