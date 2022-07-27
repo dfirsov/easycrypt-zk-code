@@ -6,6 +6,10 @@
  - [*PrIntervalToSum.ec*](PrIntervalToSum.ec) 
 	 - `lemma pr_interval_to_sum_lemma` -  probability expression of the form `Pr[r <@ A.run() : s <= r <= e]` can be represented as a finite sum.
  - [*HybridArgumentWithParameter.ec*](MeansWithParameter.ec) - Formalization of a "hybrid argument technique".  This file is a **copy** from the EasyCrypt standard library development which adds a universally quantified parameter to the adversary.  
- - [*MeansWithParameter.ec*](MeansWithParameter.ec) - Dependency of a hybrid argument development which  formalizes the finite version of the "averaging technique". This file is a **copy** from the EasyCrypt standard library which adds a universally quantified parameter to the "tail" of the computation.  
- - [*while_props*](while_props/) - Variety of properties of `while`-cycles.
+ - [*MeansWithParameter.ec*](MeansWithParameter.ec) - Dependency of a hybrid argument development which  formalizes the finite version of the "averaging technique". This file is a **copy** from the EasyCrypt standard library which adds a universally quantified parameter to the "tail" of the computation.
+ - [*ExtractabilityEquations.ec*](ExtractabilityEquations.ec)
+ 	- `lemma extraction_success_prob` - *raw* equation which establishes the lower-bound on success of extraction. 
+ - [*Sim1Equations.ec*](Sim1Equations.ec)
+ 	- `lemma one_to_many_zk` - *raw* equation associated with iteration of a "one-shot simulator".
+ - [*while_props*](while_props/) - iteration and decomposition properties of `while`-cycles.
 
