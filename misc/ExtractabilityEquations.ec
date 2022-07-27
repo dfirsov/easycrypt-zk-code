@@ -610,7 +610,7 @@ apply avr_lemma_11_app.
 qed.
 
 
-lemma final_eq_step1 &m AccRun SuccExtr p negl : 
+lemma extraction_success_prob &m AccRun SuccExtr p negl : 
    Pr[ InitRun2(A).run(p) @ &m 
           : res.`1.`1 <> res.`2.`1 /\ AccRun p res.`1 /\ AccRun p res.`2
    /\ !SuccExtr p res.`1 res.`2 ] <= negl
@@ -680,7 +680,7 @@ have f1 :    0%r
          - (1%r/(size allcs)%r) * Pr[ InitRun1(A).run(p) @ &m  :  AccRun p res ])
     - negl.
 rewrite - f2.
-apply (final_eq_step1 &m). assumption.
+apply (extraction_success_prob &m). assumption.
 clear f2. clear H.
 have f3 : Pr[InitRun1(A).run(p) @ &m : AccRun p res] ^ 2 
      <= 1%r / (size allcs)%r * Pr[InitRun1(A).run(p) @ &m : AccRun p res] + negl.

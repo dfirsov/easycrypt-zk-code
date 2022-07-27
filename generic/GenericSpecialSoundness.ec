@@ -145,7 +145,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    proof. rewrite -  (ex_a_eq_f &m p aux).
    move => f. simplify.
     rewrite -  (ex_a_eq_f &m p aux (fun x => x) ).
-   apply (final_eq_step1 (A(P)) _ _ _ &m (fun pq (r : challenge * (response * commitment)) => 
+   apply (extraction_success_prob (A(P)) _ _ _ &m (fun pq (r : challenge * (response * commitment)) => 
      hc_verify (fst pq) r.`2.`2 r.`1 r.`2.`1) (fun (pq :statement * unit) 
         (r1 r2 : challenge * (response * commitment)) => soundness_relation (fst pq) 
           (special_soundness_extract (fst pq) (r1.`2.`2, r1.`1, r1.`2.`1) (r2.`2.`2, r2.`1, r2.`2.`1)))
