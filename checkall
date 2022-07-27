@@ -4,7 +4,7 @@ timeout=20
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic_sigma_protocols -timeout $timeout $1;
+  if easycrypt -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;
@@ -23,12 +23,12 @@ check misc/while_props/WhileNoSuccess.ec
 
 
 ## Generic sigma protocol defs/results
-check generic_sigma_protocols/GenericSigmaProtocol.ec
-check generic_sigma_protocols/GenericCompleteness.ec
-check generic_sigma_protocols/GenericSoundness.ec
-check generic_sigma_protocols/GenericZeroKnowledge.ec
-check generic_sigma_protocols/GenericExtractability.ec
-check generic_sigma_protocols/GenericSpecialSoundness.ec
+check generic/GenericSigmaProtocol.ec
+check generic/GenericCompleteness.ec
+check generic/GenericSoundness.ec
+check generic/GenericZeroKnowledge.ec
+check generic/GenericExtractability.ec
+check generic/GenericSpecialSoundness.ec
 
 
 ## instance of Fiat-Shamir protocol

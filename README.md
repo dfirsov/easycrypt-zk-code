@@ -3,7 +3,7 @@
 This repository contains the EasyCrypt code associated with the paper "D. Firsov, D. Unruh. [Zero-Knowledge in EasyCrypt](https://eprint.iacr.org/2022/926)" .
 
 ## Contents
-- *[generic_sigma_protocols/](generic_sigma_protocols)*  - generic formalization of properties and derivations associated with sigma protocols.
+- *[generic/](generic)*  - generic formalization of properties and derivations associated with sigma protocols.
 - *[case_studies/FiatShamir/](case_studies/FiatShamir/)* - instance of Fiat-Shamir protocol.
 - *[case_studies/Schnorr/](case_studies/Schnorr/)* - instance of Schnorr protocol.
 - *[case_studies/HamiltonBlum/](case_studies/HamiltonBlum/)* - instance of Blum protocol. 
@@ -28,7 +28,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
         ( "DEVELOPMENT_PATH/rewinding" 
           "DEVELOPMENT_PATH/misc"
           "DEVELOPMENT_PATH/misc/while_props"
-          "DEVELOPMENT_PATH/generic_sigma_protocols")))
+          "DEVELOPMENT_PATH/generic")))
 
   
 
