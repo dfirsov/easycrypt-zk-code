@@ -2,7 +2,6 @@ require import AllCore Distr DBool Aux.
 
 require import RandomFacts RealSeries List.
 require import Reflection ReflectionComp.
-require WholeMsg.
 
 type at2, at1.
 
@@ -365,16 +364,10 @@ progress.
 qed.
 
 
-local clone import WholeMsg as WM with type message <- bool,
-                            op m1 <- false,
-                            op m2 <- true,
-                            type ain <- at1*at2
-proof*.
-realize m1_and_m2_diff. auto. qed.
-
+local clone import Splitcases as SC with type argt <- at1*at2.
 
 local module T = {
-  proc main(b:bool, i1i2:at1*at2) = {
+  proc work(i1i2:at1*at2, b:bool) = {
    var r', r : bool;
 
    A.init(i1i2.`1);   
@@ -389,7 +382,7 @@ local module T = {
 }.
 
 local module T2 = {
-  proc main(b:bool, i1i2:at1*at2) = {
+  proc work(i1i2:at1*at2, b:bool) = {
    var r', r : bool;
 
    if(b){
@@ -402,24 +395,25 @@ local module T2 = {
   }
 }.
 
+local module W = MeansWithParameter.Rand.
 
 
 local lemma d_b1 ii1 ii2 &m : Pr[ P(A).init_main12(ii1,ii2) @ &m : res ] 
   = f (Pr[ P(A).main1(ii1,ii2) @ &m : res ] - Pr[ P(A).main2(ii1,ii2) @ &m : res ]) .
 have ->: Pr[ P(A).init_main12(ii1,ii2) @ &m : res ] 
- = Pr[ W(T).main(ii1,ii2) @ &m : res ].
-byequiv (_: ={glob A} /\ (i1,i2){1} = a{2} /\  (ii1,ii2) = a{2} ==> _). proc. inline*. swap {1} 2 -1. simplify.
+ = Pr[ W(T).main(ii1,ii2) @ &m : res.`2 ].
+byequiv (_: ={glob A, arg}  ==> _). proc. inline*. swap {1} 2 -1. simplify.
 seq 2 4 :( ={b,glob A} /\ (i1,i2){1} = i1i2{2} ).  call (_:true). 
-wp.  rnd. skip. progress. rewrite /{0,1}. smt(eq_duniformP). smt(eq_duniformP).
+wp.  rnd. skip. progress. (* rewrite /{0,1}. smt(eq_duniformP). smt(eq_duniformP). *)
 if. auto. wp. call (_:true). skip. auto.
 wp. call (_:true). skip. auto. auto. auto.
 rewrite (splitcases T).
-have ->: Pr[T.main(false, (ii1,ii2)) @ &m : res] 
+have ->: Pr[T.work((ii1,ii2), false) @ &m : res] 
  = Pr[ P(A).main2(ii1,ii2) @ &m : !res ].
 byequiv. proc. rcondf {1} 2. progress. call (_:true).
 skip. smt().
 wp.   sim.  call (_:true). call (_:true).  skip. auto. auto. auto.
-have ->: Pr[T.main(true, (ii1,ii2)) @ &m : res] 
+have ->: Pr[T.work((ii1,ii2), true) @ &m : res] 
  = Pr[ P(A).main1(ii1,ii2) @ &m : res ].
 byequiv. proc. rcondt {1} 2. progress. call (_:true).
 skip. smt().
@@ -440,21 +434,21 @@ qed.
 local lemma d_b2  (ii2 : at2)  &m : Pr[ P(A).main12(ii2) @ &m : res ] 
   = f (Pr[ A.run1(ii2) @ &m : res ] - Pr[ A.run2(ii2) @ &m : res ]) .
 have ->: Pr[ P(A).main12(ii2) @ &m : res ]
- = Pr[ W(T2).main(witness,ii2) @ &m : res ].
+ = Pr[ W(T2).main(witness,ii2) @ &m : res.`2 ].
 byequiv (_: ={glob A} /\ arg{1} = arg.`2{2} ==> _). proc. inline*. 
 seq 1 3 : (={glob A} /\ b{1} = b{2} /\ i1i2.`2{2} = i2{1}).
 wp. 
-rnd. skip. progress. smt(eq_duniformP). smt(eq_duniformP). wp.
-if. auto. call (_:true). skip. auto.
-wp. sim. call (_:true). skip. auto. auto. auto.
+rnd. skip. progress. (* smt(eq_duniformP). smt(eq_duniformP). wp. *)
+if. auto. wp. call (_:true). skip. auto.
+wp. call (_:true). skip. auto. auto. auto.
 rewrite (splitcases T2).
-have ->: Pr[T2.main(false, (witness,ii2)) @ &m : res]
+have ->: Pr[T2.work((witness,ii2), false) @ &m : res]
  = Pr[ A.run2(ii2) @ &m : !res ].
 byequiv. proc*. inline*. rcondf {1} 3. progress. wp.
 skip.  smt().
 wp.   sim.  
 call (_:true).  wp.  skip. progress. auto. auto.
-have ->: Pr[T2.main(true, (witness,ii2)) @ &m : res]
+have ->: Pr[T2.work((witness,ii2),true) @ &m : res]
  = Pr[ A.run1(ii2) @ &m : res ].
 byequiv. proc*. inline*. rcondt {1} 3. progress. wp.
 skip.  smt().

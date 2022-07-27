@@ -5,7 +5,7 @@ require import AllCore List Distr.
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
-require OneToManyZK HybridArgumentWithParameter.
+require Sim1Equations HybridArgumentWithParameter.
 
 (* we can instantiate sbits with list of Booleans  *)
 type sbits.
@@ -775,7 +775,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   declare module D <: ZKDistinguisher{-HonestProver} .
 
 
-  local clone import OneToManyZK as OMZK with type prob <- statement,
+  local clone import Sim1Equations as OMZK with type prob <- statement,
                                         type wit <- witness,
                                         type sbits <- summary,
                                         type event <- bool,

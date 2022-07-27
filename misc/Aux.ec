@@ -3,6 +3,8 @@ require import AllCore Distr FSet StdRing StdOrder StdBigop List RealExp.
 (*---*) import RField RealOrder Bigreal BRA. 
 require import Int. 
 
+
+
     
 
 
@@ -294,3 +296,46 @@ rewrite kiki2. auto.
 qed.
 
 end section.
+
+
+
+
+theory Splitcases.
+
+require MeansWithParameter.
+type argt.
+
+section.
+clone import MeansWithParameter with type argt <- argt,
+                                           type output <- bool,
+                                           type input <- bool,
+                                           op d <- duniform [true; false].
+require import Finite.
+
+lemma splitcases:
+  forall (T <: Worker) &m (x : argt),
+    Pr[Rand(T).main(x) @ &m : res.`2] =
+    Pr[T.work(x,false) @ &m : res] / 2%r +
+    Pr[T.work(x,true) @ &m : res] / 2%r.
+progress.
+rewrite (Mean_uni T &m (fun _ _ x => x) (1%r/2%r)). progress. 
+rewrite duniform1E. smt().
+smt(@Finite).
+progress. simplify.
+have ->: (support (duniform [true; false])) = (fun x => true). smt(@Distr).
+pose lst := (to_seq (fun _ => true)).
+have f1 :  false \in lst. smt(@Finite @Distr).
+have f2 :  true \in lst . smt(@Finite @Distr).
+have f3 : size lst = 2. rewrite /lst.
+rewrite Bool.BoolFin.card_size_to_seq. auto.
+have f4 : forall (l : bool list), false \in l => true \in l => size l = 2 => l = [false ; true] \/ l = [true ; false]. 
+elim. smt(). move => x0. elim.  progress. move => x1. elim. smt().
+progress. smt(@List).
+have f5 : lst = [false;  true] \/ lst = [true ; false].  smt().
+case (lst = [false; true]). move => z. rewrite z.
+smt().
+progress. have ->: lst = [true ; false]. smt().
+smt().
+qed.
+end section.
+end Splitcases.

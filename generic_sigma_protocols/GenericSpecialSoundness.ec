@@ -67,8 +67,8 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
    end Statement.
 
 
-   require GenericKE.
-   clone import GenericKE as GKE with type pt <- statement,
+   require ExtractabilityEquations.
+   clone import ExtractabilityEquations as GKE with type pt <- statement,
                                       type auxt <- unit,
                                        type irt <- commitment,
                                        type ct <- challenge,

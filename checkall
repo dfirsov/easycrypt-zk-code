@@ -16,8 +16,8 @@ check() {
 
 # list of files to check
 
-check misc/while_props/GenericKE.ec
-check misc/while_props/OneToManyZK.ec
+check misc/ExtractabilityEquations.ec
+check misc/Sim1Equations.ec
 check misc/while_props/WhileCycle.ec
 check misc/while_props/WhileNoSuccess.ec
 
