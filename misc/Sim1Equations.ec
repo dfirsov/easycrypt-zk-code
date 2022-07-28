@@ -11,11 +11,6 @@ op pair_sbits : sbits * sbits -> sbits.
 op unpair: sbits -> sbits * sbits.
 
 
-
-
-
-
-
 require WhileSplit.
 clone import WhileSplit as MW with type irt    <- prob,
                                    type rrt   <- event * sbits,
@@ -31,43 +26,9 @@ clone import WhileSplit as MW with type irt    <- prob,
                          
 import MW.IFB.
 
-(* import MW.IFB.IM. *)
-
-module W0 = W0.
-  
-
-(* module type Dist = { *)
-(*   proc guess(_:prob * wit * sbits) : bool *)
-(* }. *)
-
-
 module type Simulator1 = {
   proc run(Ny : prob) : event * sbits
 }.
-
-
-(* module W0(Sim1:Simulator1,  D : Dist) = { *)
-(*   module Sim1 = Sim1 *)
-(*   proc run(a : prob, w : wit) = { *)
-(*       var r, b; *)
-(*       r <@ Sim1.run(a); *)
-(*       b <@ D.guess(a,w,r.`2); *)
-(*       return (b, r); *)
-(*   } *)
-(* }. *)
-
-
-(* module W1(Sim1:Simulator1,  D : Dist) = { *)
-(*   module M = W(Sim1) *)
-(*   proc run(a : (event * sbits -> bool) * prob * int * int * (event * sbits), w : wit) = { *)
-(*       var r, b; *)
-(*       r <@ M.whp(a); *)
-(*       b <@ D.guess(a.`2,w, r.`2); *)
-(*       return (b, r); *)
-(*   } *)
-(* }. *)
-
-
 
 
 module Iter(Sim1 : Simulator1,  D : Dist)  = {
@@ -79,10 +40,6 @@ module Iter(Sim1 : Simulator1,  D : Dist)  = {
   }
 }.
 
-module type Module = {
-
-}.
-
 
 section.
 
@@ -90,7 +47,6 @@ declare module Sim1 <: Simulator1{-DW, -W}.
 declare module D <: Dist {-DW, -W}.
 
 declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob Sim1, arg} ==> ={res}  ].
-
 declare axiom Sim1_ll : islossless Sim1.run.
 declare axiom Sim1_rew_ph : forall (x : (glob Sim1)),
   phoare[ Sim1.run : (glob Sim1) = x ==> !E res => (glob Sim1) = x] = 1%r.
@@ -119,7 +75,7 @@ local lemma zk_step1 &m E p eps zkp:
         * (zkp + eps')).
 proof.
 progress.
-apply oip3;auto.
+apply abs_val_ineq2;auto.
 qed.
 
 
@@ -172,7 +128,7 @@ apply (zk_step1 &m). assumption. assumption. assumption.
 elim. move => eps' [H3 [H41 H42 ]].
 exists eps'. 
 split. auto.
-apply oip4.
+apply abs_val_ineq3.
 rewrite coeffeq.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
   = 1%r - Pr[W0(Sim1,D).run(p,w) @ &m :  E res.`2].
@@ -254,16 +210,16 @@ have ->:
 inline Iter(Sim1, D).run. sp. wp. 
 inline W1(Sim1, D).run. sp. 
 seq 1 1 :   (a0{2} = a{2} /\
-  w0{2} = w{2} /\
+  w0{2} = w /\
   a{1} = (E0{1}, (Ny0{1}), 1, ea0{1}, (fevent0{1}, witness)) /\
   w1{1} = w0{1} /\
   fevent0{1} = fevent{1} /\
   Ny0{1} = Ny{1} /\
-  w0{1} = w{1} /\
-  ea0{1} = ea{1} /\
+  w0{1} = w /\
+  ea0{1} = ea /\
   E0{1} = E{1} /\
-  (a{2}, w{2}) = ((Top.E, (p), 1, ea, (Top.fevent, witness)), w) /\
-  (fevent{1}, Ny{1}, w{1},  ea{1}, E{1}) =
+  (a{2}, w) = ((Top.E, (p), 1, ea, (Top.fevent, witness)), w) /\
+  (fevent{1}, Ny{1}, w,  ea, E{1}) =
   (Top.fevent, p, w,  ea, Top.E) /\
    (glob Sim1){1} = (glob Sim1){2} /\ r1{1} = r0{2}).
 call (_: ={glob Sim1}). simplify. sim.
@@ -302,7 +258,6 @@ smt().
 qed.
 
 
-
 local lemma zk_almost_final &m p w eps ea coeff zkp :
    `|Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1] 
         / Pr[W0(Sim1,D).run(p,w) @ &m : E res.`2] 
@@ -322,7 +277,7 @@ have ie1 : `|Pr[ Iter(Sim1, D).run(fevent, p,w,ea,E)
            @ &m : E res.`2 /\  res.`1 ]  
          - coeff * zkp| <= eps.
 apply (zk_non_final &m p eps ea coeff zkp);auto. smt().
-apply ots. assumption. 
+apply abs_val_ineq1. assumption. 
 rewrite H3. 
 split.
 have ->: Pr[W0(Sim1,D).run(p,w) @ &m : ! E res.`2]
@@ -389,6 +344,7 @@ simplify. auto. smt().
 apply (zk_almost_final &m);auto. 
 qed.
 
+
 local lemma pow_ler (a b : real) :  0%r <= a => 0%r <= b => forall n, 0 <= n => a <= b => a ^n <= b ^n.
 move => ap bp. 
 apply ge0ind.  progress. smt(). progress. smt(@Real).
@@ -440,6 +396,14 @@ smt(). smt(). auto. auto. smt().
 qed.
 
 
+local lemma dbound (a a' d zkp eps : real) :
+   0%r <= a' <= a =>
+   a - a' <= d =>
+    `| a' - zkp | <= eps
+    => `|a - zkp| <= eps + d.
+smt().
+qed.
+
 
 local lemma zk_final_clean' &m p w p0 eps ea zkp:
      `| Pr[ W0(Sim1,D).run(p,w) @ &m : E res.`2 /\ res.`1 ]
@@ -459,7 +423,7 @@ have f1 : `|Pr[ Iter(Sim1, D).run(fevent,p,w,ea,E)
            @ &m : E res.`2 /\ res.`1 ] - zkp| 
               <= eps + (1%r-p0) ^ ea.
 apply (zk_final_le &m p w p0 eps ea zkp );auto.
-apply (kkk Pr[Iter(Sim1, D).run(fevent, p, w,  ea, E) @ &m : res.`1]
+apply (dbound Pr[Iter(Sim1, D).run(fevent, p, w,  ea, E) @ &m : res.`1]
 Pr[Iter(Sim1, D).run(fevent, p, w,  ea, E) @ &m :
          E res.`2 /\ res.`1]). 
 rewrite Pr[mu_ge0]. simplify. rewrite Pr[mu_sub]. auto. auto.
@@ -489,7 +453,7 @@ have bf2 : Pr[Iter(Sim1, D).run(fevent, p, w, ea, E) @ &m : ! E res.`2]
  sp. wp. call {1} D_ll. 
   conseq (_: _==> r1{1} = r0{2}). smt().
 call (_: ={glob Sim1}).  sim. skip. progress. auto. auto.
-apply (final_zz_le (Sim1) Sim1_ll _ &m). apply Sim1_rew_ph. apply Estart. auto.
+apply (iter_run_rew_le (Sim1) Sim1_ll _ &m). apply Sim1_rew_ph. apply Estart. auto.
 have ->: Pr[Sim1.run(p) @ &m : ! E res] 
   = Pr[W0(Sim1, D).run(p, w) @ &m : ! E res.`2].
 byequiv. proc*. inline*. wp. sp. call {2} D_ll. call (_: true).

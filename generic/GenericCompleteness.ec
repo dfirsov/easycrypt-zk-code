@@ -125,7 +125,7 @@ theory CompletenessTheory.
     auto.
     byphoare (_: arg = ((statement, witness), fun (x : bool) => !x,
                                            1, (n-1) + 1 , true) ==> _).
-    apply (asdsadq_ge (Completeness(P,V))). 
+    apply (iter_run_ge_ph (Completeness(P,V))). 
     proc.
     call verify_ll. call response_ll. 
     call challenge_ll. 

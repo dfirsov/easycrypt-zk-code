@@ -97,7 +97,7 @@ abstract theory Statistical.
   auto.  auto.
   byphoare (_: arg = ((statement), fun (x : bool) => !x,
                                          1, (n - 1) + 1, true) ==> _).
-  apply (asdsadq_le (Soundness(P,HV))). 
+  apply (iter_run_le_ph (Soundness(P,HV))). 
   proc.
   call verify_ll. call response_ll. call challenge_ll. call commitment_ll. skip. auto.
   apply phs. auto. smt().

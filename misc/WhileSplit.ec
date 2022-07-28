@@ -21,6 +21,7 @@ module type Run = {
 op pair_sbits : sbits * sbits -> sbits.
 op unpair: sbits -> sbits * sbits.
 
+
 require import WhileNoSuccess.
 clone import IterUntilSuccRew as IFB with 
   type rrt <- rrt,
@@ -31,6 +32,7 @@ clone import IterUntilSuccRew as IFB with
   op pair_sbits <- pair_sbits,
   op unpair <- unpair.
 
+  
 require PrIntervalToSum.
 clone import PrIntervalToSum as PIT with type rt <- bool * rrt,
                                          type iat <- ((rrt -> bool) * irt * int * int * rrt)*de .
@@ -58,6 +60,7 @@ byphoare (: (glob A) = (glob A){m} ==> _).
 proc*. call (A_rew_ph (glob A){m}).
 skip.  auto. auto. auto. smt().
 qed.
+
 
 lemma if_whp_prop : 
   equiv [ W(A).whp ~ W(A).if_whp : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
@@ -307,7 +310,7 @@ have FF : forall ea, 0 <= ea => phoare[ W(A).whp :
    arg = (MyPred,ia,1,ea,r) /\ (glob A) = (glob A){m}
      ==> !MyPred res ] = (Pr[ A.run(ia) @ &m : !MyPred res ] ^ ea).
 move => ea0 ea0p.
-conseq (final_zz_ph_m A _ _ &m Pr[A.run(ia) @ &m : ! MyPred res]  ia ea0 r _ _ _).  auto. apply A_ll. apply A_rew_ph. auto.  auto. 
+conseq (iter_run_rew_eq_ph A _ _ &m Pr[A.run(ia) @ &m : ! MyPred res]  ia ea0 r _ _ _).  auto. apply A_ll. apply A_rew_ph. auto.  auto. 
 bypr. move => &m1 [eq1 eq2]. rewrite eq1. 
 byequiv (_: ={arg, glob A} ==> ={res}). sim. progress. rewrite eq2. auto. auto.
 pose p1 := Pr[ W0(A,D).run(ia,wa) @ &m : MyPred res.`2 /\ res.`1 ].

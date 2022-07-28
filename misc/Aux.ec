@@ -2,10 +2,7 @@ require import DJoin.
 require import AllCore Distr FSet StdRing StdOrder StdBigop List RealExp.
 (*---*) import RField RealOrder Bigreal BRA. 
 require import Int. 
-
-
-
-    
+   
 
 
 lemma big_reindex f (c e : int) :  big predT f (range 0 e) 
@@ -22,7 +19,6 @@ have ->: (transpose Int.(+) c) = (+) c. smt().
 rewrite - (range_add 0 e c). auto.
 auto.
 qed.
-
 
 
 lemma big_formula_p p  : 0%r <= p <= 1%r => forall n, 0 <= n  =>
@@ -42,7 +38,6 @@ lemma big_formula_1mp p  : 0%r <= p <= 1%r => forall n, 0 <= n  =>
  bigi predT (fun (i : int) => (1%r-p)^i * p) 0 n = 1%r - (1%r-p)^ n.
 smt (big_formula_p).
 qed.
-
 
 
 lemma big_split_min ['a]:
@@ -100,7 +95,6 @@ rewrite big_geq. smt(). auto.
 qed.
 
 
-
 lemma djoinmap_weight (d : 'a -> 'b distr) :  forall l,
   (forall x, is_lossless (d x)) =>
     weight (djoinmap d l) = 1%r.
@@ -108,14 +102,6 @@ elim. smt (weight_djoin_nil).
 smt (weight_djoin_cons).
 qed.
 
-
-lemma kkk (a a' d zkp eps : real) :
-   0%r <= a' <= a =>
-   a - a' <= d =>
-    `| a' - zkp | <= eps
-    => `|a - zkp| <= eps + d.
-smt().
-qed.
 
 lemma sub_all ['a]:
    forall (p1 p2 : 'a -> bool) (s : 'a list),
@@ -156,18 +142,19 @@ smt(). simplify. smt().
 qed.
 
 
-
 lemma ler_trans1 (a b c : real) : a <= b => b <= c => a <= c. by smt().
 qed.
 
-lemma oip1 (a b c eps : real) :  (0%r <= eps) =>
+
+section.
+local lemma oip1 (a b c eps : real) :  (0%r <= eps) =>
   `|a / b - c| <= eps
  => exists (p : real), 0%r <= p <= eps  /\ `|a / b - c| = p.
 smt().
 qed.
 
 
-lemma oip2 (a b c p : real) :  
+local lemma oip2 (a b c p : real) :  
   (0%r < b) =>
   `|a / b - c| = p =>
       a = b * c - b * p \/  a = b * c + b * p.
@@ -175,8 +162,7 @@ smt().
 qed.
 
 
-
-lemma oip2b (a b c p : real) :  
+local lemma oip2b (a b c p : real) :  
   (0%r < b) =>
   (0%r <= p) =>
       a = b * c - b * p \/  a = b * c + b * p
@@ -185,30 +171,14 @@ smt(@Real).
 qed.
 
 
-lemma oip3 (a b c eps : real) :  (0%r < b) => (0%r <= eps) =>
-  `|a / b - c| <= eps => 
-  exists (p : real),  0%r <= p <= eps  
-  /\ `|a / b - c| = p 
-  /\ (a = b * (c - p) \/  a = b * (c + p)).
-smt (oip1 oip2).
-qed.
-
-lemma oip4 (a c p : real) :  
-  (0%r <= p) =>
-   a = c - p \/  a = c + p
-   => `|a - c| = p.
-smt().
-qed.
-
-
-lemma ots' (a c : real) : 
+local lemma ots' (a c : real) : 
   (0%r <= a) =>
   (0%r <= c <= 1%r) =>
   a * c  <= a.
 proof. smt(). qed.
 
 
-lemma ots (a b c e : real) : 
+lemma abs_val_ineq1 (a b c e : real) : 
   (0%r <= b <= 1%r) =>
   (0%r <= c <= 1%r) =>
   `|a - c * b| <= e
@@ -240,6 +210,22 @@ smt().
 qed.
 
 
+lemma abs_val_ineq2 (a b c eps : real) :  (0%r < b) => (0%r <= eps) =>
+  `|a / b - c| <= eps => 
+  exists (p : real),  0%r <= p <= eps  
+  /\ `|a / b - c| = p 
+  /\ (a = b * (c - p) \/  a = b * (c + p)).
+smt (oip1 oip2).
+qed.
+
+
+lemma abs_val_ineq3 (a c p : real) :  
+  (0%r <= p) =>
+   a = c - p \/  a = c + p
+   => `|a - c| = p.
+smt().
+qed.
+end section.
 
 lemma aux_lem : forall l n,  
   size l = n =>
@@ -247,7 +233,6 @@ lemma aux_lem : forall l n,
   false \in l.
 elim. smt(@List). smt(@List).
 qed.
-
 
 
 section.
@@ -294,7 +279,6 @@ move => q.
 rewrite /cartprod2.  rewrite kiki0;auto.
 rewrite kiki2. auto. 
 qed.
-
 end section.
 
 
@@ -302,6 +286,7 @@ end section.
 
 theory Splitcases.
 
+require import Finite.
 require MeansWithParameter.
 type argt.
 
@@ -310,7 +295,7 @@ clone import MeansWithParameter with type argt <- argt,
                                            type output <- bool,
                                            type input <- bool,
                                            op d <- duniform [true; false].
-require import Finite.
+
 
 lemma splitcases:
   forall (T <: Worker) &m (x : argt),

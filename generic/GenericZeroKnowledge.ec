@@ -791,6 +791,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   realize MW.IFB.RW.unpair_pair. apply unpair_pair. qed.
 
 
+   local module W0 = MW.W0.
 
 
   local module Simulator'(S : Simulator1)(V : RewMaliciousVerifier)  = {
@@ -902,7 +903,7 @@ call (sim1_rew_ph (x.`4, x.`5)).
 skip. auto.
 
 apply D_guess_ll.
-        auto. 
+        auto.  
         have ->: Pr[W0(Sim1', D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1]
         = Pr[RD(Sim1(V), D).run(stat, wit) @ &m : res.`2.`1 /\ res.`1].
      byequiv (_: ={glob V, glob Sim1, arg, glob Count, glob HybOrcl} ==> _). proc. 

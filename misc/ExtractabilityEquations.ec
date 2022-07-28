@@ -15,6 +15,7 @@ type ct,rt,pt.
 op d : ct distr.
 op allcs : ct list.
 
+op cartprod2 (l : 'a list)  = allpairs (fun c1 c2 => (c1,c2)) l l.
 
 axiom allcs_uniq : uniq allcs.
 axiom allcs_all x : mu1 d x <> 0%r => x \in allcs.
@@ -90,7 +91,6 @@ auto. auto.
 qed.
 
 
-
 local module X'(C : Comp) = {
   proc run(p : pt) = {
     var c1c2, r;
@@ -111,9 +111,7 @@ local module Xseq'(C : Comp) = {
 }.
 
 
-
 declare module C <: Comp.
-
 
 local lemma x_xseq &m M p: 
    Pr[Xpar(C).run(p) @ &m : M p res] = Pr[Xseq(C).run(p) @ &m : M p res].
@@ -133,11 +131,11 @@ qed.
 local lemma avr_lemma_1 &m M p : 
   Pr[ Xpar(C).run(p) @ &m  : M res ] 
      = big predT (fun c1c2 => 
-        (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs) .
+        (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) 
+                                  (allpairs (fun c1 c2 => (c1,c2))  allcs allcs) .
 proof. rewrite -  sumE_fin. apply allpairs_uniq. apply allcs_uniq. apply allcs_uniq. smt().
 progress. 
 apply allpairsP. exists x. progress.
-
 have : mu1 d x.`1 <> 0%r.  smt(@Distr).
 apply allcs_all. 
 apply allcs_all.  smt(@Distr).
@@ -148,9 +146,11 @@ qed.
 
 local lemma avr_lemma_2 &m M p : 
      big predT (fun c1c2 => 
-        (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs)
+        (mu1 (d `*` d) c1c2) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) 
+      (allpairs (fun c1 c2 => (c1,c2))  allcs allcs)
    = big predT (fun (c1c2 : ct * ct) => 
-        ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) (allpairs (fun c1 c2 => (c1,c2))  allcs allcs).
+        ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * Pr[ C.rest(p,c1c2) @ &m : M (c1c2,res) ]) 
+          (allpairs (fun c1 c2 => (c1,c2))  allcs allcs).
 apply eq_big. auto.
 progress.
 rewrite - dprod1E. smt().
@@ -168,8 +168,6 @@ auto. simplify. progress.
 case (N i). auto.
 simplify. rewrite Pr[mu_false]. simplify. auto.
 qed.
-
-op cartprod2 (l : 'a list)  = (allpairs (fun c1 c2 => (c1,c2)) l l).
 
 
 local lemma avr_lemma_4 &m M p : 
@@ -218,7 +216,6 @@ apply avr_lemma_5.
 qed.
 
 
-
 lemma avr_lemma_seq &m M p : 
   Pr[ Xseq(C).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M res ] 
      = Pr[ Xseq(C).run(p) @ &m  : M res ] 
@@ -228,19 +225,15 @@ lemma avr_lemma_seq &m M p :
                    (cartprod2 allcs).
 rewrite - (x_xseq &m (fun p (r : (ct * ct) * rt) => r.`1.`1 <> r.`1.`2 /\ M r) ). simplify.
 rewrite - (x_xseq &m (fun p (r : (ct * ct) * rt) => M r) ). simplify.
-
 rewrite avr_lemma_1.
 rewrite avr_lemma_2. 
 apply avr_lemma_5.
 qed.
-
-
 end section.
-
 end AveragingAux.
 
 
-
+theory ExtractabilityEquationsTheory.
 
 type ct, pt, rt, irt, auxt, sbits.
 
@@ -258,13 +251,15 @@ clone import AveragingAux as BP with type ct  <- ct,
                               type pt  <- pt * auxt,
                               type rt  <- (rt * irt) * (rt * irt),
                               op    d  <- d,
-                              op allcs <- allcs.
-
+                              op allcs <- allcs
+proof*.
+realize allcs_uniq. apply allcs_uniq. qed.
+realize allcs_all. apply allcs_all. qed.
 
 clone import RWI with type sbits <- sbits,
                       type iat <- pt * auxt,
                       type irt <- irt,
-                      type rrt <- ct * rt .
+                      type rrt <- ct * rt.
 
 module type Adv = {
   proc init(p : pt, aux : auxt) : irt
@@ -406,14 +401,6 @@ byequiv. proc. call (_:true). call (_:true). skip.
 progress. auto. auto. auto. auto.
 qed.
 
-
-(* (* c1c2 <$ d * d ~ c1 <$ d ; c2 <$ d  *) *)
-(* local lemma x1 &m M p:  *)
-(*    Pr[Xpar(C2).run(p) @ &m : M p res] = Pr[Xseq(C2).run(p) @ &m : M p res]. *)
-(* apply (x_xseq C2). *)
-(* qed. *)
-
-
    
 (* sum binding  *)
 local lemma x2 &m M p:
@@ -427,7 +414,8 @@ progress. auto. auto.
 have ->: 
   Pr[Xseq(C2).run(p) @ &m :
    M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2)]
- =    Pr[ QQ(A',A').main(p) @ &m : M p (res.`1.`2.`1, (res.`1.`2.`2, res.`1.`1)) /\ M p  (res.`2.`2.`1, (res.`2.`2.`2, res.`2.`1)) ] .
+ =    Pr[ QQ(A',A').main(p) @ &m : M p (res.`1.`2.`1, (res.`1.`2.`2, res.`1.`1)) 
+                   /\ M p  (res.`2.`2.`1, (res.`2.`2.`2, res.`2.`1)) ] .
 byequiv. proc. inline*. swap {2} 4 -3. swap {2} 9 -7. wp.
 call (_:true). wp.  call (_:true). wp.  call (_:true).
 wp. call (_:true). call (_:true). wp. rnd. rnd. skip. progress.
@@ -461,8 +449,8 @@ byequiv.
 proc.
 elim rewindable_A_plus.
 move => fA [s1 [s2 [s2h [s2ll [s3 [s3h ]]]] ]] s3ll.
-seq 1 1 : ((c1{2}, p{2}) = (c, p) /\
-  (p{1}, c1c2{1}) = (p, (c, c)) /\ (glob A){1} = (glob A){2} /\ ={i}).
+seq 1 1 : ((c1{2}, p) = (c, p) /\
+  (p, c1c2{1}) = (p, (c, c)) /\ (glob A){1} = (glob A){2} /\ ={i}).
 call (_:true). skip. progress.
 seq 2 1 : (={glob A,i,r1}).
 exists* (glob A){2}. elim*. progress.
@@ -474,14 +462,15 @@ qed.
 
 
 local lemma avr_lemma_8_app &m M p : 
-  Pr[ Xseq(C2).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2) ] 
-
-     >= Pr[ Xseq(C2).run(p) @ &m  : M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2)  ] 
+    Pr[ Xseq(C2).run(p) @ &m  : res.`1.`1 <> res.`1.`2 /\ M p (res.`1.`1, res.`2.`1)
+                                                       /\ M p (res.`1.`2, res.`2.`2) ] 
+     >= Pr[ Xseq(C2).run(p) @ &m  : M p (res.`1.`1, res.`2.`1) /\ M p (res.`1.`2, res.`2.`2) ] 
      - big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) => 
                   ((mu1 d c1c2.`1) * (mu1 d c1c2.`2)) * 
                    Pr[ C1.main(c1c2.`1,p) @ &m :  M p (c1c2.`1, res) ]) 
                    (cartprod2 allcs).
-rewrite (avr_lemma_6_app &m (fun p (r :  (ct * ct) * ((rt * irt) * (rt * irt))) =>   M p (r.`1.`1, r.`2.`1) /\ M p (r.`1.`2, r.`2.`2))).
+rewrite (avr_lemma_6_app &m (fun p (r :  (ct * ct) * ((rt * irt) * (rt * irt))) 
+                       => M p (r.`1.`1, r.`2.`1) /\ M p (r.`1.`2, r.`2.`2))).
 simplify.
 have f2 :  big (fun (r : ct * ct) => r.`1 = r.`2)
   (fun (c1c2 : ct * ct) =>
@@ -541,7 +530,8 @@ have ->: big (fun (r : ct * ct) => r.`1 = r.`2)
       (fun (c : ct) =>
          mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)])
           allcs.
-have ->: big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) allcs = big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) 
+have ->: big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) allcs 
+      = big predT (fun (c : ct) => mu1 d c * Pr[C1.main(c,p) @ &m : M p (c, res)]) 
     (map fst (filter (fun x => fst x = snd x) (cartprod2 allcs))). rewrite cart2_diag_unzip1. apply allcs_uniq. auto.
 rewrite big_mapT. 
 rewrite - big_filter. rewrite  /(\o). auto.
@@ -575,7 +565,7 @@ apply (avr_lemma_10_app &m M p).
 qed.
 
 
-lemma final_eq &m M p : 
+local lemma final_eq &m M p : 
    Pr[ InitRun2(A).run(p) @ &m 
           : res.`1.`1 <> res.`2.`1 /\ M p res.`1 /\ M p res.`2 ] 
   >= Pr[ InitRun1(A).run(p) @ &m  :  M p res ]^2
@@ -646,18 +636,15 @@ smt().
 qed.
 
 
-
-
-
-lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
+local lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
 smt(@RealExp). qed.
 
 
-lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
+local lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
 smt(@RealExp). qed.
 
 
-lemma final_eq_step2 &m AccRun SuccExtr p negl : 
+lemma extraction_success_prob_coroll &m AccRun SuccExtr p negl : 
    Pr[ InitRun2(A).run(p) @ &m 
           : res.`1.`1 <> res.`2.`1 /\ AccRun p res.`1 /\ AccRun p res.`2
    /\ !SuccExtr p res.`1 res.`2 ] <= negl
@@ -705,3 +692,4 @@ qed.
 
 end section.
 
+end ExtractabilityEquationsTheory.

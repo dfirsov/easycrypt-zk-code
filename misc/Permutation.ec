@@ -1,10 +1,8 @@
-pragma Goals:printall.
 require import AllCore List Distr.
 
 type permutation = int -> int.
 
-op compose : permutation -> permutation -> permutation 
-  = (\o).
+op compose : permutation -> permutation -> permutation = (\o).
 
 op inv : permutation -> permutation.
 op mk_perm : int list -> permutation.

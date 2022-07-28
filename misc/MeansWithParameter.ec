@@ -1,3 +1,10 @@
+(*
+
+THIS FILE CONTAINS AN UPDATED FORMALIZATION OF FINITE AVERAGING TECHNIQUE FROM STADLIB OF EASYCRYPT.
+
+The main change is that we added "forall quantified" argument to an adversary.
+*)
+
 require import AllCore List Distr.
 require import Finite.
 require (*--*) StdBigop.

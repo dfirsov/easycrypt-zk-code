@@ -3,7 +3,6 @@ require import AllCore Distr.
 
 
 theory IterUntilSuccDistr.
-
 type sbits, iat, rrt, irt.
 
 module M = {
@@ -28,8 +27,8 @@ module M = {
   }
 }.
 
-
-lemma whp_split_if_end :  
+section.
+local lemma whp_split_if_end :  
   equiv[ M.whp ~ M.whp_if_end : ={MyP,myd, s,r} /\ e{1} - 1 = e{2}
         ==> ={res,M.c} ].
 proof. proc.
@@ -56,29 +55,29 @@ rcondf {1} 1. progress. skip. progress.
 qed.
 
 
-lemma whp_split_if_end' MyP s e r p P d :  
+local lemma whp_split_if_end' MyP s e r p P d :  
   (phoare [ M.whp_if_end : arg = (MyP,d,s,e,r) ==> P res ] = p)
    => phoare [ M.whp : arg = (MyP,d,s,e+1,r) ==> P res ] = p.
 proof. progress. bypr.
 progress.
-have <-: Pr[M.whp_if_end(MyP{m},d{m}, s{m}, e{m}, r{m}) @ &m : P res] = p.
-byphoare (_: arg = (MyP{m},d{m}, s{m}, e{m}, r{m}) ==> _).
+have <-: Pr[M.whp_if_end(MyP,d, s, e, r) @ &m : P res] = p.
+byphoare (_: arg = (MyP,d, s, e, r) ==> _).
 conseq H. auto. auto. byequiv.
 conseq whp_split_if_end. smt(). auto. auto. auto.
 qed.
 
 
-lemma lll (b a c : real) : a <= b => b <= c => a <= c.
+local lemma lll (b a c : real) : a <= b => b <= c => a <= c.
 smt(). qed.
 
     
-lemma whp_split_if_end_le MyP s e r p myd P :  
+local lemma whp_split_if_end_le MyP s e r p myd P :  
   (phoare [ M.whp_if_end : arg = (MyP,myd,s,e,r) ==> P res ] <= p)
    => phoare [ M.whp : arg = (MyP,myd,s,e+1,r) ==> P res ] <= p.
 proof. progress. bypr.
 progress.
-have zz : Pr[M.whp_if_end(MyP{m}, myd{m},s{m}, e{m}, r{m}) @ &m : P res] <= p.
-byphoare (_: arg = (MyP{m},myd{m},s{m}, e{m}, r{m}) ==> _).
+have zz : Pr[M.whp_if_end(MyP, myd,s, e, r) @ &m : P res] <= p.
+byphoare (_: arg = (MyP,myd,s, e, r) ==> _).
 conseq H. auto. auto. 
 apply (lll Pr[M.whp_if_end(MyP,myd,s, e, r) @ &m : P res] ).
 byequiv.
@@ -86,13 +85,13 @@ byequiv.
 qed.
 
 
-lemma whp_split_if_end_ge MyP s e r p myd P :  
+local lemma whp_split_if_end_ge MyP s e r p myd P :  
   (phoare [ M.whp_if_end : arg = (MyP,myd,s,e,r) ==> P res ] >= p)
    => phoare [ M.whp : arg = (MyP,myd,s,e+1,r) ==> P res ] >= p.
 proof. progress. bypr.
 progress.
-have zz : Pr[M.whp_if_end(MyP{m}, myd{m},s{m}, e{m}, r{m}) @ &m : P res] >= p.
-byphoare (_: arg = (MyP{m},myd{m},s{m}, e{m}, r{m}) ==> _).
+have zz : Pr[M.whp_if_end(MyP, myd,s, e, r) @ &m : P res] >= p.
+byphoare (_: arg = (MyP,myd,s, e, r) ==> _).
 conseq H. auto. auto.  
 apply (lll Pr[M.whp_if_end(MyP,myd,s, e, r) @ &m : P res] ). auto.
 byequiv. 
@@ -101,7 +100,7 @@ qed.
 
 
 
-lemma asdsad (p : real) r myda MyPa: 
+local lemma iter (p : real) r myda MyPa: 
   (mu myda (fun (x : rrt) => ! MyPa x) = p) =>
   MyPa r = false => forall e, 0 <= e => 
   phoare[ M.whp_if_end : arg = (MyPa,myda, 1,e,r) ==> !MyPa res ] = (p ^ (e+1)).
@@ -133,7 +132,7 @@ simplify. skip. auto. progress. smt(@Real).
 qed.
 
 
-lemma asdsad_le (p : real) MyPa r d:
+local lemma iter_le (p : real) MyPa r d:
   (mu d (fun (x : rrt) => ! MyPa x) <= p) =>
     MyPa r = false => forall e, 0 <= e => 
   phoare[ M.whp_if_end : arg = (MyPa, d,1,e,r) ==> !MyPa res ]
@@ -166,9 +165,7 @@ simplify. skip. auto. smt(@Real).
 qed.
 
 
-
-
-lemma asdsad_ge (p : real) MyPa r d:
+local lemma iter_ge (p : real) MyPa r d:
   (mu d (fun (x : rrt) => ! MyPa x) >= p) =>
     MyPa r = false => forall e, 0 <= e => 
   phoare[ M.whp_if_end : arg = (MyPa, d,1,e,r) ==> !MyPa res ]
@@ -201,40 +198,41 @@ simplify. skip. auto. smt(@Real).
 qed.
 
 
-lemma asdsadq (p : real) MyP r d:  
+lemma iter_sample_eq (p : real) MyP r d:  
    (mu d (fun (x : rrt) => ! MyP x) = p) =>
   MyP r = false => forall e, 0 <= e =>
   phoare[ M.whp : arg = (MyP,d,1,e+1,r) ==> !MyP res ] = (p ^ (e+1)).
 move => H1 H e ep.
 have fact1  : phoare[ M.whp_if_end : arg = (MyP,d,1,e,r) ==> !MyP res ] = (p ^ (e+1)).
-apply (asdsad  p r d MyP H1 H e ep). auto.
+apply (iter  p r d MyP H1 H e ep). auto.
 conseq (whp_split_if_end' MyP 1 e r (p^(e+1)) (fun x => !MyP x) d fact1).
 qed.
 
 
 
-lemma asdsadq_le (p : real) MyP r d:  
+lemma iter_sample_le (p : real) MyP r d:  
    (mu d (fun (x : rrt) => ! MyP x) <= p) =>
    MyP r = false => forall e, 0 <= e =>
     phoare[ M.whp : arg = (MyP,d,1,e+1,r) ==> !MyP res ] <= (p ^ (e+1)).
 move => H1 H e ep.
 have fact1  : phoare[ M.whp_if_end : arg = (MyP,d,1,e,r) ==> !MyP res ] <= (p ^ (e+1)).
-apply (asdsad_le  p MyP r d H1 H e ep). auto.
+apply (iter_le  p MyP r d H1 H e ep). auto.
 conseq (whp_split_if_end_le MyP 1 e r (p^(e+1))  d (fun x => !MyP x) fact1).
 qed.
 
 
 
-lemma asdsadq_ge (p : real) MyP r d:  
+lemma iter_sample_ge (p : real) MyP r d:  
    (mu d (fun (x : rrt) => ! MyP x) >= p) =>
    MyP r = false => forall e, 0 <= e =>
     phoare[ M.whp : arg = (MyP,d,1,e+1,r) ==> !MyP res ] >= (p ^ (e+1)).
 move => H1 H e ep.
 have fact1  : phoare[ M.whp_if_end : arg = (MyP,d,1,e,r) ==> !MyP res ] >= (p ^ (e+1)).
-apply (asdsad_ge  p MyP r d H1 H e ep). auto.
+apply (iter_ge  p MyP r d H1 H e ep). auto.
 conseq (whp_split_if_end_ge MyP 1 e r (p^(e+1))  d (fun x => !MyP x) fact1).
 qed.
 
+end section.
 end IterUntilSuccDistr.
 
 
@@ -341,7 +339,6 @@ local clone import IterUntilSuccDistr with type sbits <- sbits,
 op MyPred : rrt -> bool.
 
 declare module A <: HasRun {-W, -DW}.
-
 declare axiom A_ll : islossless A.run.
 declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] = 1%r.
 
@@ -357,8 +354,6 @@ rewrite Pr[mu_split (!MyPred res => (glob A) = (glob A){m}) ]. smt().
 have ->: Pr[A.run(z{m}) @ &m : (!MyPred res => (glob A) = (glob A){m}) ] = 1%r. byphoare (_: (glob A) = (glob A){m} ==> _). apply (A_rew_ph). auto. auto.
 rewrite Pr[mu_false]. smt().
 qed.
-
-
 
 
 local lemma asdistr_rew2 : forall (D : (glob A) -> irt -> rrt distr) ,
@@ -442,9 +437,9 @@ qed.
 
 
 
-lemma final_zz &m (p : real)  i e ra :  MyPred ra = false => 0 <= e =>
+lemma iter_run_rew_eq &m (p : real)  i e ra :  MyPred ra = false => 0 <= e =>
    Pr[ A.run(i) @ &m : !MyPred res ]  = p
-  => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] = (p ^ (e)).
+  => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] = p ^ e.
 case (e = 0).
 progress.
 have ->: Pr[A.run(i) @ &m : ! MyPred res] ^ 0 = 1%r. smt(@Real).
@@ -472,16 +467,16 @@ byphoare(_: arg = (MyPred,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
 have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPred x) =
   Pr[A.run(i) @ &m : ! MyPred res].
 rewrite H0. auto.
-conseq (asdsadq (Pr[A.run(i) @ &m : ! MyPred res]) MyPred  ra (D (glob A){m} i) lf sf e' H ).
+conseq (iter_sample_eq (Pr[A.run(i) @ &m : ! MyPred res]) MyPred  ra (D (glob A){m} i) lf sf e' H ).
 auto.
 auto.
 qed.
 
 
 
-lemma final_zz_le &m pr  i e ra :  MyPred ra = false => 0 <= e =>
+lemma iter_run_rew_le &m pr  i e ra :  MyPred ra = false => 0 <= e =>
    Pr[ A.run(i) @ &m : !MyPred res ]  <= pr
-  => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] <= (pr ^ (e)).
+  => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] <= pr ^ e.
 case (e = 0).
 progress.
 byphoare (_: e = 0 /\ s = 1 /\ p ra = false /\ r = ra ==> _).
@@ -506,16 +501,14 @@ skip. progress.
 skip. progress. auto. auto.
 byphoare(_: arg = (MyPred,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
 have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPred x) <= pr. rewrite H1. auto.
-conseq (asdsadq_le pr MyPred ra (D (glob A){m} i) lf sf e' H ). auto.
+conseq (iter_sample_le pr MyPred ra (D (glob A){m} i) lf sf e' H ). auto.
 auto.
 qed.
 
 
-
-
-lemma final_zz_ge &m pr  i e ra :  MyPred ra = false => 0 <= e =>
+lemma iter_run_rew_ge &m pr  i e ra :  MyPred ra = false => 0 <= e =>
    Pr[ A.run(i) @ &m : !MyPred res ]  >= pr
-  => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] >= (pr ^ (e)).
+  => Pr[ W(A).whp(MyPred,i, 1,e,ra) @ &m : !MyPred res ] >= pr ^ e.
 case (e = 0).
 progress.
 byphoare (_: e = 0 /\ s = 1 /\ p ra = false /\ r = ra ==> _).
@@ -540,66 +533,26 @@ skip. progress.
 skip. progress. auto. auto.
 byphoare(_: arg = (MyPred,D (glob A){m} i, 1, e' + 1 , ra ) ==> _).
 have lf :   mu (D (glob A){m} i) (fun (x : rrt) => ! MyPred x) >= pr. rewrite H1. auto.
-conseq (asdsadq_ge pr MyPred ra (D (glob A){m} i) lf sf e' H ). auto.
+conseq (iter_sample_ge pr MyPred ra (D (glob A){m} i) lf sf e' H ). auto.
 auto.
 qed.
 
 
-lemma final_zz_ph_le p  i e r :  MyPred r = false => 0 <= e =>
-   phoare[ A.run : arg = i ==> !MyPred res ] <= p =>
-   phoare [ W(A).whp : arg = (MyPred, i, 1,e,r) ==> !MyPred res ] <= (p ^ (e)).
-move => sf ep ph1.
-bypr. progress.
-have ff : Pr[A.run(i) @ &m : ! MyPred res] <= p.
-byphoare (_: arg = i ==> _). apply ph1. auto. auto.
-rewrite H. simplify.
-apply (final_zz_le &m p  i e r sf ep ff).
-qed.
-
-
-lemma final_zz_ph_ge p  i e r :  MyPred r = false => 0 <= e =>
-   phoare[ A.run : arg = i ==> !MyPred res ] >= p =>
-   phoare [ W(A).whp : arg = (MyPred, i, 1,e,r) ==> !MyPred res ] >= (p ^ (e)).
-move => sf ep ph1.
-bypr. progress.
-have ff : Pr[A.run(i) @ &m : ! MyPred res] >= p.
-byphoare (_: arg = i ==> _). apply ph1. auto. auto.
-rewrite H. simplify.
-apply (final_zz_ge &m p  i e r sf ep ff).
-qed.
-
-
-
-lemma final_zz_ph &m p i e r :  MyPred r = false => 0 <= e =>
-   phoare[ A.run : arg = i ==> !MyPred res ] = p =>
-   phoare [ W(A).whp : arg = (MyPred,i, 1,e,r) ==> !MyPred res ] = (p ^ (e)).
-move => sf ep ph1.
-bypr. progress.
-rewrite -  (final_zz &m0 p  i e r sf ep).
-byphoare (_: arg = i ==> _). conseq ph1. auto. auto.
-rewrite H. auto.
-qed.
-
-
-
-lemma final_zz_ph_m &m p i e r :  MyPred r = false => 0 <= e =>
+lemma iter_run_rew_eq_ph &m p i e r :  MyPred r = false => 0 <= e =>
    phoare[ A.run : arg = i /\ (glob A){m} = (glob A) ==> !MyPred res ] = p =>
    phoare [ W(A).whp : arg = (MyPred,i, 1,e,r) /\ (glob A){m} = (glob A) ==> !MyPred res ] = (p ^ e).
 move => sf ep ph1.
 bypr. progress. rewrite H. simplify.
-rewrite -  (final_zz &m0 p  i e r sf ep).
+rewrite -  (iter_run_rew_eq &m0 p  i e r sf ep).
 byphoare (_: arg = i /\ (glob A) = (glob A){m0} ==> _). conseq ph1. auto. auto.
 auto. auto.
 qed.
-
-
 end section.
 
 end IterUntilSuccRew.
 
 
 theory IterUntilSucc.
-
 type rt, iat.
 
 module type Run = {
@@ -633,7 +586,7 @@ declare module A <: Run{-M}.
 
 declare axiom A_run_ll : islossless A.run.
 
-lemma whp_split_if_end :  
+local lemma whp_split_if_end :  
   equiv[ M(A).whp ~ M(A).whp_if_end : ={glob A, i, MyP, s,r} /\ e{1} - 1 = e{2}
         ==> ={res,M.c} ].
 proof. proc.
@@ -661,29 +614,29 @@ qed.
 
 
 
-lemma whp_split_if_end' MyP  i s e r p P :  
+local lemma whp_split_if_end' MyP  i s e r p P :  
   (phoare [ M(A).whp_if_end : arg = (i,MyP,s,e,r) ==> P res ] = p)
    => phoare [ M(A).whp : arg = (i, MyP,s,e+1,r) ==> P res ] = p.
 proof. progress. bypr.
 progress.
-have <-: Pr[M(A).whp_if_end(i{m}, MyP{m}, s{m}, e{m}, r{m}) @ &m : P res] = p.
-byphoare (_: arg = (i{m}, MyP{m}, s{m}, e{m}, r{m}) ==> _).
+have <-: Pr[M(A).whp_if_end(i, MyP, s, e, r) @ &m : P res] = p.
+byphoare (_: arg = (i, MyP, s, e, r) ==> _).
 conseq H. auto. auto. byequiv.
 conseq whp_split_if_end. smt(). auto. auto. auto.
 qed.
 
 
-lemma lll (b a c : real) : a <= b => b <= c => a <= c.
+local lemma lll (b a c : real) : a <= b => b <= c => a <= c.
 smt(). qed.
 
     
-lemma whp_split_if_end_le MyP i s e r p P :  
+local lemma whp_split_if_end_le MyP i s e r p P :  
   (phoare [ M(A).whp_if_end : arg = (i,MyP,s,e,r) ==> P res ] <= p)
    => phoare [ M(A).whp : arg = (i,MyP,s,e+1,r) ==> P res ] <= p.
 proof. progress. bypr.
 progress.
-have zz : Pr[M(A).whp_if_end(i{m},MyP{m}, s{m}, e{m}, r{m}) @ &m : P res] <= p.
-byphoare (_: arg = (i{m},MyP{m},s{m}, e{m}, r{m}) ==> _).
+have zz : Pr[M(A).whp_if_end(i,MyP, s, e, r) @ &m : P res] <= p.
+byphoare (_: arg = (i,MyP,s, e, r) ==> _).
 conseq H. auto. auto. 
 apply (lll Pr[M(A).whp_if_end(i, MyP,s, e, r) @ &m : P res] ).
 byequiv.
@@ -691,7 +644,7 @@ conseq whp_split_if_end. smt(). auto. auto. auto. apply zz.
 qed.
 
 
-lemma whp_split_if_end_ge MyP i s e r p P :  
+local lemma whp_split_if_end_ge MyP i s e r p P :  
   (phoare [ M(A).whp_if_end : arg = (i,MyP,s,e,r) ==> P res ] >= p)
    => phoare [ M(A).whp : arg = (i,MyP,s,e+1,r) ==> P res ] >= p.
 proof. progress. bypr.
@@ -705,7 +658,7 @@ symmetry. conseq whp_split_if_end. smt(). auto. auto. auto.
 qed.
 
 
-lemma asdsad (p : real) ia r MyPa: 
+local lemma iter_eq (p : real) ia r MyPa: 
    (phoare[ A.run : arg = ia ==> !MyPa res ] = p) =>
   MyPa r = false => forall e, 0 <= e => 
   phoare[ M(A).whp_if_end : arg = (ia, MyPa, 1,e,r) ==> !MyPa res ] = (p ^ (e+1)).
@@ -739,7 +692,7 @@ rcondf 1. skip.  progress. smt().
 simplify. skip. auto. smt(@Real).
 qed.
 
-lemma asdsad_le (p : real) ia r MyPa:
+local lemma iter_le (p : real) ia r MyPa:
    (phoare[ A.run : arg = ia ==> !MyPa res ] <= p) =>
   MyPa r = false => forall e, 0 <= e =>
   phoare[ M(A).whp_if_end : arg = (ia, MyPa, 1,e,r) ==> !MyPa res ] <= (p ^ (e+1)).
@@ -773,7 +726,7 @@ rcondf 1. skip.  progress.  smt().
 simplify. skip. auto. smt(@Real).
 qed.
 
-lemma asdsad_ge (p : real) ia r MyPa:
+local lemma iter_ge (p : real) ia r MyPa:
    (phoare[ A.run : arg = ia ==> !MyPa res ] >= p) =>
   MyPa r = false => forall e, 0 <= e =>
   phoare[ M(A).whp_if_end : arg = (ia, MyPa, 1,e,r) ==> !MyPa res ] >= (p ^ (e+1)).
@@ -809,41 +762,35 @@ qed.
 
 
 
-
-lemma asdsadq (p : real) ia MyP r :  
+lemma iter_run_eq_ph (p : real) ia MyP r :  
    (phoare[ A.run : arg = ia ==> !MyP res ] = p) =>
   MyP r = false => forall e, 0 <= e =>
   phoare[ M(A).whp : arg = (ia,MyP,1,e+1,r) ==> !MyP res ] = (p ^ (e+1)).
 move => H1 H e ep.
 have fact1  : phoare[ M(A).whp_if_end : arg = (ia,MyP,1,e,r) ==> !MyP res ] = (p ^ (e+1)).
-apply (asdsad  p ia r  MyP H1 H e ep). auto.
+apply (iter_eq  p ia r  MyP H1 H e ep). auto.
 conseq (whp_split_if_end' MyP ia 1 e r (p^(e+1)) (fun x => !MyP x) fact1).
 qed.
 
-
-lemma asdsadq_le (p : real) ia MyP r:  
+lemma iter_run_le_ph (p : real) ia MyP r:  
    (phoare[ A.run : arg = ia ==> !MyP res ] <= p) =>
   MyP r = false => forall e, 0 <= e =>
   phoare[ M(A).whp : arg = (ia, MyP,1,e+1,r) ==> !MyP res ] <= (p ^ (e+1)).
 move => H1 H e ep.
 have fact1  : phoare[ M(A).whp_if_end : arg = (ia,MyP,1,e,r) ==> !MyP res ] <= (p ^ (e+1)).
-apply (asdsad_le   p  ia r MyP H1 H e ep). auto.
+apply (iter_le   p  ia r MyP H1 H e ep). auto.
 conseq (whp_split_if_end_le MyP ia 1 e r (p^(e+1))  (fun x => !MyP x) fact1).
 qed.
 
-
-
-lemma asdsadq_ge (p : real) ia MyP r:  
+lemma iter_run_ge_ph (p : real) ia MyP r:  
    (phoare[ A.run : arg = ia ==> !MyP res ] >= p) =>
   MyP r = false => forall e, 0 <= e =>
   phoare[ M(A).whp : arg = (ia, MyP,1,e+1,r) ==> !MyP res ] >= (p ^ (e+1)).
 move => H1 H e ep.
 have fact1  : phoare[ M(A).whp_if_end : arg = (ia,MyP,1,e,r) ==> !MyP res ] >= (p ^ (e+1)).
-apply (asdsad_ge   p  ia r MyP H1 H e ep). auto.
+apply (iter_ge   p  ia r MyP H1 H e ep). auto.
 conseq (whp_split_if_end_ge MyP ia 1 e r (p^(e+1))  (fun x => !MyP x) fact1).
 qed.
-
-
 
 end section.
 

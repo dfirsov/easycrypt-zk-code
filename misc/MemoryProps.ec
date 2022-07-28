@@ -10,8 +10,6 @@ clone import ReflComp with type at1 <- at1,
                            type rt1 <- unit,
                            type rt2 <- bool.
 
-
-
                            
 section.
 
@@ -202,7 +200,6 @@ section.
 
 declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
-
 
 local module A' = {
   var r : bool
