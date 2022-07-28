@@ -1,6 +1,6 @@
 
 
-(* this file imports all generic results regarding sigma protocols.  *)
+(* this imports all generic (Generic*.ec) theories. *)
 require GenericSpecialSoundness.
 clone include GenericSpecialSoundness. 
 

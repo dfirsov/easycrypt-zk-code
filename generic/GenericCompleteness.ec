@@ -21,6 +21,7 @@ module type HonestVerifier = {
 }.
 
 
+(* generic completeness game for one-run composed sigma protocol  *)
 module Completeness(P: HonestProver, V: HonestVerifier) = {
   proc run(s:statement, w:witness) = {
     var commit, challenge, response, accept;
@@ -32,7 +33,7 @@ module Completeness(P: HonestProver, V: HonestVerifier) = {
   }
 }.
 
-
+(* generic completeness game for sequentially composed sigma protocol  *)
 module CompletenessAmp(P: HonestProver, V: HonestVerifier) = { 
   proc run(stat:statement,wit:witness,N:int) = {
     var accept : bool;
@@ -47,8 +48,7 @@ module CompletenessAmp(P: HonestProver, V: HonestVerifier) = {
   } 
 }. 
 
-
-
+(* generic skeleton for honest verifiers which is parameterized by challenge_set and verify_transcript function  *)
 module HV : HonestVerifier = {
   var c : commitment
   var s : statement
@@ -71,6 +71,7 @@ theory CompletenessTheory.
 
   theory Statistical.
 
+    (* example of a statistical completeness statement  *)
     abstract theory Statement.
     op completeness_error : statement -> real.
     axiom completeness : exists (HP <: HonestProver) (HV  <: HonestVerifier),
@@ -92,7 +93,7 @@ theory CompletenessTheory.
     local clone import IterUntilSucc as WNBP with type rt <- bool,
                                                   type iat <- statement * witness.
 
-
+    (* statistical completeness for sequentially composed sigma protocol   *)
     lemma completeness_seq &m statement witness n deltoid:
         completeness_relation statement witness 
         => (forall &n, Pr[Completeness(P,V).run(statement,witness) @ &n : res]
@@ -136,13 +137,12 @@ theory CompletenessTheory.
     qed.  
     end section.
 
-
   end Statistical.
-
 
 
   theory Perfect.
 
+    (* example of a perfect completeness *)
     abstract theory Statement.
     axiom completeness  : exists (HP <: HonestProver) (HV  <: HonestVerifier),
       forall  statement witness &m,
@@ -151,9 +151,7 @@ theory CompletenessTheory.
               = 1%r.
     end Statement.
 
-
-
-
+    
     section.
     declare module P <: HonestProver{-HV}.
     declare module V <: HonestVerifier{-P}.
@@ -171,6 +169,7 @@ theory CompletenessTheory.
 
     local clone import Statistical as SC.
 
+    (* perfect completeness for sequentially composed sigma protocol   *)
     lemma completeness_seq &m statement witness n:
       completeness_relation statement witness
        => 1 <= n

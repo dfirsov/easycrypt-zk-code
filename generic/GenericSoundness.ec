@@ -5,7 +5,6 @@ require import WhileNoSuccess.
 require GenericCompleteness.
 clone include GenericCompleteness. (* inherit defs.  *)
 
-
 op soundness_relation : relation.
 
 module type MaliciousProver = {  
@@ -14,6 +13,7 @@ module type MaliciousProver = {
 }.
 
 
+(* generic soundness game for one-run of sigma protocol  *)
 module Soundness(P: MaliciousProver, 
                  V: HonestVerifier) = {
   proc run(statement: statement) : bool = {
@@ -26,6 +26,7 @@ module Soundness(P: MaliciousProver,
   }
 }.
 
+(* generic soundness game for sequentially composed sigma protocol  *)
 module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = { 
   proc run(stat:statement,N:int) = {
     var accept : bool;
@@ -42,10 +43,12 @@ module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = {
 
 abstract theory SoundnessTheory.
 
+
 abstract theory Statistical.
 
   op soundness_error : statement -> real.
 
+  (* example of a one-run soundness statement *)
   abstract theory Statement.
   section.
   declare axiom soundness: exists (HV <: HonestVerifier),
@@ -57,6 +60,7 @@ abstract theory Statistical.
   end section.
   end Statement.
 
+  
   section.
 
   declare module P <: MaliciousProver {-HV}.
@@ -69,11 +73,13 @@ abstract theory Statistical.
   local clone import IterUntilSucc as WNBP with type rt <- bool,
                                                 type iat <- statement.
 
+  (* premise of one-run soundness bound  *)
   declare axiom soundness &n statement:
       ! in_language soundness_relation statement =>
        Pr[Soundness(P,HV).run(statement) @ &n : res]
            <= soundness_error statement.
 
+  (* statistical soundness for sequentially composed sigma protocol  *)
   lemma soundness_seq &m statement n:
       ! in_language soundness_relation statement =>
        1 <= n =>
@@ -81,7 +87,8 @@ abstract theory Statistical.
          <= (soundness_error statement) ^ n.
   proof.
   move => nil nz.
-  have phs : phoare[ Soundness(P,HV).run : arg = statement ==> res ] <= (soundness_error statement).
+  have phs : phoare[ Soundness(P,HV).run : arg = statement ==> res ] 
+    <= (soundness_error statement).
   bypr. move => &m0 H. 
   rewrite H. simplify. apply soundness.  assumption.
   have ->: Pr[SoundnessAmp(P, HV).run(statement, n) @ &m : res]    
@@ -103,10 +110,8 @@ abstract theory Statistical.
   apply phs. auto. smt().
   auto. auto. 
   qed.
-
   end section.
 
 end Statistical.
-
 end SoundnessTheory.
 

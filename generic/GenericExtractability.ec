@@ -4,7 +4,7 @@ require import AllCore List Distr.
 require GenericZeroKnowledge.
 clone include GenericZeroKnowledge. (* inherit defs. *)
 
-
+(* malicious provers with rewindability interface   *)
 module type RewMaliciousProver = {
   proc commitment(s : statement) : commitment 
   proc response(challenge : challenge) : response 
@@ -20,7 +20,8 @@ module type Extractor(P: RewMaliciousProver) = {
 
 theory ExtractabilityTheory.
 
-(* TODO: Consider adding extractability statements (but require bulky rewindability defs)  *)
+(* Consider adding example of an extractability statement. However,
+this requires bulky rewindability premises...  *)
 
 section.
 
