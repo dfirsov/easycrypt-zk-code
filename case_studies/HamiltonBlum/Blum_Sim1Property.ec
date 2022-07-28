@@ -147,7 +147,6 @@ declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom D_run_ll : islossless D.guess.
 declare axiom V_summitup_ll2 : islossless V.summitup.
 declare axiom V_challenge_ll2 : islossless V.challenge.
-
 declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
   ==> ={res} ].
 
@@ -345,11 +344,11 @@ module Sim1_2(V : MaliciousVerifier) = {
 
 (* hiding props  *)
 op negl, negl2 : real.
-axiom negl_prop : 0%r <= negl.
-axiom negl2_prop : 0%r <= negl2 < 1%r/4%r.
+axiom negl_ge0 : 0%r <= negl.
+axiom negl2_ge0 : 0%r <= negl2 < 1%r/4%r.
 
 
-axiom sim_1_2 &m pa wa: 
+axiom comm_scheme_hiding1 &m pa wa: 
    `|Pr[ Sim1_1(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ]
       - Pr[ Sim1_2(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2 ]| 
    <= negl.
@@ -371,9 +370,8 @@ Instead: (success, result) is indist. between them (* Here: maybe not easiest *)
 
 *)
 
-
     
-axiom sim1ass &m pa :
+axiom comm_scheme_hiding2 &m pa :
   `|Pr[Sim1_0(V,D).simulate(pa) @ &m : res.`1] -  1%r/2%r| <= negl2. 
   (* 
 Using sim_1_2, but for Sim1, Sim1_9 (but discard rb if fails)
@@ -704,20 +702,20 @@ apply (ler_trans (2%r *
 apply main_fin.  split. rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
 rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
 rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
-smt (negl2_prop). 
+smt (negl2_ge0). 
 rewrite h. rewrite Pr[mu_sub]. auto. auto.
 apply pr_e1. 
 rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
-apply sim1ass.
+apply comm_scheme_hiding2.
 apply pr_e2. 
 rewrite Pr[mu_ge0]. auto. rewrite Pr[mu_le1]. auto.
-apply sim1ass.
+apply comm_scheme_hiding2.
 have ->: Pr[Sim1_9(V).simulate(pa, wa) @ &m : res.`2 /\ res.`1] =
  Pr[Sim1_2(V).simulate(pa,wa) @ &m : res.`1 /\ res.`2].
 byequiv (_: (pa,wa) = arg{1} /\ arg{1} = arg{2} 
  /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). 
 symmetry. conseq (sim_2_9 pa wa ishc). smt(). smt(). auto. auto.
-smt (sim_1_2).
+smt (comm_scheme_hiding1).
 qed.    
 
                                       
@@ -735,7 +733,8 @@ elim rewindable_V_plus.
 move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 exists*  (glob V){1}. elim*. progress.
 call {1} (s2 V_L). skip. progress.
-seq 3 3 : ((b{1} = b'{1}) = (b{2} = b'{2})). sim.
+seq 3 3 : ((b{1} = b'{1}) = (b{2} = b'{2})).
+call (_:true). call (_:true).
 inline*. wp. sp.
 seq 1 1 : (  p_a{2} = pa{2} /\
   g{2} = p_a{2} /\
@@ -814,7 +813,7 @@ rewrite (sim110 stat  witness &m).
 apply D_run_ll. auto.
 have f : `|Pr[Sim1_0(V, D).simulate(stat,  witness) @ &m : res.`1] - 1%r / 2%r|
  <= negl2. 
-apply sim1ass. smt().
+apply comm_scheme_hiding2. smt().
 qed.
 
 end section.

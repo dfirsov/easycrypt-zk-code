@@ -83,7 +83,7 @@ apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. apply D_guess_ll.
 apply D_guess_prop.
-smt(negl2_prop negl_prop N_pos @RealExp).
+smt(negl2_ge0 negl_ge0 N_pos @RealExp).
 progress.
 apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _ _  stat wit &n _).
 apply Sim1_run_ll.
