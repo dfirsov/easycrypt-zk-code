@@ -16,6 +16,9 @@
 	- `lemma whp_cap_fin_sum` - represention of finite "iterate-until-success" as a sum. 
  - [*WhileNoSuccess.ec*](WhileNoSuccess.ec)
 	- `theory IterUntilSuccDistr` - distribution sampling in the while-loop until success.
+	  	  - `lemmas iter_sample_eq, iter_sample_le, iter_sample_ge`
 	- `theory IterUntilSuccRew` - run a procedure in the while-loop until success, otherwise rewind.
+	  	  - `lemmas iter_run_rew_eq, iter_run_rew_le, iter_run_rew_ge`
 	- `theory IterUntilSucc` - assuming a probability bound which holds for all memories, run a procedure in the while-loop until success.
+	  	  - `lemmas iter_run_eq_ph, iter_run_le_ph, iter_run_ge_ph`
 
