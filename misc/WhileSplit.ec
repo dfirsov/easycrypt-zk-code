@@ -1,18 +1,17 @@
 pragma Goals:printall.
-require import Int.
+require import Int Real AllCore Distr FSet StdRing StdOrder StdBigop List.
+(*---*) import RField RealOrder Bigreal BRA.
 
 require import Aux.
 
 type rrt, irt, sbits, dt, de.
 
 op MyPred : rrt -> bool.
-
 op df : irt -> rrt -> de -> dt.
 
 module type Dist = {
   proc guess(r:dt) : bool
 }.
-
 
 module type Run = {
   proc run(i:irt) : rrt
@@ -23,20 +22,18 @@ op pair_sbits : sbits * sbits -> sbits.
 op unpair: sbits -> sbits * sbits.
 
 require import WhileNoSuccess.
-clone import IterIfNoSucc as IFB with 
+clone import IterUntilSuccRew as IFB with 
   type rrt <- rrt,
   type irt <- irt,
   type iat <- (rrt -> bool) * irt * int * int * rrt,
   type sbits <- sbits,
-  op  MyPred <- MyPred,
+  op MyPred <- MyPred,
   op pair_sbits <- pair_sbits,
   op unpair <- unpair.
 
-(* import IM. *)
-
 require PrIntervalToSum.
 clone import PrIntervalToSum as PIT with type rt <- bool * rrt,
-                                            type iat <- ((rrt -> bool) * irt * int * int * rrt)*de .
+                                         type iat <- ((rrt -> bool) * irt * int * int * rrt)*de .
 
 section.
 
@@ -45,7 +42,11 @@ declare module D <: Dist {-W, -DW}.
 
 declare axiom A_ll : islossless A.run.
 declare axiom A_rew_ph x : phoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] = 1%r.
-lemma A_rew_hoare x : hoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] .
+declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob A, arg} ==> ={res}  ].
+declare axiom D_ll : islossless D.guess.
+
+
+local lemma A_rew_hoare x : hoare[ A.run : (glob A) = x ==> !MyPred res => (glob A) = x ] .
 proof.  hoare. 
 bypr. progress.
 have  : 1%r = Pr[A.run(arg{m}) @ &m : true ].
@@ -57,10 +58,6 @@ byphoare (: (glob A) = (glob A){m} ==> _).
 proc*. call (A_rew_ph (glob A){m}).
 skip.  auto. auto. auto. smt().
 qed.
-
-declare axiom whp_axp : equiv[ D.guess ~ D.guess : ={glob A, arg} ==> ={res}  ].
-
-declare axiom D_ll : islossless D.guess.
 
 lemma if_whp_prop : 
   equiv [ W(A).whp ~ W(A).if_whp : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
@@ -83,7 +80,7 @@ qed.
 
 
 lemma whp_if_prop : 
-  equiv [ W(A).whp ~ W(A).whp_if : ={glob W, glob A, arg} ==>  ={glob W, glob A, res} ].
+  equiv [ W(A).whp ~ W(A).whp_if : ={glob W, glob A, arg} ==> ={glob W, glob A, res} ].
 proc.
 inline*. sp. 
 case (s{2} <= e{2}).
@@ -106,8 +103,6 @@ skip. progress.
 qed.
 
 
-
-
 lemma whp_split_prop : 
   equiv [ W(A).whp ~ W(A).whp_split : m{2} <= e{2}  /\ ={glob W, glob A, p, i, s, e, r}
         ==>  ={glob W, glob A, res} ].
@@ -127,7 +122,6 @@ skip. progress.
 qed.
 
 
-
 module W0(A : Run, D : Dist) = {
   proc run(a : irt,w:de) = {
       var r, b;
@@ -136,6 +130,7 @@ module W0(A : Run, D : Dist) = {
       return (b, r);
   }
 }.
+
 
 module W1(A : Run, D : Dist) = {
   module M = W(A)
@@ -158,6 +153,7 @@ local module W2 = {
   }
 }.
 
+
 local module W3 = {
   module M = W(A)
   proc run(a : (rrt -> bool) * irt * int * int * rrt,w:de ) = {
@@ -167,9 +163,6 @@ local module W3 = {
       return (b, r);
   }
 }.
-
-
-
 
 
 local module W3' = {
@@ -189,24 +182,6 @@ local module W3' = {
 }.
 
 
-local lemma w3w3' : equiv[ W3.run ~ W3'.run : ={arg, glob A, glob W} ==> ={res, glob W} ].
-proof. proc.
-inline W3.M.whp_if. sp.  elim*. progress.
-seq 1 1 : ( ={w,a,ri, glob A, glob W} /\ p{1} = a.`1{2} /\ e{1} = a.`4{2} /\ i{1} = a.`2{2} ). 
-inline*. sp. 
-wp. 
-while (={a,  w, glob A, glob W} /\ p{1} = a{2}.`1 /\ i{1} = a.`2{2} /\  i0{1} = i{2} /\ e0{1} = e{2} /\ p0{1} = p{2} /\ r1{1} = r0{2} /\ e{1} = a.`4{2}).
-wp.  call (_:true). skip. progress. skip. progress.
-
-if. smt().
-inline*. wp.  sp.  call whp_axp. wp.  call (_:true). skip. progress. 
-call whp_axp. wp.  skip. progress. 
-qed.
-
-
-
-
-
 local module W4 = {
   module M = W(A)
   proc run(a : (rrt -> bool) * irt * int * int * rrt,w:de ) = {
@@ -217,7 +192,31 @@ local module W4 = {
   }
 }.
 
-local lemma whp_premat_1_eq  pa ia sa ea ra ja : sa <= ja => ja <= ea + 1 =>
+
+local module CAW = {
+  proc run(a : (rrt -> bool) * irt * int * int * rrt,w:de) = {
+    var r;
+    r <@ W1(A,D).run(a,w);
+    return r;
+  }
+}.
+
+
+local lemma w3w3' : equiv[ W3.run ~ W3'.run : ={arg, glob A, glob W} ==> ={res, glob W} ].
+proof. proc.
+inline W3.M.whp_if. sp.  elim*. progress.
+seq 1 1 : ( ={w,a,ri, glob A, glob W} /\ p{1} = a.`1{2} /\ e{1} = a.`4{2} /\ i{1} = a.`2{2} ). 
+inline*. sp. 
+wp. 
+while (={a,  w, glob A, glob W} /\ p{1} = a{2}.`1 /\ i{1} = a.`2{2} /\  i0{1} = i{2} /\ e0{1} = e{2} /\ p0{1} = p{2} /\ r1{1} = r0{2} /\ e{1} = a.`4{2}).
+wp.  call (_:true). skip. progress. skip. progress.
+if. smt().
+inline*. wp.  sp.  call whp_axp. wp.  call (_:true). skip. progress. 
+call whp_axp. wp.  skip. progress. 
+qed.
+
+
+local lemma whp_premat_1_eq  pa ia (sa : int) ea ra ja : sa <= ja => ja <= ea + 1 =>
   equiv [ W(A).whp ~  W(A).whp_split : arg{1} = (pa,ia,sa,ja-1,ra) 
   /\ arg{2} = (pa,ia,sa,ja-1,ea,ra) /\  ={glob A} ==>   (((W.c = ja /\ pa res){1} /\ (W.c = ja /\ pa res){2} => ={res, glob A})    /\ (W.c = ja /\ pa res){1}  <=> (W.c = ja /\ pa res){2} )  ].
 proof. move => hp ph.
@@ -244,9 +243,7 @@ rcondf {2} 1. progress. skip. smt().
 qed.
 
 
-
-
-local lemma whp_premat_1 &m pa ia sa ea ra ja wa : sa <= ja => ja <= ea + 1 =>
+local lemma whp_premat_1 &m pa ia (sa : int) ea ra ja wa : sa <= ja => ja <= ea + 1 =>
   Pr[ W1(A,D).run((pa,ia,sa,ja-1,ra),wa) @ &m : W.c = ja /\ pa res.`2 /\ res.`1 ]
    =   Pr[ W2.run((pa,ia,sa,ja-1,ea,ra),wa) @ &m : W.c = ja /\ pa res.`2 /\  res.`1 ].
 proof. move => hp ph.
@@ -263,7 +260,7 @@ skip. smt(). auto.  auto.
 qed.
 
 
-local lemma whp_cap &m p i s ea r ja wa :  s <= ja => ja <= ea + 1 =>
+local lemma whp_cap &m p i (s : int) ea r ja wa :  s <= ja => ja <= ea + 1 =>
    Pr[ W1(A,D).run((p,i,s,ea,r),wa) @ &m : W.c = ja /\ p res.`2 /\ res.`1 ]  
    = Pr[ W1(A,D).run((p,i,s,ja-1,r),wa) @ &m : W.c = ja /\ p res.`2 /\ res.`1 ].
 proof.
@@ -286,13 +283,12 @@ auto.
 qed.
 
 
-require import Real.
-
 local lemma jjj ia wa &m : 
    phoare[ W0(A, D).run : arg = (ia,wa) /\ (glob A) = (glob A){m} ==> MyPred res.`2 /\ res.`1 ] =  Pr[W0(A, D).run(ia, wa) @ &m : MyPred res.`2 /\ res.`1] . 
 bypr. progress. rewrite H. simplify. byequiv (_: ={glob A, arg} ==> _).
 proc. call whp_axp. call (_:true). skip. progress. auto. auto.
 qed.
+
 
 local lemma whp_cap_fin &m ia (ea : int) r ja wa  :
   2  <= ja     =>
@@ -342,19 +338,6 @@ rcondf 1. skip. progress. smt().
 hoare.  call (_:true).  wp.  skip. progress. smt().
 qed.
 
-require import AllCore Distr FSet StdRing StdOrder StdBigop List.
-(*---*) import RField RealOrder Bigreal BRA.
-
-
-
-
-local module CAW = {
-  proc run(a : (rrt -> bool) * irt * int * int * rrt,w:de) = {
-    var r;
-    r <@ W1(A,D).run(a,w);
-    return r;
-  }
-}.
 
 
 local lemma whp_cap_fin_int_sum_D &m ia pa M (ea : int) ra wa :

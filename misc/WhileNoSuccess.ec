@@ -239,9 +239,7 @@ end IterUntilSuccDistr.
 
 
 
-
-
-theory IterIfNoSucc.
+theory IterUntilSuccRew.
 
 type sbits, iat, rrt, irt.
 
@@ -597,7 +595,7 @@ qed.
 
 end section.
 
-end IterIfNoSucc.
+end IterUntilSuccRew.
 
 
 theory IterUntilSucc.

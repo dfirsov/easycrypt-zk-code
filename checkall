@@ -18,8 +18,8 @@ check() {
 
 check misc/ExtractabilityEquations.ec
 check misc/Sim1Equations.ec
-check misc/while_props/WhileAsSum.ec
-check misc/while_props/WhileNoSuccess.ec
+check misc/WhileSplit.ec
+check misc/WhileNoSuccess.ec
 
 
 ## Generic sigma protocol defs/results

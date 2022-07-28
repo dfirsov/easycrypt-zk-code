@@ -16,8 +16,8 @@ op unpair: sbits -> sbits * sbits.
 
 
 
-require WhileAsSum.
-clone import WhileAsSum as MW with type irt    <- prob,
+require WhileSplit.
+clone import WhileSplit as MW with type irt    <- prob,
                                    type rrt   <- event * sbits,
                                    type sbits <- sbits,
                                    type dt <- prob * wit * sbits,

@@ -11,5 +11,11 @@
  	- `lemma extraction_success_prob` - *raw* equation which establishes the lower-bound on success of extraction. 
  - [*Sim1Equations.ec*](Sim1Equations.ec)
  	- `lemma one_to_many_zk` - *raw* equation associated with iteration of a "one-shot simulator".
- - [*while_props*](while_props/) - iteration and decomposition properties of `while`-cycles.
+ - [*WhileSplit.ec*](WhileSplit.ec)
+	- `lemmas if_whp_prop, whp_if_prop, whp_split_prop` - while cycle decomposition.
+	- `lemma whp_cap_fin_sum` - represention of finite "iterate-until-success" as a sum. 
+ - [*WhileNoSuccess.ec*](WhileNoSuccess.ec)
+	- `theory IterUntilSuccDistr` - distribution sampling in the while-loop until success.
+	- `theory IterUntilSuccRew` - run a procedure in the while-loop until success, otherwise rewind.
+	- `theory IterUntilSucc` - assuming a probability bound which holds for all memories, run a procedure in the while-loop until success.
 
