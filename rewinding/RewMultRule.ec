@@ -6,7 +6,7 @@ type ex1at, ex2at, ex1rt, ex2rt.
 
 module type RewEx1Ex2 = {
   proc getState() : sbits
-  proc * setState(b : sbits) : unit 
+  proc setState(b : sbits) : unit 
   proc ex1(x1 : ex1at) : ex1rt
   proc ex2(x2 : ex2at) : ex2rt
 }.

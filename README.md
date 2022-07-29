@@ -14,7 +14,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
 - *[MANUAL.md](MANUAL.md)* - brief description of structure of the generic development.
 
 ## Setup
-* For this project we used the version of EasyCrypt (1.0) theorem prover with GIT hash: r2022.04-23-gb44893a5.
+* For this project we used the version of EasyCrypt (1.0) theorem prover with GIT hash: r2022.04-48-gc8d3d6c1.
 * EasyCrypt was configured with support from the following SMT solvers: Why3@1.5.0, Z3@4.8.7, CVC4@1.6, Alt-Ergo@2.4.1.
 * To check the development run:
 
@@ -29,7 +29,8 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
           "DEVELOPMENT_PATH/misc"
           "DEVELOPMENT_PATH/generic")))
 
-  
+
+* **The development of EasyCrypt and its standard library is very active. As a result, to setup this development we strongly suggest to use the indicated versions of the EasyCrypt and SMT solvers. As there were some breaking changes the current development is guaranteed not to load with older versions of EasyCrypt.**
 
 
 

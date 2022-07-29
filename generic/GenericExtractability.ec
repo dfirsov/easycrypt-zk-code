@@ -9,7 +9,7 @@ module type RewMaliciousProver = {
   proc commitment(s : statement) : commitment 
   proc response(challenge : challenge) : response 
   proc getState() : sbits
-  proc * setState(b : sbits) : unit 
+  proc setState(b : sbits) : unit 
 }.
 
 

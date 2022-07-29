@@ -265,7 +265,7 @@ module type Adv = {
   proc init(p : pt, aux : auxt) : irt
   proc run(i : irt, c : ct)  : rt
   proc getState() : sbits
-  proc * setState(b : sbits) : unit
+  proc setState(b : sbits) : unit
 }.
 
 

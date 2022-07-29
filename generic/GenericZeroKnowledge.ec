@@ -24,7 +24,7 @@ module type RewMaliciousVerifier = {
   proc challenge(_:statement * commitment) : challenge
   proc summitup(statement: statement, response: response): summary
   proc getState() : sbits
-  proc * setState(b : sbits) : unit 
+  proc setState(b : sbits) : unit 
 }.
 
 module type MaliciousVerifier = {
@@ -37,7 +37,7 @@ module type ZKDistinguisher = {
 }.
 
 module type Simulator(V: RewMaliciousVerifier) = {
-  proc * simulate(statement: statement) : summary
+  proc simulate(statement: statement) : summary
 }.
 
 module type Simulator1(V: RewMaliciousVerifier) = {
@@ -596,16 +596,16 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   byequiv. proc. 
   inline Amem.run1. inline Amem.init.
   wp.  seq 7 9 : (={glob V} /\ (s,w){1} = (s,w){2} /\ summary{1} = summary{2} ).  sp. wp. 
-  seq 4 4 : (={glob HybOrcl, glob V, glob P} /\ (s,w){1} = (s0,w0){2} /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
+  seq 4 4 : (={glob HybOrcl, glob V, glob Sim, glob P} /\ (s,w){1} = (s0,w0){2} /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
   while (={glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s0,w0){2}
    /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
   wp.  call (_:true). call (_:true). call (_:true).  call (_:true).
-  skip. progress. wp.  rnd. skip. progress.   smt(). 
+  skip. progress. wp.  rnd. skip. progress.   smt().  smt().
   sp.
-  seq 2 2 : (={glob P, glob V,  glob HybOrcl, summary, s, w}).
+  seq 2 2 : (={glob P, glob V,  glob Sim, glob HybOrcl, summary, s, w}).
   wp.  call (_: ={glob V}). sim. sim. sim. sim.
   skip. progress.         
-  while (={glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s,w){2}
+  while (={glob Sim,glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s,w){2}
    /\ summary{1} = summary{2}) . wp. 
   call (_: ={glob V}).  sim. sim. sim. sim.
   skip. progress. 
@@ -622,7 +622,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   while (={glob V, glob P, glob HybOrcl} /\ (s,w){1} = (s0,w0){2}
    /\ summary{1} = summary0{2} /\ (s,w){1} = i2{2}).
   wp.  call (_:true). call (_:true). call (_:true).  call (_:true).
-  skip. progress. wp.  rnd. wp. skip. progress. smt(). 
+  skip. progress. wp.  rnd. wp. skip. progress. smt().  smt().
   call D_guess_prop. skip. auto.
   auto. auto.
   case (`|Pr[MemoryProps.P(Amem).main1((ss,ww), (ss,ww)) @ &m : res] -
@@ -649,14 +649,14 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   byequiv. proc.         
   inline Dstar.guess. wp.
   seq 3 6: (={glob V,s,w} /\ summary{1} = summary0{2} /\  HybOrcl.l{1} =  HybOrcl.l{2}). sim. 
-  progress. smt(). 
+  progress. smt(). smt().
   call D_guess_prop. skip. auto.
   auto.  auto. 
   have -> : Pr[Amem.run2((ss, ww)) @ &n : res] = Pr[ZKReal(P, V, Dstar).run(ss, ww) @ &n : res].
   byequiv. proc.         
   inline Dstar.guess. wp.
   seq 6 9: (={glob V,s,w} /\ summary{1} = summary0{2} /\ HybOrcl.l{1} = HybOrcl.l{2}). sim. 
-  progress. smt(). 
+  progress. smt(). smt().
   call D_guess_prop. skip. progress.
   auto.  auto. 
   apply (zk_ass  &n). smt(). 

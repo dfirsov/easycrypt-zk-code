@@ -12,7 +12,7 @@ axiom unpair_pair x : unpair (pair_sbits x) = x.
 
 module type Rew = {
   proc getState() : sbits
-  proc * setState(b : sbits) : unit
+  proc setState(b : sbits) : unit
 }.
 
 
@@ -23,7 +23,7 @@ module type Initializer = {
 
 module type RewRun = {
   proc getState() : sbits
-  proc * setState(b : sbits) : unit 
+  proc setState(b : sbits) : unit 
   proc run(z : iat2) : rrt
 }.
 
