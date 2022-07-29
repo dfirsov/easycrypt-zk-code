@@ -16,8 +16,7 @@ section.
 local lemma nosmt le3 ['a] : forall (d : 'a distr),  
    mu d predT = sum (fun (x : 'a) =>  mass d x).
 proof.  progress. 
-
-rewrite muE. smt.
+rewrite muE. rewrite /predT. simplify. smt(massE).
 qed.
 
 local lemma nosmt le4 ['a] :  forall (d : 'a distr),  
@@ -25,14 +24,14 @@ local lemma nosmt le4 ['a] :  forall (d : 'a distr),
 proof. progress.
 exists 1%r. move => J ju. 
 have  : isdistr (mass d). 
-  have ->: (mass d) = mu1 d. smt.
+  have ->: (mass d) = mu1 d. smt(massE).
   apply isdistr_mu1. 
 case.
 move => id1 id2.
 have e :  (fun (i : 'a) => `|mass d i|)
       = (fun (i : 'a) =>  mass d i).
 apply fun_ext. move => i. 
-smt.
+smt().
 rewrite e. 
 apply (id2 J).
 apply ju.
@@ -53,11 +52,11 @@ local lemma nosmt le6 ['a] : forall (d : 'a distr),
   mu d predT = lim (fun (n : int) => big predT (mass d) (pmap J (range 0 n))).
 proof. progress. elim (le5 d). progress. 
 exists J. progress.  rewrite - (sumE (mass d) J). apply H. apply le4. 
-  have ->: (mass d) = mu1 d. smt.
-rewrite le3.  smt.
+  have ->: (mass d) = mu1 d. smt(massE).
+rewrite le3.  smt(massE).
 qed.
 
-
+search mu.
 local lemma le7_convto ['a] : forall (d : 'a distr), 
   exists (J : int -> 'a option),
   enumerate J (support (mass d)) /\
@@ -70,7 +69,7 @@ pose brr := (fun (l : real) => (RealSeq.convergeto br l)).
 case (exists (x : real), brr x).
 move => eb.
 have opp : RealSeq.convergeto br (lim br).
-smt.
+smt(@RealSeq).
 move => epsilon H1.
 have ik : exists (N : int), forall (n : int), N <= n => `|br n - (lim br)| < epsilon.
 apply (opp epsilon H1).
@@ -84,33 +83,35 @@ have ikk : forall (n : int), N <= n => lim br - br n < epsilon.
 rewrite ikkk.
 move => n np. rewrite (akk n).
 have jkl : forall (d : 'a distr)  l ,  uniq l => big predT (mass d) l = mu d (mem l).
-move => d0. apply list_ind. simplify.  simplify big. smt.
+move => d0. apply list_ind. simplify.  simplify big.
+have ->: mem [] = (fun (x : 'a) => false). smt().
+rewrite mu0. auto.
 move => x l. simplify.
 move => ih ihp. 
 have e : mem (x :: l) = fun z => (z = x) \/ mem l z.
-smt.
+smt().
 rewrite e.
 rewrite (mu_disjoint d0 (pred1 x) (fun z => mem l z)).
 move => p.
 elim. move => p1 p2.
-smt.
+smt().
 elim ihp. move => p1 p2.
 rewrite - (ih p2).
-have o : mu d0 (transpose (=) x) = mu1 d0 x . smt.
+have o : mu d0 (transpose (=) x) = mu1 d0 x. smt().
 rewrite o. clear o.
-have o : mu1 d0 x = mass d0 x . smt.
+have o : mu1 d0 x = mass d0 x . smt(massE).
 rewrite o. clear o.
-smt.
+smt().
 have get : big predT (mass d) (pmap J (range 0 n)) <= mu d predT.
-rewrite (jkl d). smt. smt.
+rewrite (jkl d). smt(@List). smt(@Distr).
 have ee : mu d predT - big predT (mass d) (pmap J (range 0 n))
  = `|mu d predT - big predT (mass d) (pmap J (range 0 n))|.
-smt.
+smt().
 rewrite ee. clear ee.
 have el : 
  `|mu d predT - big predT (mass d) (pmap J (range 0 n))| 
  =  `|big predT (mass d) (pmap J (range 0 n)) - mu d predT|.
-smt. rewrite el.
+smt(). rewrite el.
 rewrite - ikkk.
  clear el. apply (Np n). apply np.
 have kka : forall n, big predT (mass d) (pmap J (range 0 n)) 
@@ -121,21 +122,21 @@ have jj : (fun (x : 'a) => mass d x)
 apply fun_ext. move => x. simplify. 
 simplify. auto. 
 have ooz : uniq ((pmap J (range 0 n))).
-smt.
+smt(@List).
 rewrite (mu_mem_uniq d (pmap J (range 0 n)) ooz).
-smt.
+smt(massE).
 have ak : forall (n : int), N <= n => mu d predT - (mu d (mem (pmap J (range 0 n)))) < epsilon.
-timeout 20. smt.
+smt().
 have ykk : forall (n : int), N <= n =>  mu d predT - mu d (mem (pmap J (range 0 n)))  < epsilon.
 move => n p.  apply (ak n p).
 exists N.
 have oli : forall n,  mu d (predC (mem (pmap J (range 0 n)))) = mu d predT - mu d (mem (pmap J (range 0 n))).
-smt.
+smt(@Distr).
 move => n Nn.
 rewrite oli.
-simplify. smt.
+simplify. smt().
 move => sb.
-have sb' : (forall (x : real), ! brr x). smt.
+have sb' : (forall (x : real), ! brr x). smt().
 have f1 : mu d predT = 0%r.
 rewrite H0.
 simplify lim.
@@ -143,8 +144,8 @@ rewrite choiceb_dfl.
 apply sb'.
 auto. move => epsilon ep.
 exists 0. 
-have okl : pmap J (range 0 0) = []. smt.
-move => n n0. simplify. smt. 
+have okl : pmap J (range 0 0) = []. smt(@List).
+move => n n0. simplify. smt(@Distr). 
 qed.
 
 
@@ -161,7 +162,7 @@ pose brr := (fun (l : real) => (RealSeq.convergeto br l)).
 case (exists (x : real), brr x).
 move => eb.
 have opp : RealSeq.convergeto br (lim br).
-smt.
+smt(@RealSeq).
 have ik : exists (N : int), forall (n : int), N <= n => `|br n - (lim br)| < epsilon.
 apply (opp epsilon H1).
 elim ik.
@@ -174,33 +175,33 @@ have ikk : forall (n : int), N <= n => lim br - br n < epsilon.
 rewrite ikkk.
 move => n np. rewrite (akk n).
 have jkl : forall (d : 'a distr)  l ,  uniq l => big predT (mass d) l = mu d (mem l).
-move => d0. apply list_ind. simplify.  simplify big. smt.
+move => d0. apply list_ind. simplify.  simplify big. rewrite mu0. auto.
 move => x l. simplify.
 move => ih ihp. 
 have e : mem (x :: l) = fun z => (z = x) \/ mem l z.
-smt.
+smt().
 rewrite e.
 rewrite (mu_disjoint d0 (pred1 x) (fun z => mem l z)).
 move => p.
 elim. move => p1 p2.
-smt.
+smt().
 elim ihp. move => p1 p2.
 rewrite - (ih p2).
-have o : mu d0 (transpose (=) x) = mu1 d0 x . smt.
+have o : mu d0 (transpose (=) x) = mu1 d0 x. smt (massE).
 rewrite o. clear o.
-have o : mu1 d0 x = mass d0 x . smt.
+have o : mu1 d0 x = mass d0 x. smt(massE).
 rewrite o. clear o.
-smt.
+smt().
 have get : big predT (mass d) (pmap J (range 0 n)) <= mu d predT.
-rewrite (jkl d). smt. smt.
+rewrite (jkl d). smt(@List). smt(@Distr).
 have ee : mu d predT - big predT (mass d) (pmap J (range 0 n))
  = `|mu d predT - big predT (mass d) (pmap J (range 0 n))|.
-smt.
+smt().
 rewrite ee. clear ee.
 have el : 
  `|mu d predT - big predT (mass d) (pmap J (range 0 n))| 
  =  `|big predT (mass d) (pmap J (range 0 n)) - mu d predT|.
-smt. rewrite el.
+smt(). rewrite el.
 rewrite - ikkk.
  clear el. apply (Np n). apply np.
 have kka : forall n, big predT (mass d) (pmap J (range 0 n)) 
@@ -211,23 +212,23 @@ have jj : (fun (x : 'a) => mass d x)
 apply fun_ext. move => x. simplify. 
 simplify. auto. 
 have ooz : uniq ((pmap J (range 0 n))).
-smt.
+smt(@List).
 rewrite (mu_mem_uniq d (pmap J (range 0 n)) ooz).
-smt.
+smt(massE).
 have ak : forall (n : int), N <= n => 
   mu d predT - (mu d (mem (pmap J (range 0 n)))) < epsilon.
-timeout 20. smt.
+smt().
 have ykk : forall (n : int), N <= n => 
  mu d predT - mu d (mem (pmap J (range 0 n))) < epsilon.
 move => n p.  apply (ak n p).
 exists N.
 have oli : forall n, mu d (predC (mem (pmap J (range 0 n)))) 
-                   = mu d predT - mu d (mem (pmap J (range 0 n))). smt.
+                   = mu d predT - mu d (mem (pmap J (range 0 n))). smt(@Distr).
 rewrite oli.
 apply ykk.
 progress.
 move => sb.
-have sb' : (forall (x : real), ! brr x). smt.
+have sb' : (forall (x : real), ! brr x). smt().
 have f1 : mu d predT = 0%r.
 rewrite H0.
 simplify lim.
@@ -235,10 +236,10 @@ rewrite choiceb_dfl.
 apply sb'.
 auto.
 exists 0. 
-have okl : pmap J (range 0 0) = []. smt.
+have okl : pmap J (range 0 0) = []. smt(@List).
 rewrite okl.
 simplify. rewrite f1.
-smt.
+smt().
 qed.
 
 
@@ -253,8 +254,8 @@ exists J. split.
 have : support (mass d) = support d.
 apply fun_ext. move => x. simplify support.
 simplify RealSeries.support.
-have : mass d x >= 0%r. smt.
-move => prr. smt.
+have : mass d x >= 0%r. smt(@Distr).
+move => prr. smt(@Distr).
 move => q. rewrite - q. apply H.
 progress.
 qed.
@@ -282,8 +283,8 @@ exists J. split.
 have : support (mass d) = support d.
 apply fun_ext. move => x. simplify support.
 simplify RealSeries.support.
-have : mass d x >= 0%r. smt.
-move => prr. smt.
+have : mass d x >= 0%r. smt(@Distr).
+move => prr. smt(@Distr).
 move => q. rewrite - q. apply H.
 progress.
 qed.
@@ -344,7 +345,7 @@ have <-:  mu (D (glob A){m} a) (predC (mem (pmap J (range 0 n))))
              = Pr[A.main(a) @ &m : (predC (mem (pmap J (range 0 n)))) (res, (glob A)) ].
    rewrite Pr[mu_eq].  move => &hr.
       pose x := (res{hr}, (glob A){hr}).
-      smt. auto.
+      smt(). auto.
 simplify. apply H.
 apply H2.
 auto.
@@ -410,7 +411,7 @@ have <-:  mu (D (glob A){m} a) (predC (mem (pmap J (range 0 n))))
            = Pr[A.main(a) @ &m : (predC (mem (pmap J (range 0 n)))) res ].
    rewrite Pr[mu_eq].  move => &hr.
       pose x := (res{hr}).
-      smt. auto.
+      smt(). auto.
 simplify.  apply H.
 apply H2.
 auto.

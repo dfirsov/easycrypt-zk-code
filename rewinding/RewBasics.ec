@@ -143,7 +143,7 @@ rewrite ll1.
 have ll3 : forall &m, ((glob A){m} = x)  => Pr[A.getState() @ &m : (glob A) = x /\ res = fA x] = 1%r.
 move => &m eq. byphoare (_: (glob A) = (glob A){m} ==> _) .
 proc*. call (s2 x). auto. auto. auto.
-smt.  
+smt().  
 bypr. progress. apply ll1.
 bypr. rewrite Pr[mu_not]. 
 move => &m e. rewrite (ll2 &m x). auto.
@@ -270,7 +270,7 @@ call ph.
 call (s2 ga). skip.  auto.
 call (s3 ga). skip. auto.
 hoare.
-call (_:true). skip. progress. smt.
+call (_:true). skip. progress. smt().
 auto. 
 qed.
 
@@ -289,7 +289,7 @@ call ph.
 call (s2 ga). skip. auto.
 call (s3 ga). skip. auto.
 hoare.
-call (_:true). skip. progress.  smt.
+call (_:true). skip. progress. smt().
 qed.
 
     
@@ -313,7 +313,7 @@ auto.
 skip.   auto.
 hoare.
 call (_:true).
-auto. smt.
+auto. smt().
 auto.
 auto.
 auto.

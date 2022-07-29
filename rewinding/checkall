@@ -16,26 +16,14 @@ check() {
 
 # list of files to check
 check RandomFacts.ec
-check GuessGame.ec
 check FiniteApproximation.ec
 check Averaging.ec
 check JensensInf.ec
-check JensensSquare.ec
 check SquareConvex.ec
 check Reflection.ec
 check ReflectionComp.ec
 check RewBasics.ec
-check RewTrivial.ec
-check RewTransformations.ec
-check RewCommutes.ec
-check RewCommutesSimple.ec
 check RewMultRule.ec
-check RewSumBindingAux.ec
-check RewSumBindingGeneric.ec
-check RewSumBindingCommitment.ec
 check RewWithInit.ec
-check RewWithInitAlt.ec
-check CoinToss.ec
-
 
 echo "DONE";
