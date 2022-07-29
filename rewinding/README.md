@@ -1,4 +1,4 @@
-# Rewinding and reflection library.
+# Rewinding and Reflection Library
 
 This folder contains results associated with rewindability of
 adversaries and reflection of probabilistic programs as distributions.
