@@ -30,7 +30,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
           "DEVELOPMENT_PATH/generic")))
 
 
-* **The development of EasyCrypt and its standard library is very active. As a result, to setup this development we strongly suggest to use the indicated versions of the EasyCrypt and SMT solvers. As there were some breaking changes the current development is guaranteed not to load with older versions of EasyCrypt.**
+* **The development of EasyCrypt and its standard library is very active. As a result, to load this development we strongly suggest to use the indicated versions of the EasyCrypt, its standard library, and SMT solvers. As there were some breaking changes the current development is guaranteed not to load with older versions of EasyCrypt.**
 
 
 
