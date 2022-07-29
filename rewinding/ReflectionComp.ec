@@ -150,7 +150,7 @@ local lemma dlet1lem' &m : forall d i1 i2 q M,
   Pr[ Q.main_distr_face(d, q,i1,i2) @ &m : M res ] 
 = Pr[WorkAvg(Q).main(d i1,i2) @ &m : M res.`1 ].
 proof. move => d i1 i2 q M e. byequiv.
-proc.  inline*. wp. rnd. wp. rnd. wp. skip. progress. smt. smt. smt. smt.
+proc.  inline*. wp. rnd. wp. rnd. wp. skip. progress. smt(). smt(). smt(). smt().
 qed.
 
 
@@ -172,11 +172,11 @@ local lemma rewindable_A_nr1 :
         ==> (glob A){1} = res{2}.`2 /\ res{1} = res{2}.`1 ].
 elim rewindable_A_pp.
 progress. exists D Q. progress. 
-bypr (res,glob A){1} (res){2}. smt. 
+bypr (res,glob A){1} (res){2}. smt(). 
 move => &1 &2. move => a p1. 
 rewrite - (H (fun (x : rt1 * (glob A) ) => x = a)). 
 byphoare (_: arg = D x1{1} (glob A){1} ==> _).
-proc. rnd.  skip. progress. smt. auto. 
+proc. rnd.  skip. progress. smt(). auto. 
 qed.
 
 
@@ -194,8 +194,8 @@ elim rewindable_A_nr1.
 progress. exists D Q. progress.
 proc*. inline Q.egs. wp. sp.
 seq 1 1 : ((r,glob A){1} = sb{2} ).
-call H1. skip. auto.   smt.
-conseq (_: exists ga, (ga) = sb{2} /\ (r,glob A){1} = sb{2}  ==> _). smt.
+call H1. skip. auto.   smt().
+conseq (_: exists ga, (ga) = sb{2} /\ (r,glob A){1} = sb{2}  ==> _). smt().
 elim*. move => ga. skip. 
 progress.
 qed. 
@@ -215,11 +215,11 @@ local lemma rewindable_A_nr4 :
         ==> res{1} = res{2}.`1 /\ (res,glob A){1} = res{2} ].
 elim rewindable_A_nr2.
 progress. exists D Q. progress.
-bypr (res{1}, (glob A){1}) (res{2}). smt.
+bypr (res{1}, (glob A){1}) (res{2}). smt().
 move => &1 &2 a pr.
 rewrite - (H0 (fun r x => x = a)). 
 byphoare (_: arg = d{2} ==> _) . proc.
-rnd. skip. smt. auto. auto.
+rnd. skip. smt(). auto. auto.
 qed.
 
 
@@ -295,8 +295,8 @@ transitivity Q.main_distr
     res{1} = (res{2}.`1, res{2}.`2.`1) /\ (glob A){1} = res{2}.`2.`2) 
   (={d, q,i1,i2} ==> ={res}).  
 move => &1 &2 p.  exists (glob A){1}. exists ((fun x => D x (glob A){2}), Q, arg{1}.`1, arg{1}.`2, witness). progress. 
-smt. smt. smt. smt. smt. auto. conseq H4.
-progress. smt. smt. conseq H5. auto. 
+smt(). smt(). smt(). smt(). smt(). auto. conseq H4.
+progress. smt(). smt(). conseq H5. auto. 
 qed.
 
 local lemma rewindable_A_nr8 : 
@@ -326,7 +326,7 @@ local lemma rewindable_A_nr8 :
 proof. elim rewindable_A_nr7.
 progress. exists D Q. progress.
 byequiv (_: ={glob A,i1,i2}  /\ (fun x => D x (glob A){2}) = d{2} /\ Q = q{2} ==> _). 
-conseq H6. progress. progress. auto. smt. smt. progress. progress. auto. smt. smt. smt. smt.
+conseq H6. progress. progress. auto. smt(). smt(). progress. progress. auto. smt(). smt(). smt(). smt().
 qed.
 
 
@@ -433,7 +433,7 @@ local lemma rewindable_A_nr11 :
     = mu (dlet (D i1 (glob A){m}) (fun a => dmap (Q i2 a) (fun x => (a.`1, x)))) M.  
 proof. elim rewindable_A_nr10.
 progress. exists D  (fun x2 (r1g : rt1 * glob A) => Q (x2 , r1g.`1) r1g.`2). split. auto. split.   progress. simplify. 
-move => &m M i1 i2 qg.  rewrite (H7 &m). rewrite (H9 &m). smt.
+move => &m M i1 i2 qg.  rewrite (H7 &m). rewrite (H9 &m). smt().
 rewrite  (dlet_mu_main (D i1 (glob A){m}) 
             ((fun (a1 : at2) (a2 : (rt1 * glob A)) => 
                    dmap ((fun x2 (r1g : rt1 * glob A) => Q (x2 , r1g.`1) r1g.`2) a1 a2) 
@@ -485,9 +485,9 @@ have iii : Pr[ W.main(fun (ex2a1r : at2 * rt1) (g : (glob A))
   => Q ex2a1r.`1 (ex2a1r.`2, g)) @ &m : exists &n, (glob A){n} = (glob A){m} /\ Q.qg{n} 
      = fun (ex2a1r : at2 * rt1) (g : (glob A)) => Q ex2a1r.`1 (ex2a1r.`2, g) ] = 1%r. 
 apply (ohj (fun (ex2a1r : at2 * rt1) (g : (glob A)) => Q ex2a1r.`1 (ex2a1r.`2, g)) &m).
-timeout 20. smt. elim.
+smt(@Distr). elim.
 move => &n. elim. move => a b.
-rewrite - (jj M i1 i2 &n &m). smt.
+rewrite - (jj M i1 i2 &n &m). smt().
 rewrite (H1 &n M). auto. rewrite a. auto.
 qed.
 

@@ -59,13 +59,13 @@ call (_:true). skip. auto.
    have ph1 : forall &n x, phoare[ P.run : z = x /\ (glob P) = (glob P){n} ==> M1 res ] = (Pr[ P.run(x) @ &n : M1 res ]).
    progress. bypr. progress. byequiv. proc*. call (_:true). skip. auto. auto. auto.
    call (ph1 &m  i1). skip.  progress.
-conseq (_: ((glob Q) = (glob Q){m} /\ x = i1 /\ y = i2) ==> M2 r2). smt. smt.
+conseq (_: ((glob Q) = (glob Q){m} /\ x = i1 /\ y = i2) ==> M2 r2). smt(). smt().
    have ph2 : forall &n x, phoare[ Q.run : z = x /\ (glob Q) = (glob Q){n} ==> M2 res ] = (Pr[ Q.run(x) @ &n : M2 res ]).
    progress. bypr. progress. byequiv. proc*. call (_:true). skip.  progress. auto. auto.
    rewrite /q. call (ph2 &m i2). skip.  progress.
-hoare. call (_:true). skip. smt.
-smt.
-smt.
+hoare. call (_:true). skip. smt().
+smt().
+smt().
 auto.
 qed.
 
@@ -77,7 +77,7 @@ declare module A <: RewEx1Ex2.
 (* getState lossless follows from rewindable_A, 
   but setState lossless does not, so we ask it *)
 (* PAPER: we cannot put these things globally into the section because "op f : glob A -> sbits" is not allowed *)
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -109,7 +109,7 @@ call ph.
 call (s2 ga). skip. auto.
 call (s3 ga). skip. auto.
 hoare.
-call (_:true). skip. progress. smt.
+call (_:true). skip. progress. smt().
 auto. 
 qed.
 
@@ -128,7 +128,7 @@ call ph.
 call (s2 ga). skip. auto.
 call (s3 ga). skip. auto.
 hoare.
-call (_:true). skip. progress.  smt.
+call (_:true). skip. progress.  smt().
 qed.
 
 
@@ -170,7 +170,7 @@ call hp.
 skip. progress.   auto. 
 hoare.
 call (_:true).
-auto. smt.
+auto. smt().
 auto.
 auto.
 auto.

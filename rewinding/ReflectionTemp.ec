@@ -60,13 +60,13 @@ local module P = {
 
 
 local lemma filter_le1 : forall (l : bool list), filter (fun _ => true) l = l.  
-proof. apply list_ind. smt. smt.
+proof. apply list_ind. smt(). smt().
 qed.
 
 
 local lemma bigLemma ['a] (f : 'a -> real) : forall l x,  big predT f (x :: l)
      = f x + big predT f l.
-proof. apply list_ind. smt. move => x l ih. simplify. smt.
+proof. apply list_ind. smt(). move => x l ih. simplify. smt().
 qed.
 
 
@@ -77,7 +77,7 @@ local lemma iot2 ['a] (c : real) (a : 'a) : 0%r <= c => summable (pickme c a).
 proof. move => pr. simplify summable.
 exists c.
 apply list_ind.
-smt.
+smt().
 simplify.
 move => x l ih.
 elim.
@@ -90,17 +90,17 @@ rewrite axe.
 simplify pos pickme. 
   have :  forall (l : 'a list) x, !(x \in l) =>
    big predT (fun (i : 'a) => `|if x = i then c else 0%r|) l  = 0%r.
-apply list_ind. smt. simplify.
+apply list_ind. smt(). simplify.
 move => x0 l0 ihh. move => x1 prr.
-have : (x1 <> x0 /\ !(x1 \in l0)) . smt.
+have : (x1 <> x0 /\ !(x1 \in l0)) . smt().
 elim. move => p1 p2. 
 rewrite (bigLemma (fun (i : 'a) => `|if x1 = i then c else 0%r|) l0 x0).
 simplify. rewrite (ihh x1 p2). simplify. rewrite p1. simplify. auto.
 move => prop1.
-rewrite (prop1 l x xnil). progress. smt.
+rewrite (prop1 l x xnil). progress. smt().
 move => ane. simplify pickme. rewrite ane. simplify.
 have : `|0%r| + big predT (fun (i : 'a) => `|if a = i then c else 0%r|) l  
-         =  big predT (fun (i : 'a) => `|if a = i then c else 0%r|) l. smt.
+         =  big predT (fun (i : 'a) => `|if a = i then c else 0%r|) l. smt().
 move => qoq. rewrite qoq.
 apply ih. apply ul.
 qed.
@@ -117,20 +117,20 @@ pose E_neg := (fun (M : real) => exists (J : 'a list),
   uniq J /\ M = big predT (fun (x : 'a) => `|neg (pickme c a) x|) J).
 have : ub E_neg 0%r.
 have :  forall J,  big predT (fun (x : 'a) => `|neg (pickme c a) x|) J = 0%r.
-apply list_ind. smt. move => x l ih. simplify.     
+apply list_ind. smt(). move => x l ih. simplify.     
 rewrite (bigLemma (fun (x0 : 'a) => `|neg (pickme c a) x0|) l x).
-simplify. rewrite ih. simplify neg pickme. smt.
+simplify. rewrite ih. simplify neg pickme. smt().
 move => bignegval.
 simplify ub. 
 move => y q. 
 elim q. apply list_ind.
-smt. move => x l ih. simplify.
+smt(). move => x l ih. simplify.
 elim. elim. move => xnl ul.
 move => qq. rewrite qq.
 rewrite (bignegval (x::l)). auto.
 move => ubc.
 have : E_neg 0%r.
-exists []. simplify. smt.
+exists []. simplify. smt().
 move => eng.
 have : has_lub E_neg.
 simplify has_lub.
@@ -147,7 +147,7 @@ apply lub_upper_bound. apply haslubneg.
 apply eng.
 move => lneg0'.
 have : lub E_neg = 0%r.
-smt.
+smt().
 move => lubnege0.
 rewrite lubnege0.
 simplify.
@@ -155,7 +155,7 @@ have : ub E_pos c.
 simplify ub. 
 move => y q. 
 elim q.  apply list_ind.
-smt.
+smt().
 simplify.
 move => x l ih. elim. elim.
 move => xnl ul.
@@ -164,28 +164,28 @@ have : forall (l : 'a list) x, !(x \in l) => big predT
   (fun (x0 : 'a) =>
      `|if (if x = x0 then c else 0%r) < 0%r then 0%r
        else `|if x = x0 then c else 0%r| |) l  = 0%r.
-apply list_ind. move => l0 x1. smt.
+apply list_ind. move => l0 x1. smt().
 simplify.
 move => x0 l0  ni x1 pr . 
-have : ! (x1 = x0) /\ !(x1 \in l0). smt.
+have : ! (x1 = x0) /\ !(x1 \in l0). smt().
 elim. move => p1 p2.
 rewrite (bigLemma (fun (x0_0 : 'a) =>
      `|if (if x1 = x0_0 then c else 0%r) < 0%r then 0%r
        else `|if x1 = x0_0 then c else 0%r| |) l0 x0).
-simplify. rewrite ni. assumption. smt.
+simplify. rewrite ni. assumption. smt().
 move => qoq.
 case (a = x).
 move => axe.
 rewrite axe.
 simplify pos pickme. 
-have : `|if c < 0%r then 0%r else `|c| | = c. smt.
+have : `|if c < 0%r then 0%r else `|c| | = c. smt().
 move => qq. rewrite qq.
 rewrite (qoq l x xnl). simplify.
 move=> yce. rewrite yce. auto.
 (* CONTINUTE *)
 move => anex. move => qzx.
 have : y = big predT (fun (x0 : 'a) => `|pos (pickme c a) x0|) l.
-rewrite qzx. simplify pos pickme.  rewrite anex. simplify. smt.
+rewrite qzx. simplify pos pickme.  rewrite anex. simplify. smt().
 move => ye.
 have :  uniq l /\ y = big predT (fun (x0 : 'a) => `|pos (pickme c a) x0|) l. 
 split. apply ul. apply ye.
@@ -197,7 +197,7 @@ have : has_lub (fun (M : real) =>
             `|pos (fun (x0 : 'a) => if a = x0 then c else 0%r) x|) J).
 split. exists c.
 exists (a :: []).
-split. smt. simplify. simplify big. simplify predT. smt.
+split. smt(). simplify. simplify big. simplify predT. smt().
 exists c. apply ubcc.
 move => haslub.
 have : lub (fun (M : real) =>
@@ -217,8 +217,8 @@ have : lub (fun (M : real) =>
          (fun (x : 'a) =>
             `|pos (fun (x0 : 'a) => if a = x0 then c else 0%r) x|) J) >= c.
 apply lub_upper_bound. apply haslub. simplify. 
-exists [a]. split. smt.
-simplify big predT pos. simplify. smt.
+exists [a]. split. smt().
+simplify big predT pos. simplify. smt().
 move => lubgec.       
 have : c = lub
   (fun (M : real) =>
@@ -228,7 +228,7 @@ have : c = lub
        big predT
          (fun (x : 'a) =>
             `|pos (fun (x0 : 'a) => if a = x0 then c else 0%r) x|) J).
-smt.
+smt().
 move => ceq.  rewrite - ceq.
 simplify pos. simplify. auto.
 qed.
@@ -241,10 +241,10 @@ local lemma gen_fact &m : forall  a (l : (rt * (glob A)) list), uniq l
               l.
 proof. move => a. apply list_ind.
 simplify. rewrite Pr[mu_false].
-smt. simplify.
+smt(). simplify.
 move => x l p1 p2. simplify.
 rewrite Pr[mu_disjoint].
-smt.
+smt().
 elim p2.
 move => p21 p22.
 have : big predT (fun (x0 : (rt * (glob A))) => 
@@ -259,7 +259,7 @@ move => q. rewrite q.
 rewrite (p1 p22).
 have ee : Pr[A.run(a) @ &m : (res, (glob A)) = x] 
         = Pr[A.run(a) @ &m : res = x.`1  /\ (glob A) = x.`2 ]. 
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 rewrite ee. auto.
 qed.
 
@@ -281,7 +281,7 @@ have : forall a (x : rt * glob A) &m' &m'' ,
           Pr[A.run(a) @ &m': res = x.`1 /\ (glob A) = x.`2] 
           = Pr[A.run(a) @ &m'': res = x.`1 /\ (glob A) = x.`2].
 move => a x &m' &m'' a1 a2.  
-byequiv. proc*.  call(_:true). skip. smt. progress. progress.
+byequiv. proc*.  call(_:true). skip. smt(). progress. progress.
 move => H1'. 
 have : forall a (x : rt * glob A), 
    Pr[A.run(a) @ &m: res=x.`1 /\ (glob A) = x.`2] = PR (glob A){m} a x.
@@ -326,7 +326,7 @@ move => H21 a.
 have nice: isdistr (PR (glob A){m} a).     
   have : (forall (s : ((rt * (glob A)) list)), uniq s => 
       big predT (PR (glob A){m} a) s <= 1%r).  rewrite  H21.
-  apply list_ind. smt.
+  apply list_ind. smt().
   move => x l. simplify. 
   move => q1 q2.
   rewrite - (gen_fact &m a (x :: l)).  apply q2.
@@ -341,33 +341,33 @@ have H7: forall M, Pr[ P.sampleFrom((D (glob A){m} a)) @ &m  : M res ]
   move => M0.
   byphoare (_ : d = (D (glob A){m} a) ==> _).
   proc.
-  rnd. skip. move => &hr prr .  progress. smt.
-  smt. auto.
+  rnd. skip. move => &hr prr .  progress. smt().
+  smt(). auto.
 have H3: forall M, equiv [P.sampleFrom ~ A.run : ={glob A} /\ arg{1} = (D (glob A){m} a) 
                          /\ (glob A){2} = (glob A){m} /\ arg{2} = a 
                          ==> M res{1} <=> M (res , glob A){2}].
   move => M0.
   conseq (_: _ ==> res{1}.`1 = res{2} /\ res{1}.`2 = (glob A){2} ).
-    smt.
+    smt().
   bypr (res{1}) (res, glob A){2}.
-    smt.
+    smt().
   move => &1 &2 aa p1. 
   (* move up to toplevel. *)
   have good_q: Pr[A.run(a) @ &m : (res , glob A) = aa] 
                = Pr[A.run(a) @ &2 : (res , glob A) = aa] .
     have eq1 : Pr[A.run(a) @ &m : (res, (glob A)) = aa] 
                = Pr[A.run(a) @ &m : res = aa.`1 /\ (glob A) = aa.`2].
-      rewrite Pr[mu_eq]. progress. smt. auto.
+      rewrite Pr[mu_eq]. progress. smt(). auto.
     have eq2 : Pr[A.run(a) @ &2 : (res, (glob A)) = aa] 
                = Pr[A.run(a) @ &2 : res = aa.`1 /\ (glob A) = aa.`2].
-      rewrite Pr[mu_eq]. progress. smt. auto.
+      rewrite Pr[mu_eq]. progress. smt(). auto.
     rewrite eq1 eq2.
-    apply (H1' a aa &m &2). auto.  smt. 
+    apply (H1' a aa &m &2). auto.  smt(). 
   elim p1. move => p11. elim. move => p12. elim. move => p13 p14. rewrite p14.
   rewrite -  good_q.
   have eq1 : Pr[A.run(a) @ &m : (res, (glob A)) = aa] 
              = Pr[A.run(a) @ &m : res = aa.`1 /\ (glob A) = aa.`2].
-    rewrite Pr[mu_eq]. progress. smt. auto.
+    rewrite Pr[mu_eq]. progress. smt(). auto.
   rewrite eq1.
   rewrite (H2 a aa).
   rewrite p12.
@@ -377,9 +377,9 @@ have H3: forall M, equiv [P.sampleFrom ~ A.run : ={glob A} /\ arg{1} = (D (glob 
     move => prr1 prr2.
     rewrite prr1.
     have x: mu (mk (PR (glob A){m} a)) (transpose (=) aa) = mu1 (mk (PR (glob A){m} a)) aa.
-      rewrite /pred1. smt.
+      rewrite /pred1. smt().
     rewrite x. clear x.
-    rewrite -  massE. smt.
+    rewrite -  massE. smt(@Distr).
     (* rewrite  muK.  
     apply nice. *) 
     auto. auto. auto.
@@ -387,8 +387,8 @@ have H4: forall M, Pr[ P.sampleFrom((D (glob A){m} a)) @ &m : M res ]
                    = Pr[ A.run(a) @ &m : M (res , (glob A)) ].
   move => M0. byequiv (_: (glob A){1} = (glob A){m} /\ ={glob A} /\ d{1} = D (glob A){m} a 
                           /\ arg{2} = a  ==> _). conseq (H3 M0). 
-  move => &1 &2 prr.  progress. smt. smt.
-  smt. smt. auto. auto.
+  move => &1 &2 prr.  progress. smt(). smt().
+  smt(). smt(). auto. auto.
 rewrite - (H7 M).
 rewrite - (H4 M).
 by reflexivity.
@@ -407,10 +407,10 @@ bypr (res{1}) (res{2}). auto.
 move => &1 &2 aa p1. 
 have good_q: Pr[A.run(az) @ &m : (res) = aa] 
                = Pr[A.run(az) @ &2 : (res) = aa] .
-byequiv. proc*.  call (_:true). skip. progress. smt. auto. auto.                       
+byequiv. proc*.  call (_:true). skip. progress. smt(). auto. auto.                       
 have <-: mu (D (glob A){2} a{2}) (fun r =>  r = aa) = Pr[A.run(a{2}) @ &2 : res = aa]. rewrite pr.
 auto. simplify. 
-byphoare (_: arg = d{1} ==> _). proc. rnd. skip. progress. smt. auto. auto.
+byphoare (_: arg = d{1} ==> _). proc. rnd. skip. progress. smt(). auto. auto.
 qed.
                        
 
