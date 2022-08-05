@@ -51,8 +51,7 @@ lemma qr_statistical_zk stat wit &m:
           `|ideal_prob - real_prob| <= 2%r * (1%r / 2%r) ^ OSS.N.
 proof.
 progress.
-apply (statistical_zk HP Sim1  V D _ _ _ _ _ _ _ _ _  _ stat wit  
-   &m _ );auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
+apply (statistical_zk HP Sim1  V D _ _ _ _ _ _ _ stat wit &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
 apply P_response_ll. apply P_commitment_ll.
 apply D_guess_ll.  conseq  D_guess_prop. auto.
    apply (sim1_rew_ph V). 
@@ -65,10 +64,10 @@ apply V_summitup_ll.
 apply V_challenge_ll. apply D_guess_ll. 
 conseq D_guess_prop. auto. auto. auto.
 progress.
-rewrite (sim1_succ V D _ _ _ _ _ &m0 stat0). apply (rewindable_A_plus V).
+rewrite (sim1_succ V D _ _ _ _ _ &m stat). apply (rewindable_A_plus V).
 apply rewindable_V_plus.
 apply V_summitup_ll.
-apply V_challenge_ll. apply D_guess_ll. conseq D_guess_prop. auto. auto. auto.
+apply V_challenge_ll. apply D_guess_ll. conseq D_guess_prop. auto. auto. smt(). auto.
 qed.
 
 
@@ -88,8 +87,7 @@ progress.  apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. apply D_guess_ll.  conseq D_guess_prop. 
 smt(@RealExp). progress.
-apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ _ _  _ stat wit  
-   &n _ ).
+apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ _ _ stat wit &n).
 apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll.
 apply P_response_ll. apply P_commitment_ll.
 proc. 
@@ -114,11 +112,11 @@ wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.
 skip. smt(). skip. smt().
 auto. auto. progress.
 proc. call D_guess_prop. sim. smt().
-rewrite - (sim1_succ V D _ _ _ _  _ &m0 p).
+rewrite - (sim1_succ V D _ _ _ _  _ &n stat).
 apply (rewindable_A_plus V). apply rewindable_V_plus. apply V_summitup_ll.
 apply V_challenge_ll. apply D_guess_ll. 
 conseq D_guess_prop. auto. smt().
-rewrite   (sim1_error V (Di(D, SimN(Sim1), V)) _ _ _ _  _ &m0 p w H0). 
+rewrite   (sim1_error V (Di(D, SimN(Sim1), V)) _ _ _ _  _ &n stat wit). 
 apply (rewindable_A_plus V).
 apply rewindable_V_plus. apply V_summitup_ll.
 apply V_challenge_ll. 
@@ -128,12 +126,12 @@ while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt(). proc. call D_guess_prop. sim. auto. 
 progress.
-rewrite (sim1_succ V D _ _ _ _  _ &m0 stat0). apply (rewindable_A_plus V).
+rewrite (sim1_succ V D _ _ _ _  _ &n stat). apply (rewindable_A_plus V).
 apply rewindable_V_plus. apply V_summitup_ll.
 apply V_challenge_ll. apply D_guess_ll. 
 proc*.
-call D_guess_prop. skip. auto. 
-auto. auto. auto.
+call D_guess_prop. skip. auto. smt().
+auto. auto. 
 qed.
 
 

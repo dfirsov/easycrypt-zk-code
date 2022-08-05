@@ -5,6 +5,10 @@ require  GenericSigmaProtocol.
 require CommitmentSpecial.
 clone include CommitmentSpecial with type message <- bool.
 
+require Djoinmap.
+clone import Djoinmap as DJM  with type a <- bool,
+                                   type b <- commitment * opening,
+                                    op d <- Com.
 
 
 (* the number of vertices in the graph  *)
@@ -42,7 +46,7 @@ op compl_graph_cyc : int -> int list = range 0.
 
 (* Intuitively (permute_graph g p)(i,j) = g(p i, p j). Below we
 declaratively describe the properties of permute_graph function.  *)
-op permute_graph (p : permutation) (g : graph) : graph.
+op permute_graph ['a] (p : permutation) (g : 'a list) : 'a list.
 
 
 (* Intuitively, "prj_path w g" returns entries which corresponds to the cycle represented by the witness "w".
@@ -50,6 +54,10 @@ For example, prj (1,2,3) g := [g(1,2),g(2,3),g(3,1)].
 Below we declaratively describe the properties of prj_path function.
 *)
 op prj_path ['a]  : hc_wit -> 'a list -> 'a list.
+
+(* rep_path w l g -- replace values in "g" at positions which correspond to "w" with values from "l" *)
+op rep_path ['a] : int list -> 'a list -> 'a list -> 'a list.
+
 
 (* to permute a witness we just apply permutation point-wise  *)
 op permute_witness : permutation -> hc_wit -> hc_wit = map.
@@ -127,7 +135,7 @@ axiom permute_graph_prop1 p n : permute_graph p (compl_graph n) = (compl_graph n
 
 axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
 
-axiom permute_graph_prop2 perm g : size (permute_graph perm g) = size g.
+axiom permute_graph_prop2 perm (g : graph) : size (permute_graph perm g) = size g.
 
 axiom permute_graph_prop3 g perm w : perm  \in perm_d K =>
  completeness_relation g w = completeness_relation (permute_graph perm g) (permute_witness perm w).
@@ -144,3 +152,13 @@ axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
 axiom lemma7 w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
 
 axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
+
+axiom lemma9 w : size w = K => prj_path w (compl_graph K) = nseq K true.
+
+axiom prj_rep ['a] (g : 'a list) w:  g = rep_path w (prj_path w g) g.
+
+axiom rep_prj ['a] (g : 'a list) w l: l = (prj_path w (rep_path w g l)).
+
+axiom rep_map ['a 'b] (g : 'a list) w l l' (f : 'a -> 'b):map f (rep_path w l l') = rep_path w (map f l) (map f l').
+
+axiom rep_distr w l l' : djoinmap Com (rep_path w l' l) = dapply (fun xx' => rep_path w (fst xx') (snd xx')) ((djoinmap Com l) `*` (djoinmap Com l')).

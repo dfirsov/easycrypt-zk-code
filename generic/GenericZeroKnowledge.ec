@@ -921,22 +921,16 @@ sim.  skip. progress. auto. auto.
   declare axiom D_guess_ll     : islossless D.guess.
   declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg, glob Count, glob HybOrcl} ==> ={res} ].
 
-  declare axiom sim1_rew_ph :
-   forall (x : (glob Sim1(V))),
-    phoare[ Sim1(V).run : (glob Sim1(V)) = x 
-            ==> !fst res => (glob Sim1(V)) = x] = 1%r.
-
-  declare axiom sim1_dist_prob_prop &m p w:
-     zk_relation p w => 
-      `|Pr[RD(Sim1(V), D).run(p, w) @ &m : fst res.`2 /\ res.`1] /
-           Pr[Sim1(V).run(p) @ &m : fst res]
-            - Pr[ ZKD(HonestProver,V,D).main(p,w) @ &m : res ]| <= epsilon.
-
-
-  declare axiom succ_event_prob stat &m :  in_language zk_relation stat 
-           => Pr[Sim1(V).run(stat) @ &m : res.`1] >= sigma.
 
   lemma statistical_zk stat wit &m:
+      (forall (x : (glob Sim1(V))),
+          phoare[ Sim1(V).run : (glob Sim1(V)) = x 
+              ==> !fst res => (glob Sim1(V)) = x] = 1%r)
+   => (`|Pr[RD(Sim1(V), D).run(stat, wit) @ &m : fst res.`2 /\ res.`1] /
+           Pr[Sim1(V).run(stat) @ &m : fst res]
+            - Pr[ ZKD(HonestProver,V,D).main(stat,wit) @ &m : res ]| <= epsilon)
+   => (Pr[Sim1(V).run(stat) @ &m : res.`1] >= sigma)
+   =>
       zk_relation stat wit => 
       let real_prob = Pr[ZKReal(HonestProver, V, D).run(stat, wit) @ &m : res] in
       let ideal_prob = Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res] in
@@ -947,11 +941,11 @@ sim.  skip. progress. auto. auto.
    apply V_summitup_ll.
    apply V_challenge_ll.
    apply D_guess_ll.
-   apply sim1_rew_ph.
+   auto.
    apply D_guess_prop.
    auto.
-   apply (sim1_dist_prob_prop &m stat wit). auto.
-   apply succ_event_prob. exists wit. auto.
+   auto.
+   auto.
   qed.  
   end section.  
   end Statistical.
