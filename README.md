@@ -1,6 +1,6 @@
 # Zero-Knowledge in EasyCrypt
 
-This repository contains the EasyCrypt code associated with the paper "D. Firsov, D. Unruh. [Zero-Knowledge in EasyCrypt](https://eprint.iacr.org/2022/926)" .
+This repository contains the EasyCrypt code associated with the paper "D. Firsov, D. Unruh. [Zero-Knowledge in EasyCrypt](https://eprint.iacr.org/2022/926)".
 
 ## Contents
 - *[generic/](generic)*  - generic formalization of properties and derivations associated with sigma protocols.
