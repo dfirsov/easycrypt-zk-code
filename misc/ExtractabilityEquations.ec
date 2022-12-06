@@ -420,13 +420,13 @@ byequiv. proc. inline*. swap {2} 4 -3. swap {2} 9 -7. wp.
 call (_:true). wp.  call (_:true). wp.  call (_:true).
 wp. call (_:true). call (_:true). wp. rnd. rnd. skip. progress.
 auto. auto.
-apply (rew_with_init A' A' _ _ _ _ _ &m (fun (r :  irt * (ct * rt)) => M p (r.`2.`1, (r.`2.`2, r.`1)) )).
+apply (rew_with_init A' A' _ _ _ _  &m (fun (r :  irt * (ct * rt)) => M p (r.`2.`1, (r.`2.`2, r.`1)) )).
 proc*.  sim. proc*. sim.
 elim rewindable_A_plus. progress.
 exists f. progress. 
 byphoare (_: (glob A) = (glob A){m0} ==> _). apply H0. auto. auto.
 byphoare (_: arg = f x ==> _). conseq (H3 x). auto. auto. auto.
-proc. call A_ll. rnd.  skip. smt(dll).
+(* proc. call A_ll. rnd.  skip. smt(dll). *)
 conseq A_init_ll.
 qed.
    
@@ -639,7 +639,6 @@ qed.
 local lemma qqq1  (a b : real) : a <= b  => sqrt a <= sqrt b.
 smt(@RealExp). qed.
 
-
 local lemma qqq2  (a b : real) : a ^ 2 <= b  => a <= sqrt b.
 smt(@RealExp). qed.
 
@@ -684,11 +683,21 @@ auto.
 apply qqq1. 
 have : Pr[InitRun1(A).run(p) @ &m : AccRun p res] <= 1%r. rewrite Pr[mu_le1]. auto.
 have : Pr[InitRun1(A).run(p) @ &m : AccRun p res] >= 0%r. rewrite Pr[mu_ge0]. auto.
-have : 0 <= size allcs. smt(@List).
-have : forall a b , 0%r <= a <= 1%r => b >= 0%r => a/b <= 1%r/b. smt(@Real).
+have : 0 <= size allcs. 
+elim allcs. auto. progress. smt().
+have : forall a b , 0%r <= a <= 1%r => b >= 0%r => a/b <= 1%r/b. 
+progress.
+case (b = 0%r). progress.
+move => bpos.
+apply (ler_pdivr_mulr).
+smt().
+smt().
+progress.
+have : Pr[InitRun1(A).run(p) @ &m : AccRun p res] / (size allcs)%r <= inv (size allcs)%r.
+apply H. auto. 
+smt().
 smt().
 qed.
-
 
 end section.
 

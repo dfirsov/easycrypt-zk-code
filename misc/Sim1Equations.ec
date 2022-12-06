@@ -6,10 +6,8 @@ type prob, wit, sbits, event.
 
 op E : event * sbits -> bool.
 
-
 op pair_sbits : sbits * sbits -> sbits.
 op unpair: sbits -> sbits * sbits.
-
 
 require WhileSplit.
 clone import WhileSplit as MW with type irt    <- prob,
@@ -254,7 +252,7 @@ elim.
 move => eps' [eps'p1 epsp2].
 apply (ler_trans (coeff * eps')).
 smt().
-smt().
+smt(ger_pmull).
 qed.
 
 

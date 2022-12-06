@@ -83,12 +83,8 @@ theory CompletenessTheory.
 
 
     section.
-    declare module P <: HonestProver{-HV}.
+    declare module P <: HonestProver.
     declare module V <: HonestVerifier{-P}.
-    declare axiom verify_ll     : islossless V.verify.
-    declare axiom challenge_ll  : islossless V.challenge.
-    declare axiom response_ll   : islossless P.response.
-    declare axiom commitment_ll : islossless P.commitment.
 
     local clone import IterUntilSucc as WNBP with type rt <- bool,
                                                   type iat <- statement * witness.
@@ -127,11 +123,6 @@ theory CompletenessTheory.
     byphoare (_: arg = ((statement, witness), fun (x : bool) => !x,
                                            1, (n-1) + 1 , true) ==> _).
     apply (iter_run_ge_ph (Completeness(P,V))). 
-    proc.
-    call verify_ll. call response_ll. 
-    call challenge_ll. 
-    call commitment_ll. 
-    skip. auto.
     apply phs. auto. smt(). 
     auto. auto. 
     qed.  
@@ -153,13 +144,8 @@ theory CompletenessTheory.
 
     
     section.
-    declare module P <: HonestProver{-HV}.
+    declare module P <: HonestProver.
     declare module V <: HonestVerifier{-P}.
-
-    declare axiom verify_ll     : islossless V.verify.
-    declare axiom challenge_ll  : islossless V.challenge.
-    declare axiom response_ll   : islossless P.response.
-    declare axiom commitment_ll : islossless P.commitment.
 
     (* assumption of perfect completeness *)
     declare axiom completeness &n statement witness :
@@ -177,8 +163,7 @@ theory CompletenessTheory.
     progress.
     have : (1%r - 0%r) ^ n <=
       Pr[CompletenessAmp(P, V).run(statement, witness, n) @ &m : res].
-    apply (SC.completeness_seq P V verify_ll 
-               challenge_ll response_ll commitment_ll _  
+    apply (SC.completeness_seq P V  _  
                statement witness n _ _ );auto. 
     move => &n.
     progress. rewrite completeness;auto.

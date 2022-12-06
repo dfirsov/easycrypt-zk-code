@@ -3,8 +3,6 @@ require import AllCore DBool Bool List Distr Int Aux DJoin.
 require import Permutation Blum_Basics.
 
 
-
-
 section.
 
 local lemma prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
@@ -58,7 +56,7 @@ have ->: size (permute_graph prm s{hr}) = size s{hr}. smt (permute_graph_prop2).
 have ->: size s{hr} = K * K. elim ishc. smt().
 move => q. 
 have qqq : size (prj_path (permute_witness prm w{hr}) pi_gwco) = K.   
-rewrite lemma1.  rewrite q. rewrite size_map. elim ishc. smt().
+rewrite lemma1.  rewrite q. rewrite size_map. elim ishc. progress. smt(@StdOrder.IntOrder).
 elim ishc. smt(size_map).
 smt (size_map).
 have ->: (prj_path (permute_witness prm w{hr}) (unzip1 pi_gwco))
@@ -106,7 +104,7 @@ local lemma hc_complete statement witness &m : completeness_relation statement w
 move => inlang. byphoare (_: arg = (statement, witness) ==> _);auto. 
 proc. inline*. wp. rnd.  simplify. wp. 
 rnd.  wp. 
-conseq (_: _ ==> true). progress. smt (@Distr @DBool). 
+conseq (_: _ ==> true). progress. simplify. smt (@Distr). 
 apply djoinmap_weight. apply Com_lossless.
 rnd. wp.  skip. progress. apply perm_d_lossless.
 qed.
@@ -141,11 +139,7 @@ lemma hc_completeness_iter: forall (statement:hc_stat) (witness:hc_wit) &m n,
        completeness_relation statement witness =>
       Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
 progress.
-apply (BlumProtocol.CompletenessTheory.Perfect.completeness_seq HP HV _ _ _ _ _ &m).
-proc.  skip.  auto.
-proc.  wp.  rnd.  skip.  progress. smt (@Distr).
-proc.  wp.  skip. auto.
-proc. rnd. conseq (_: _ ==> true). progress. smt(djoinmap_weight Com_lossless). wp. rnd. wp. skip. smt (perm_d_lossless).
+apply (BlumProtocol.CompletenessTheory.Perfect.completeness_seq HP HV).
 progress.
 apply hc_completeness. auto. auto. auto.
 qed.

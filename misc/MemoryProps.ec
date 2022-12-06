@@ -508,6 +508,7 @@ local module A' = {
   }
 }.
 
+
 lemma exists_mem_abs_diff ii1 ii2 &m p: 
        0%r <= p =>
        p <  `|Pr[ P(A).main1(ii1,ii2) @ &m : res ]  - 

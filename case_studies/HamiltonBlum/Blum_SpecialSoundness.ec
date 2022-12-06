@@ -4,7 +4,6 @@ require import Aux Permutation Blum_Basics.
 
 
 section.
-  
 
 local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :
   !soundness_relation g w /\
@@ -229,12 +228,17 @@ have ->: (nth witness <: commitment * opening> (zip (prj_path x.`1 result_R.`1.`
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) x.`2)
    (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt().
-rewrite nth_zip. smt(lemma1). simplify.
+rewrite nth_zip. 
+rewrite lemma1. smt(). smt().
+simplify.
 have ->: (nth witness <: commitment * opening>  (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
    (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt().
-rewrite nth_zip. smt(lemma1). simplify. auto.
+rewrite nth_zip. 
+rewrite lemma1. smt(). 
+rewrite lemma1. smt(). auto.
+simplify. auto.
 progress. simplify.
 rewrite /special_soundness_extract.
 elim result_R.`1.`3.
@@ -250,7 +254,10 @@ have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.
  = (nth (fst witness <:commitment * opening>, snd witness <:commitment * opening>) (zip (prj_path p1.`1 result_R.`1.`1) p1.`2)
    (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt().
 rewrite nth_zip. 
-elim p4. move => q. elim. move => q1 q2. elim q1. smt(lemma1). simplify.
+elim p4. move => q. elim. move => q1 q2. elim q1.
+progress. 
+rewrite lemma1. rewrite H H0.  smt(K_pos). smt().
+ simplify.
 have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
    (index false (prj_path p1.`1 (permute_graph x.`1 s)))) 
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>)  (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))

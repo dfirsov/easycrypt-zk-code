@@ -2,6 +2,8 @@ require import AllCore DBool Bool List Distr Aux Finite.
 require import CyclicGroup.
 import FDistr.
 
+
+
 require  GenericSigmaProtocol.
 
 
@@ -59,4 +61,5 @@ module HP : HonestProver = {
 
 
 (* Honest Verifier is derived automatically from "challenge_set" and "verify_transcript" *)
-(* print HV. *)
+print HV.
+

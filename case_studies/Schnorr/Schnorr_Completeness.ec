@@ -45,11 +45,7 @@ lemma dl_completeness_iter: forall (statement:dl_stat) (witness:dl_wit) &m n,
        completeness_relation statement witness =>
       Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
 progress.
-apply (SchnorrProtocol.CompletenessTheory.Perfect.completeness_seq HP HV _ _ _ _ _ &m).
-proc.  skip.  auto.
-proc.  wp.  rnd.  skip.  progress. smt(duniform_ll challenge_set_size).
-proc.  wp.  skip. auto.
-proc. rnd. wp. skip.  progress. smt(dt_ll).
+apply (SchnorrProtocol.CompletenessTheory.Perfect.completeness_seq HP HV).
 progress.
 apply dl_completeness. auto. auto. auto.
 qed.

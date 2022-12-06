@@ -135,7 +135,7 @@ declare axiom RewProp :
   islossless A.setState.
 
   
-declare axiom ll_A_run : islossless A.run.
+(* declare axiom ll_A_run : islossless A.run. *)
 declare axiom ll_B_init : islossless B.init.
 (* /ASSUMPTIONS *)
 
@@ -203,7 +203,7 @@ local lemma zzz &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init  *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 a, f (glob A){m} = s0 => 
@@ -213,7 +213,7 @@ local lemma zzz &m &n : exists (f : glob A -> sbits),
 elim (rewindable_A_plus A RewProp) .
 progress.
 exists f.
-progress. apply ll_A_run. (* apply ll_B_run.*)
+progress. (* apply ll_A_run. *) (* apply ll_B_run.*)
 bypr.  move => &m1 eq.
 have jk  : (glob A){m0} = (glob A){m1}. smt().
 elim eq. move => _ z. rewrite z.
@@ -232,7 +232,7 @@ local lemma qqq &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 r, f (glob A){m} = s0 => 
@@ -331,7 +331,7 @@ simplify. smt().
 have H8 : phoare[ QQ(A,B).main52 : f (glob A) =  f (glob A){n0} /\ arg = r 
           ==> M res.`1 /\ M res.`2] 
           = Pr[QQ(A,B).main52(r) @ &n0 : M res.`1 /\ M res.`2 ]. 
-apply (H6 &n0). auto.
+apply (H5 &n0). auto.
 have q1 : Pr[QQ(A,B).main52(r) @ &n0 : M res.`1 /\ M res.`2] = y. auto.
 have q3 : phoare[ QQ(A,B).main52 : f (glob A) =  f (glob A){n0} /\ arg = r 
           ==> M res.`1 /\ M res.`2] = y.  rewrite - q1.
@@ -354,7 +354,7 @@ local lemma ooo &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init  *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 a, f (glob A){m} = s0 => 
@@ -385,7 +385,7 @@ have eq2 : Pr[QQ(A,B).main5(i) @ &m0 : M res.`1.`1
              /\ M res.`1.`2 /\ res.`2.`2 = f (glob A){n0} /\ res.`2.`1 = r] 
            = Pr[QQ(A,B).main51(i) @ &m0 : res.`2 = f (glob A){n0} /\ res.`1 = r] 
              * Pr[QQ(A,B).main52(r) @ &n0 : M res.`1 /\ M res.`2].
-rewrite (H10 &m0 M &n0).  by reflexivity.
+rewrite (H9 &m0 M &n0).  by reflexivity.
 auto. rewrite eq2 eq.
 rewrite (dbl_main_no_number A). apply RewProp. smt().
 qed.
@@ -402,7 +402,7 @@ local lemma ppp &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 a, f (glob A){m} = s0 => 
@@ -496,7 +496,7 @@ local lemma nnn &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 a, f (glob A){m} = s0 =>
@@ -526,7 +526,7 @@ proof. elim (ppp &m &n). progress. exists f. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption.
-split. assumption. split. assumption. split. assumption.  split. assumption.
+split. assumption. split. assumption. split. assumption.  (* split. assumption. *)
 move => P i. apply list_ind. simplify. rewrite Pr[mu_false]. smt().
 simplify.
 move => x l ih.
@@ -576,7 +576,7 @@ rewrite - eq.
 have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 = x]
      = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1 ] . rewrite Pr[mu_eq]. smt(). auto.
-rewrite (H10  &m &l  P x.`2 i ).
+rewrite (H9  &m &l  P x.`2 i ).
  smt().  auto.
 move => dnem.
 have : (forall &n0, f (glob A){n0} <> x.`2). smt().
@@ -584,8 +584,8 @@ move => prr.
 have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 = x]
      = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1 ] . rewrite Pr[mu_eq]. smt(). auto.
-rewrite (H9 x.`2). apply prr.
 rewrite (H8 x.`2). apply prr.
+rewrite (H7 x.`2). apply prr.
 auto.
 move => opp.
 rewrite opp.
@@ -614,7 +614,7 @@ local lemma nnn1 &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 a, f (glob A){m} = s0 =>
@@ -642,9 +642,9 @@ proof. elim (nnn &m &n). progress. exists f. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption.
-split. assumption. split. assumption. split. assumption.  split. assumption.
+split. assumption. split. assumption. split. assumption.  (* split. assumption. *)
 move => P i.
-  clear H0 H1 H2 H3 H4 H5 H6 H7 H8  H9 H10 H11 H12  .
+  clear H0 H1 H2 H3 H4 H5 H6 H7 H8  H9 H10 H11   .
   have refl1 :     exists (D : (irt * sbits) distr),  
   exists (J : int -> (irt * sbits) option),
   (forall M, mu D M = Pr[ QQ(A,B).main5(i) @ &m :  M res.`2 ])
@@ -690,7 +690,7 @@ some_real
      exists &l,
        f (glob A){l} = x.`2 /\ Pr[A.run(x.`1) @ &l : P (x.`1, res)] = y).
 move => x.
-rewrite (H13 P i (x :: []) ). smt().
+rewrite (H12 P i (x :: []) ). smt().
 simplify big. rewrite /predT /g. simplify. smt().
 auto.
 elim refl1. move => D J p. elim p. move => p1 [p2 p3].
@@ -713,7 +713,7 @@ have ->: (fun (x : irt * sbits) => `|g x|)
      = (fun (x : irt * sbits) => g x).
 apply fun_ext. move => x. rewrite /g.
 rewrite - zz. smt(@Distr).
-rewrite /g. rewrite -  (H13 P). apply J'u.
+rewrite /g. rewrite -  (H12 P). apply J'u.
 rewrite Pr[mu_le1]. auto.
 have lim1 : lim ((fun (n : int) => big predT g (pmap J (range 0 n)))) = (sum g). 
 apply lim_cnvto. apply conv1.
@@ -726,7 +726,7 @@ move => N Np. exists N.
 move => n np.
 have ->: big predT g (pmap J (range 0 n))
         = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 \in (pmap J (range 0 n)) ].
-rewrite H13. smt(@List).
+rewrite H12. smt(@List).
 auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2] =
  Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ (res.`2 \in pmap J (range 0 n)) ]   +  Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ !(res.`2 \in pmap J (range 0 n)) ].
@@ -767,7 +767,7 @@ local lemma jjj &m &n : exists (f : glob A -> sbits),
    /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
    /\ islossless A.setState
-   /\ islossless A.run
+   (* /\ islossless A.run *)
 (*    /\ islossless B.init  *)
     (* assumptions above, payload below *)
    /\ (forall &m M s0 a, f (glob A){m} = s0 =>
@@ -798,7 +798,7 @@ elim (nnn1 &m &n). progress. exists f. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption.
-split. assumption. split. assumption. split. assumption.  split. assumption. split. assumption.
+split. assumption. split. assumption. split. assumption.  split. assumption. (* split. assumption. *)
 move => P i.
 apply list_ind. simplify. rewrite Pr[mu_false]. smt().
 simplify.
@@ -838,15 +838,15 @@ move => c eq.
 rewrite - eq.
 have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 = x] = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
-rewrite (H11 &m &l P  x.`2 i ).
+rewrite (H10 &m &l P  x.`2 i ).
 smt().  smt().
 move => dnem.
 have : (forall &n0, f (glob A){n0} <> x.`2). smt().
 move => prr.
 have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 = x] = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
-rewrite (H9 x.`2). apply prr.
-rewrite (H7 x.`2). apply prr.
+rewrite (H8 x.`2). apply prr.
+rewrite (H6 x.`2). apply prr.
 smt().
 move => opp.
 rewrite opp.
@@ -875,7 +875,7 @@ local lemma jjj1 &m &n : exists (f : glob A -> sbits),
     /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
     /\ islossless A.setState
-    /\ islossless A.run
+    (* /\ islossless A.run *)
 (*    /\ islossless B.init  *)
     (* assumptions above, payload below *)
     /\ (forall &m M s0 a, f (glob A){m} = s0 =>
@@ -907,9 +907,9 @@ split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption.
 split. assumption. split. assumption. split. assumption.  split. assumption. 
-split. assumption.
+(* split. assumption. *)
 move => P i.
-  clear H0 H1 H2 H3 H4 H5 H6 H7 H8  H9 H10 H11 H12 H13.
+  clear H0 H1 H2 H3 H4 H5 H6 H7 H8  H9 H10 H11 H12 .
   have refl1 :     exists (D : (irt * sbits) distr),  
   exists (J : int -> (irt * sbits) option),
   (forall M, mu D M = Pr[ QQ(A,B).main6(i) @ &m :  M res.`2 ])
@@ -947,7 +947,7 @@ some_real
      exists &l,
        f (glob A){l} = x.`2 /\ Pr[A.run(x.`1) @ &l : P (x.`1, res)] = y) .
 move => x.
-rewrite (H14 P i (x :: []) ). smt().
+rewrite (H13 P i (x :: []) ). smt().
 simplify big. rewrite /predT /g. simplify. smt().
 auto.
 elim refl1. move => D J p. elim p. move => p1 [p2 p3].
@@ -970,7 +970,7 @@ have ->: (fun (x : irt * sbits) => `|g x|)
      = (fun (x : irt * sbits) => g x).
 apply fun_ext. move => x. rewrite /g.
 rewrite - zz. smt(@Distr).
-rewrite /g. rewrite -  (H14 P). apply J'u.
+rewrite /g. rewrite -  (H13 P). apply J'u.
 rewrite Pr[mu_le1]. auto.
 have lim1 : lim ((fun (n : int) => big predT g (pmap J (range 0 n)))) = (sum g). 
 apply lim_cnvto. apply conv1.
@@ -983,7 +983,7 @@ move => N Np. exists N.
 move => n np.
 have ->: big predT g (pmap J (range 0 n))
         = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 \in (pmap J (range 0 n)) ].
-rewrite H14. smt(@List).
+rewrite H13. smt(@List).
 auto.
 have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1] =
  Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ (res.`2 \in pmap J (range 0 n)) ]   +  Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ !(res.`2 \in pmap J (range 0 n)) ].
@@ -1030,10 +1030,10 @@ local lemma derv_final &m :
   forall P i,
       Pr[ QQ(A,B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2  ] >= (Pr[ QQ(A,B).main6(i) @ &m : P res.`1 ])^2 .
 proof. elim (jjj1 &m &m). progress.
-clear H1 H2 H3 H4 H5 H6 H7 H8 H9 H10 H11 H12.
+clear H1 H2 H3 H4 H5 H6 H7 H8 H9 H10 H11 .
+rewrite H12.
 rewrite H13.
-rewrite H14.
-clear H13 H14.
+clear H12 H13.
 pose q (x : irt * sbits) := some_real
        (fun (y : real) =>
           exists &l,
@@ -1114,7 +1114,6 @@ rewrite  mu_mem.
 rewrite undup_id. apply Jp.
   have ->: (fun (i0 : a) => mass (D (glob QQ(A, B)){m} i) i0) = (fun (x : irt * sbits) => mu1 (D (glob QQ(A, B)){m} i) x).
   apply fun_ext. move => io. rewrite massE. auto. auto.
-
 have ->: (fun (x : irt * sbits) => q x * mass (D (glob QQ(A, B)){m} i) x)
  = (fun (x : irt * sbits) => q x * mu1 (D (glob QQ(A, B)){m} i) x).
 apply fun_ext. move => x. smt(@Distr).
@@ -1122,6 +1121,7 @@ have ->: (fun (x : irt * sbits) => q x ^ 2 * mass (D (glob QQ(A, B)){m} i) x)
  = (fun (x : irt * sbits) => q x ^ 2 * mu1 (D (glob QQ(A, B)){m} i) x).
 apply fun_ext. move => x. smt(@Distr @Real).
 apply (Jensen_inf (D (glob QQ(A, B)){m} i) q (fun (x : real) => x^2) 0%r 1%r 0%r 1%r _ _ _ _ _ _). 
+
 have ll: is_lossless (D (glob QQ(A, B)){m} i).  rewrite /is_lossless.
    have <-: Pr[QQ(A, B).main51(i) @ &m : predT res] = 1%r.
    byphoare (_: _ ==> _). proc. simplify.  seq 1 : (true). 

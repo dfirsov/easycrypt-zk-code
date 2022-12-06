@@ -4,7 +4,7 @@ timeout=20
 
 check() {
   echo checking $1;
-  if easycrypt -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic -timeout $timeout $1;
+  if easycrypt -no-eco -p "CVC4" -p "Z3" -p "Alt-Ergo"  -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;

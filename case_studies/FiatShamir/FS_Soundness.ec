@@ -46,11 +46,7 @@ lemma qr_soundness_iter &m s n:
      Pr[SoundnessAmp(P, HV).run(s,n) @ &m : res]
         <= (1%r/2%r) ^ n.
 proof. progress.
-apply (soundness_seq P  _ _ _ _ _ &m).
-proc. skip. auto.
-proc. wp. rnd. skip. progress. smt(@Distr).
-apply P_response_ll.
-apply P_commitment_ll.
+apply (soundness_seq P).
 apply qr_soundness. auto. auto.
 qed.
 

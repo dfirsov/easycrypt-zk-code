@@ -91,25 +91,25 @@ have ->: mu1 (dmap (djoinmap d l1{2} `*` djoinmap d l2{2}) merge) (merge xR)
  = mu1 ( (djoinmap d l1{2} `*` djoinmap d l2{2})) (splitf (size l1{2}) (merge xR)).
 rewrite - (dmap1E_can _ merge (splitf (size l1{2}))).
 rewrite /cancel.
-rewrite /merge /splitf. smt.
+rewrite /merge /splitf. smt(@List).
 rewrite /merge /splitf. 
 progress.
-have f1 : a.`1 \in djoinmap d l1{2}. smt.
-have f2 : a.`2 \in djoinmap d l2{2}. smt.
-have f3 : size a.`1 = size l1{2}. smt.
-have f4 : size a.`2 = size l2{2}. smt.
-rewrite - f3. smt. auto.
-have f1 : xR.`1 \in djoinmap d l1{2}. smt.
-have f2 : xR.`2 \in djoinmap d l2{2}. smt.
-have f3 : size xR.`1 = size l1{2}. smt.
-have f4 : size xR.`2 = size l2{2}. smt.
+have f1 : a.`1 \in djoinmap d l1{2}. smt(@Distr).
+have f2 : a.`2 \in djoinmap d l2{2}. smt(@Distr).
+have f3 : size a.`1 = size l1{2}. smt(@Distr).
+have f4 : size a.`2 = size l2{2}. smt(@Distr).
+rewrite - f3. smt(@Distr). auto.
+have f1 : xR.`1 \in djoinmap d l1{2}. smt(@Distr).
+have f2 : xR.`2 \in djoinmap d l2{2}. smt(@Distr).
+have f3 : size xR.`1 = size l1{2}. smt(@Distr).
+have f4 : size xR.`2 = size l2{2}. smt(@Distr).
 rewrite /merge.
-rewrite - f3. smt.
+rewrite - f3. smt().
 have f : exists (a : b list * b list), (a \in djoinmap d l1{2} `*` djoinmap d l2{2}) /\ xL = merge a.
 apply supp_dmap. auto.
 elim f. progress.
-smt.
-smt.
+smt(@Distr).
+smt(@Distr).
 qed.
 
 
@@ -118,9 +118,9 @@ proc.
 rnd.  skip. progress.
 rewrite - djoin_cat.
 simplify.
-smt.
+smt(@List).
 rewrite - djoin_cat.
-smt.
+smt(@List).
 qed.
 
 
@@ -128,78 +128,11 @@ qed.
 lemma djm_main14 : equiv [ DJM.main1 ~ DJM.main4 : ={arg} ==> 
   merge res{1} = res{2} ].
 transitivity DJM.main2 (={arg} ==> ={res}) (={arg} ==> merge res{1} = res{2}). 
-smt. auto. conseq main12. 
+smt(). auto. conseq main12. 
 transitivity DJM.main3 (={arg} ==> merge res{1} = res{2} ) (={arg} ==> ={res}). 
-smt. auto. symmetry. conseq main23.  auto. auto.
+smt(). auto. symmetry. conseq main23.  auto. auto.
 symmetry. conseq main34. auto. auto.
 qed.
-
-
-(* lemma djoin_pi ['a]  p (ds: 'a distr list) (xs : 'a list) *)
-(*    : size ds = size xs => mu1 (djoin (pi p ds)) xs  = mu1 (djoin ds) (ip p xs). *)
-(* proof. rewrite djoin1E. *)
-(* rewrite djoin1E. *)
-(* progress. rewrite size_pi. rewrite H. simplify. *)
-(* rewrite size_ip. auto.  simplify.  *)
-(* apply eq_big_perm. *)
-(* apply zippi.  *)
-(* qed. *)
-
-
-    
-(* lemma main5perm  p :  *)
-(*   equiv [ DJM.main5 ~ DJM.main5 : (pi p arg{1}) = (arg{2})  *)
-(*    ==> (res{1}) = (ip p res{2}) ]. progress. *)
-(* proc. *)
-(* rnd (pi p) (ip p).  skip. progress. smt. *)
-(* rewrite map_pi. auto. rewrite  djoin_pi. smt. smt. smt.  *)
-(* smt. *)
-(* qed. *)
-
-
-(* lemma djoin_pi2 ['a]  p (ds: 'a distr list) (xs : 'a list) *)
-(*    : size ds = size xs => mu1 (djoin (ip p ds)) xs  = mu1 (djoin ds) (pi p xs). *)
-(* proof. rewrite djoin1E. *)
-(* rewrite djoin1E. *)
-(* progress. rewrite size_pi. rewrite H. simplify. *)
-(* rewrite size_ip. auto.  simplify.  *)
-(* rewrite H. simplify.  *)
-(* apply  eq_big_perm. *)
-(* apply zipip.  *)
-(* qed. *)
-
-
-
-
-(* lemma djm_main54 p x : equiv [ DJM.main5 ~ DJM.main4 : (ip p  (arg{1})) = (merge arg{2}) /\ x = arg{2} ==> res{1} = (pi p ( res{2}))   *)
-(*    ]. *)
-(* proc.  *)
-(* rnd (ip p) (pi p). skip.  progress. smt. *)
-(* rewrite  /merge in H. rewrite - H. *)
-(* rewrite -   djoin_pi2. smt. *)
-(* rewrite map_ip. auto. smt. *)
-(* smt. *)
-(* qed. *)
-
-
-(* lemma djm_main51 p x : equiv [ DJM.main5 ~ DJM.main1 : (ip p  (arg{1})) = (merge arg{2}) /\ x = arg{2} ==> res{1} = (pi p (merge res{2})) ]. *)
-(* transitivity DJM.main4 ((ip p  (arg{1})) = (merge arg{2}) /\ x = arg{2} ==> res{1} = (pi p ( res{2}))) ( ={arg} ==>  *)
-(*   merge res{2} = res{1} ). *)
-(* smt. smt. *)
-(* conseq (djm_main54 p x). *)
-(* symmetry. *)
-(* conseq (djm_main14). auto. *)
-(* qed.     *)
-
-
-(* lemma djm_main511 p x : equiv [ DJM.main5 ~ DJM.main1 : (ip p  (arg{1})) = (merge arg{2}) /\ x = arg{2} ==> res{1} = (pi p (merge res{2})) *)
-(*   /\ size (fst x) = size res{2}.`1 ]. *)
-(* proc*.  *)
-(* transitivity{2} {r <- DJM.main1(x);} ((ip p  (arg{1})) = (merge arg{2}) /\ x = arg{2} ==> r{1} = (pi p (merge r{2}))) (={arg} /\ arg{1} = x ==> ={r} /\ size (fst x) = size r{1}.`1).  smt. progress. *)
-(* call (djm_main51 p x). skip. auto. *)
-(* inline*.  wp. rnd. rnd. wp. skip. progress. *)
-(* smt. *)
-(* qed. *)
 
 
 

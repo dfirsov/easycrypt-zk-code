@@ -65,11 +65,6 @@ abstract theory Statistical.
 
   declare module P <: MaliciousProver {-HV}.
 
-  declare axiom verify_ll     : islossless HV.verify.
-  declare axiom challenge_ll  : islossless HV.challenge.
-  declare axiom response_ll   : islossless P.response.
-  declare axiom commitment_ll : islossless P.commitment.
-
   local clone import IterUntilSucc as WNBP with type rt <- bool,
                                                 type iat <- statement.
 
@@ -105,8 +100,6 @@ abstract theory Statistical.
   byphoare (_: arg = ((statement), fun (x : bool) => !x,
                                          1, (n - 1) + 1, true) ==> _).
   apply (iter_run_le_ph (Soundness(P,HV))). 
-  proc.
-  call verify_ll. call response_ll. call challenge_ll. call commitment_ll. skip. auto.
   apply phs. auto. smt().
   auto. auto. 
   qed.

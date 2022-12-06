@@ -70,4 +70,4 @@ module HP : HonestProver = {
 }.
 
 (* Honest Verifier is derived automatically from "challenge_set" and "verify_transcript" *)
-(* print HV. *)
+print HV.

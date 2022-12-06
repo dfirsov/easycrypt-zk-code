@@ -201,7 +201,7 @@ local lemma Jensen_inf2 (X : 'a distr) (g : 'a -> real) f M:
     + mu X (predC M) * f (Ec X g (predC M)).
 proof.  move => llX fconv.
 have co : mu X (predC M) = 1%r - mu X M. smt(@Distr).
-rewrite co.
+rewrite co. 
 apply (fconv (Ec X g M) (Ec X g (predC M)) (mu X M)).
 smt(@Distr).
 qed.
@@ -387,7 +387,6 @@ smt().
 have dp : mu X (predC M) * f (Ec X g (predC M)) <= mu X (predC M) * d.
   have qq : forall (a b c : real), a >= 0%r => b <= c => a * b <= a * c. smt().
   have mup : mu X (predC M) >= 0%r. smt(@Distr).
-  (*have dp  : d >= 0%r. smt. *)
   smt().
 smt().
   have mup : mu X (predC M) >= 0%r. smt(@Distr).

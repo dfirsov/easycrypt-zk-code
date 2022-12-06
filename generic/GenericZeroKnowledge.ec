@@ -1,7 +1,6 @@
 pragma Goals:printall.
 require import AllCore List Distr.
 
-
 require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
@@ -705,7 +704,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
     Pr[HybGame(A1, Ob1, R(Ob1)).main(ss, ww) @ &m : res]| <=
   n%r * deltoid.
   smt().
-  smt().
+  smt(@Real).
   qed.
   end section.
   end SequentialComposition.
@@ -916,8 +915,6 @@ sim.  skip. progress. auto. auto.
     => islossless V0.summitup => islossless Sim1(V0).run.
   declare axiom V_summitup_ll  : islossless V.summitup.
   declare axiom V_challenge_ll : islossless V.challenge.
-  declare axiom P_response_ll  : islossless HonestProver.response.
-  declare axiom P_commitment_ll  : islossless HonestProver.commitment.
   declare axiom D_guess_ll     : islossless D.guess.
   declare axiom D_guess_prop : equiv[ D.guess ~ D.guess : ={glob V, arg, glob Count, glob HybOrcl} ==> ={res} ].
 

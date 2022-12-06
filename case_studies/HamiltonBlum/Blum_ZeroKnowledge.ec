@@ -54,7 +54,7 @@ lemma hc_statistical_zk   &m:
           `|ideal_prob - real_prob| <= (2%r * eps + 20%r * eps2) + 2%r * (1%r- (1%r/2%r - eps2)) ^ OSS.N.
 proof.
 progress.
-apply (statistical_zk HP Sim1 V D _ _ _ _ _ _ _ stat wit &m). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll. apply P_commitment_ll.
+apply (statistical_zk HP Sim1 V D _ _ _ _ _  stat wit &m). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
 apply D_guess_ll. 
 proc*. call D_guess_prop. skip.  auto.
 move => x.
@@ -87,10 +87,9 @@ apply P_commitment_ll. apply D_guess_ll.
 apply D_guess_prop.
 smt(eps2_ge0 eps_ge0 N_pos @RealExp).
 progress.
-apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V))  _ _ _ _ _ _ _ stat wit &n ).
+apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V))  _ _ _ _ _ stat wit &n ).
 apply Sim1_run_ll.
-apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
-apply P_commitment_ll. 
+apply V_summitup_ll. apply V_challenge_ll. 
 proc. 
 call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.

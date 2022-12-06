@@ -9,7 +9,6 @@ clone include GenericExtractability. (* inherit defs. *)
 require RewBasics.
 clone import RewBasics as Rew with type sbits <- sbits.
 
-
 module type SpecialSoundnessAdversary = { 
   proc attack(statement:statement) : transcript * transcript
 }.
@@ -249,9 +248,16 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
   have f54 :  0%r <= a. smt().
   have f53:  (a - 1%r / (size challenge_set)%r) * (a - 1%r / (size challenge_set)%r) <= a * (a - 1%r / (size challenge_set)%r). 
   smt().
-   have f5 : (a - 1%r / (size challenge_set)%r)^2  <= b.  smt(@Real challenge_set_size).
+   have f5 : (a - 1%r / (size challenge_set)%r)^2  <= b.   
+    have f511 : (a - 1%r / (size challenge_set)%r)^2  <=  a * (a - 1%r / (size challenge_set)%r).  
+      have ->: (a - 1%r / (size challenge_set)%r)^2 = (a - 1%r / (size challenge_set)%r) * (a - 1%r / (size challenge_set)%r).
+    smt(@RField).
+    apply f53. smt().
   smt(@RealExp). 
   qed.
+
+
+import StdOrder.RealOrder.
 
    (*  depending on the size of challenge_set either computational_soundness 
        or computational_soundness_II provide a better bound *)
@@ -292,8 +298,18 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
   have f51:  (a >= 1%r / c). smt().
   have f52:  (a - 1%r / c) <= a. smt(challenge_set_size).
   have f54 :  0%r <= a. smt().
-  have f6 : a * c * (a - 1%r / c) <= b * c. smt().
-  have f7 : (1%r/c) * c * (a - 1%r / c) <= b * c. smt().
+  have f6 : a * c * (a - 1%r / c) <= b * c.  
+    have -> : a * c * (a - 1%r / c)  = a * (a - 1%r / c) * c. smt().
+    apply ler_wpmul2r. smt().
+    smt().
+  have f7 : (1%r/c) * c * (a - 1%r / c) <= b * c. 
+   case (c = 0%r).  move => h. rewrite h. simplify. auto.
+    move => h.
+    have f71 : 0%r < c. smt(). clear h.
+    have  -> : 1%r / c * c * (a - 1%r / c) = (1%r / c) * (c * (a - 1%r / c)). smt().
+     have f72 : 1%r / c * (c * (a - 1%r / c)) <= a * c * (a - 1%r / c).
+     have -> : a * c * (a - 1%r / c) = a * (c * (a - 1%r / c)). smt().
+      apply ler_wpmul2r. smt(). smt(). smt().
   have f8 : (a - 1%r / c) <= b * c. smt(challenge_set_size).
   have f9 : a  <= b * c + 1%r/c. smt().
   smt (challenge_set_size). 

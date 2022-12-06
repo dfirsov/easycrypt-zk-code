@@ -584,7 +584,7 @@ module M(A : Run) = {
 section.
 declare module A <: Run{-M}.
 
-declare axiom A_run_ll : islossless A.run.
+(* declare axiom A_run_ll : islossless A.run. *)
 
 local lemma whp_split_if_end :  
   equiv[ M(A).whp ~ M(A).whp_if_end : ={glob A, i, MyP, s,r} /\ e{1} - 1 = e{2}

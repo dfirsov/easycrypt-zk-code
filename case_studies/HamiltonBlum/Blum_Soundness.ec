@@ -29,7 +29,7 @@ lemma hc_computational_soundness &m :
      Pr[Soundness(P, HV).run(ss) @ &m : res]
      <= sqrt (Pr[BindingExperiment(SpecialSoundnessBinder(SpecialSoundnessAdversary(P))).main() @ &m : res]) + 1%r/2%r.
 proof.  progress.
-apply (Computational.computational_soundness P _ _ _ &m ss ).  apply P_response_ll. apply P_commitment_ll.
+apply (Computational.computational_soundness P _ _ _ &m ss).  apply P_response_ll. apply P_commitment_ll.
 apply P_rewindable. auto.
 apply (hc_computational_special_soundness_binding (SpecialSoundnessAdversary(P)) &m).
 qed.

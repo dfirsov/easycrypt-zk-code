@@ -3,6 +3,7 @@ require import AllCore DBool Bool List Distr.
 require import Aux FS_Basics.
 
 import ZMR.
+import ComRing.
 
 (* perfect witness extraction from two valid transcripts  *)
 op special_soundness_extract (p : qr_stat) (t1 t2 : transcript): qr_wit
@@ -26,9 +27,11 @@ rewrite /qr_verify. simplify.
 progress. 
 rewrite /special_soundness_extract.  
 have -> : statement
-   = ((inv  transcript1.`1))  * (transcript1.`3) * (transcript1.`3 ). smt(@ZMR).
+   = ((inv  transcript1.`1))  * (transcript1.`3) * (transcript1.`3 ). 
+smt(@ComRing).
+
 rewrite H1.
-rewrite H7.  smt(@ZMR). 
+rewrite H7.  smt(@ComRing). 
 rewrite /valid_transcript_pair. rewrite /verify_transcript.
 case (!transcript2.`2). 
 progress. smt().
@@ -43,6 +46,6 @@ progress.
 rewrite /special_soundness_extract. 
 simplify. rewrite /my_extract.
 have -> : statement
-   = ((inv  transcript2.`1))  * (transcript2.`3) * (transcript2.`3 ). smt(@ZMR).
-smt(@ZMR).   
+   = ((inv  transcript2.`1))  * (transcript2.`3) * (transcript2.`3 ). smt(@ComRing).
+smt(@ComRing).   
 qed.
