@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Aux.
+require import AllCore DBool Bool List Distr AuxResults.
 
 (* All generic definitions associated with sigma protocols.  *)
 require  GenericSigmaProtocol.

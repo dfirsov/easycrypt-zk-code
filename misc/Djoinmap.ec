@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Int IntDiv Aux FSet.
+require import AllCore DBool Bool List Distr Int IntDiv AuxResults FSet.
 
 require import AllCore Distr FSet StdRing StdOrder StdBigop List.
 (*---*) import RField RealOrder Bigreal BRA.

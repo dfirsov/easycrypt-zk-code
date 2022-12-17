@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Aux RealExp.
+require import AllCore DBool Bool List Distr AuxResults RealExp.
 require import FS_Basics.
 
 clone import ZeroKnowledgeTheory as ZKT.

@@ -1,4 +1,4 @@
-require import AllCore DBool Bool List Distr Int Aux DJoin Permutation.
+require import AllCore DBool Bool List Distr Int AuxResults DJoin Permutation.
 require  GenericSigmaProtocol.
 
 

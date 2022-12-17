@@ -1,4 +1,4 @@
-require import AllCore Distr DBool Aux.
+require import AllCore Distr DBool AuxResults.
 
 require import RandomFacts RealSeries List.
 require import Reflection ReflectionComp.

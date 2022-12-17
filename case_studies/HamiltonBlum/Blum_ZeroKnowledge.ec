@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Int Aux DJoin.
+require import AllCore DBool Bool List Distr Int AuxResults DJoin.
 require import Permutation Blum_Basics.
 require Blum_Sim1Property.
 

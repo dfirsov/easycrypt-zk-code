@@ -1,5 +1,5 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Aux Finite.
+require import AllCore DBool Bool List Distr AuxResults Finite.
 require import CyclicGroup.
 import FDistr.
 

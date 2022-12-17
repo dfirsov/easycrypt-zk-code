@@ -1,6 +1,6 @@
 pragma Goals:printall.
-require import AllCore DBool Bool List Distr Int Aux DJoin RealExp.
-require import Aux Blum_Basics.
+require import AllCore DBool Bool List Distr Int AuxResults DJoin RealExp.
+require import Blum_Basics.
 
 require import Blum_SpecialSoundness.
 

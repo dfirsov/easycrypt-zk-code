@@ -1,6 +1,6 @@
 pragma Goals:printall.
 require import AllCore DBool Bool List Distr.
-require import Aux FS_Basics.
+require import AuxResults FS_Basics.
 
 import ZMR.
 import ComRing.

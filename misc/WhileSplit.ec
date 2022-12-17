@@ -2,7 +2,7 @@ pragma Goals:printall.
 require import Int Real AllCore Distr FSet StdRing StdOrder StdBigop List.
 (*---*) import RField RealOrder Bigreal BRA.
 
-require import Aux.
+require import AuxResults.
 
 type rrt, irt, sbits, dt, de.
 
@@ -450,7 +450,7 @@ local lemma whp_cap_fin_sum'' &m  ia (ea : int) r wa:
          (range 0 ea). 
 proof. progress.
 rewrite (whp_cap_fin_sum' &m);auto.
-rewrite (Aux.big_reindex (fun (i : int) =>
+rewrite (big_reindex (fun (i : int) =>
      Pr[A.run(ia) @ &m : ! MyPred res] ^ i * Pr[W0(A,D).run(ia,wa) @ &m : MyPred res.`2 /\  res.`1]) 2 ea). auto.
 qed.
 

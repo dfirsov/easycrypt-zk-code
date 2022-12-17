@@ -1,6 +1,6 @@
 pragma Goals:printall.
 require import AllCore.
-require import Aux FS_Basics List.
+require import AuxResults FS_Basics List.
 
 
 require import FS_SpecialSoundness.
