@@ -1,6 +1,6 @@
 require import AllCore Distr FSet StdRing StdOrder StdBigop List.
 (*---*) import RField RealOrder Bigreal BRA.
-require import Aux.
+require import AuxResults.
 
 type prob, wit, sbits, event.
 

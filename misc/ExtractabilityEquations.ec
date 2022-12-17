@@ -5,7 +5,7 @@ require import Ring StdRing StdOrder StdBigop Discrete RealSeq RealSeries RealLu
 (*---*) import IntOrder RealOrder RField.
 require (*--*) FinType.
 
-require import Averaging DProd RewWithInit Aux.
+require import Averaging DProd RewWithInit AuxResults.
 require import RealExp.
 
 
