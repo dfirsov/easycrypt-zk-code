@@ -2,11 +2,11 @@
 
 * Theory structure
 * GenericSigmaProtocol clone-includes GenericSpecialSoundness
-* GenericSpecialSoundness
+* GenericSpecialSoundness, TODO: reinclude around-whole-file theories (without ...Theory suffix, not abstract)
 ** clone-includes GenericExtractability
 ** clone-imports RewBasics as Rew
 ** Subthy Computational
-*** Clone-imports ExtractabilityEquationsTheory as GKE (TODO: what is that?)
+*** Clone-imports ExtractabilityEquationsTheory as GKE
 ** Subthy Perfect
 *** imports Computational
 * GenericExtractability
@@ -16,9 +16,23 @@
 ** clone-includes GenericSoundness
 *** TODO: Do we need that here? Or just GenericBasics?
 ** abstract subthy ZeroKnowledgeTheory
-*** parameters n, n_pos
+*** parameters n, n_pos; POSSIBILITY: make "global"
+**** abstract parameter: sequential_repetition_nr, def: op n = max (sequential_repetition_nr, 0), prove n_pos
 *** subthy SequentialComposition
 *** abstract subthy OneShotSimulator
 **** params N, N_pos
 **** subthy Computational.
 **** subthy Statistical.
+
+
+* TODO (excerpt)
+** Mention that abs-thy-module-params would be useful
+** Change generic as follows:
+*** Each subfile clone-includes previous ones
+*** Each subfile has a wrapping theory inside the the file (abstract if needed)
+*** GenericSigmaProtocol clone-includes the last one (effect: it has all the wrapping-thys as direct children as if EC had a possibility to properly split NS over files)
+** .eca file endings for thys that we clone
+** Axiom: challenge_set nonempty and distinct
+** sbits on toplevel (or own thy)
+** Whatever is in the diff that we didn't decide against (git diff bf7a045 discussion) 
+** Update description in paper

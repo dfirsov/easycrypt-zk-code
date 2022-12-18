@@ -28,7 +28,6 @@ type qr_com  = zmod.            (* commitment *)
 type qr_resp = zmod.            (* response *)
 
   (* defining relations for completeness, soundness, and ZK *)
-  (* TODO: Just one  *)
 op relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
 
 (* Schnorr's verification function  *)
