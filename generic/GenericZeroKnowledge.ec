@@ -1,3 +1,4 @@
+(* TODO rename to .eca *)
 pragma Goals:printall.
 require import AllCore List Distr.
 
@@ -128,8 +129,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   }.
 
 
-  require HybridArgumentWithParameter MemoryProps.
-
+  require MemoryProps.
   clone import MemoryProps with type at2 <- statement * witness,
                                 type at1 <- statement * witness.
 

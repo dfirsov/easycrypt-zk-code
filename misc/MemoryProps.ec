@@ -1,3 +1,5 @@
+(* TODO: Many lemma names have tmp-names here *)
+(* TODO rename to .eca *)
 require import AllCore Distr DBool AuxResults.
 
 require import RandomFacts RealSeries List.

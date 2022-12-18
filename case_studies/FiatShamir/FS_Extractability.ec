@@ -5,9 +5,6 @@ require import AuxResults FS_Basics List.
 
 require import FS_SpecialSoundness.
 
-
-clone import SpecialSoundnessTheory as SST with op special_soundness_extract <- special_soundness_extract.
-
 section.
 declare module P <: RewMaliciousProver {-HV}.
 declare axiom P_response_ll : islossless P.response.
@@ -26,10 +23,10 @@ declare axiom rewindable_P_plus :
 
 (* automatically implying proof-of-knowledge from special soundness  *)
 lemma qr_statistical_PoK &m  s: 
-  Pr[Extractor(P).extract(s) @ &m : soundness_relation s res ] >=
+  Pr[Extractor(P).extract(s) @ &m : relation s res ] >=
    (Pr[Soundness(P, HV).run(s) @ &m : res]^2
      - (1%r/2%r) * Pr[Soundness(P, HV).run(s) @ &m : res]).
-apply (SST.Perfect.statistical_extractability P  _ _ _ _ &m s  ). apply rewindable_P_plus. apply P_response_ll. 
+apply (Perfect.statistical_extractability P  _ _ _ _ &m s  ). apply rewindable_P_plus. apply P_response_ll. 
 apply P_commitment_ll. 
 apply qr_perfect_special_soundness.
 qed.

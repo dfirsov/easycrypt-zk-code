@@ -2,7 +2,7 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr AuxResults.
 
 (* All generic definitions associated with sigma protocols.  *)
-require  GenericSigmaProtocol.
+require GenericSigmaProtocol.
 
 
 (* standard library formalization of zmod fields, rings, etc.  *)
@@ -27,10 +27,9 @@ type qr_wit  = zmod.            (* witness *)
 type qr_com  = zmod.            (* commitment *)
 type qr_resp = zmod.            (* response *)
 
-(* defining relations for completeness, soundness, and ZK *)
-op completeness_relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
-op soundness_relation = completeness_relation.
-op zk_relation = completeness_relation.
+  (* defining relations for completeness, soundness, and ZK *)
+  (* TODO: Just one  *)
+op relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
 
 (* Schnorr's verification function  *)
 op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
@@ -40,19 +39,25 @@ op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
  unit c /\ unit p /\ if b then c * p = r * r 
                           else c = r * r.
 
+(* perfect witness extraction from two valid transcripts  *)
+op special_soundness_extract (p : qr_stat) (t1 t2 : qr_com * bool * qr_resp): qr_wit
+ = let (c1,ch1,r1) = t1 in
+   let (c2,ch2,r2) = t2 in
+   if ch1 then  (inv r2) * r1 else (inv r1) * r2.
+
 (* cloning the generic definition with specific FiatShamir details  *)
-clone export GenericSigmaProtocol as FiatShamirProtocol with 
+clone include GenericSigmaProtocol with 
   type statement       <- qr_stat,
   type commitment      <- qr_com,  
   type witness         <- qr_wit,
   type response        <- qr_resp,
   type challenge       <- bool,
-  op challenge_set     <=  (false :: true :: []),
+  op challenge_set     <=  [false; true],
   op verify_transcript <- verify_transcript,
-  op soundness_relation    <- soundness_relation,
-  op completeness_relation <- completeness_relation,
-  op zk_relation           <- zk_relation.
-
+  op soundness_relation    <- relation,
+  op completeness_relation <- relation,
+  op zk_relation           <- relation,
+  op special_soundness_extract <- special_soundness_extract.
 
 (* standard implementation of Honest Prover *)
 module HP : HonestProver = {

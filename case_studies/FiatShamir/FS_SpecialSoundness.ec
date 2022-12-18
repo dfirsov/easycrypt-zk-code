@@ -5,18 +5,11 @@ require import AuxResults FS_Basics.
 import ZMR.
 import ComRing.
 
-(* perfect witness extraction from two valid transcripts  *)
-op special_soundness_extract (p : qr_stat) (t1 t2 : transcript): qr_wit
- = let (c1,ch1,r1) = t1 in
-   let (c2,ch2,r2) = t2 in
-   if ch1 then  (inv r2) * r1 else (inv r1) * r2.
-
-
 (* proof of perfect special soundness  *)
 lemma qr_perfect_special_soundness (statement:qr_stat) 
  (transcript1 transcript2: transcript):
         valid_transcript_pair statement transcript1 transcript2 =>
-   soundness_relation statement 
+   relation statement 
     (special_soundness_extract statement transcript1 transcript2).
 proof.
 rewrite /valid_transcript_pair. rewrite /verify_transcript.

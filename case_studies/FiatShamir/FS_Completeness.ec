@@ -4,10 +4,10 @@ require import FS_Basics.
 
 import ZMR.
 
-section.
+section. (* We use a section to be able to avoid exporting qr_complete_h *)
 
 (* completeness in Hoare Logic (does not ensure termination)  *)
-local lemma qr_complete_h ya wa : completeness_relation ya wa
+local lemma qr_complete_h ya wa : relation ya wa
    => hoare [ Completeness(HP,HV).run : arg = (ya,wa) ==> res ].
 move => [qra invrtbl].
 proc. inline*.  wp.
@@ -23,7 +23,7 @@ qed.
 
 (* one-round completeness *)
 lemma qr_completeness: forall (statement:qr_stat) (witness:qr_wit) &m,
-  completeness_relation statement witness =>
+  relation statement witness =>
   Pr[Completeness(HP,HV).run(statement, witness) @ &m : res] = 1%r.
 move => s w &m [qr invrtbl]. byphoare (_: arg = (s, w) ==> _);auto.
 proc*.
@@ -39,10 +39,10 @@ qed.
 (* iterated completeness *)
 lemma qr_completeness_iter: forall (statement:qr_stat) (witness:qr_wit) &m n,
         1 <= n =>
-       completeness_relation statement witness =>
+       relation statement witness =>
       Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
 progress.
-apply (FiatShamirProtocol.CompletenessTheory.Perfect.completeness_seq HP HV).
+apply (CompletenessTheory.Perfect.completeness_seq HP HV).
 progress.
 apply qr_completeness. auto. auto. auto.
 qed.

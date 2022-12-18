@@ -1,3 +1,4 @@
+(* TODO: rename to .eca file *)
 pragma Goals:printall.
 require import AllCore List Distr.
 
@@ -16,9 +17,6 @@ module type RewMaliciousProver = {
 module type Extractor(P: RewMaliciousProver) = {
   proc extract(statement: statement): witness
 }.
-
-
-theory ExtractabilityTheory.
 
 (* Consider adding example of an extractability statement. However,
 this requires bulky rewindability premises...  *)
@@ -44,6 +42,3 @@ smt().
 qed. 
 
 end section.
-
-
-end ExtractabilityTheory.

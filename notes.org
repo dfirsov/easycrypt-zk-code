@@ -1,0 +1,24 @@
+* In FS_Basics: Just one relation "relation", instantiate all three relations with it.
+
+* Theory structure
+* GenericSigmaProtocol clone-includes GenericSpecialSoundness
+* GenericSpecialSoundness
+** clone-includes GenericExtractability
+** clone-imports RewBasics as Rew
+** Subthy Computational
+*** Clone-imports ExtractabilityEquationsTheory as GKE (TODO: what is that?)
+** Subthy Perfect
+*** imports Computational
+* GenericExtractability
+** clone-includes GenericZeroKnowledge
+*** TODO: Do we need that here? Or just include in GenericSigmaProtocol (and define sbits etc. in FS_Basics)
+* GenericZeroKnowledge
+** clone-includes GenericSoundness
+*** TODO: Do we need that here? Or just GenericBasics?
+** abstract subthy ZeroKnowledgeTheory
+*** parameters n, n_pos
+*** subthy SequentialComposition
+*** abstract subthy OneShotSimulator
+**** params N, N_pos
+**** subthy Computational.
+**** subthy Statistical.

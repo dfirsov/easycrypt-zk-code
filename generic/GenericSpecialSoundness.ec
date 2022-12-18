@@ -1,3 +1,5 @@
+(* TODO Should be an .eca file *)
+
 pragma Goals:printall.
 require import AllCore List Distr Real RealExp.
 
@@ -44,7 +46,7 @@ module SpecialSoundnessAdversary(P : RewMaliciousProver)
 }.
 
 
-abstract theory SpecialSoundnessTheory.
+(* abstract theory SpecialSoundnessTheory. *)
 
 
 op special_soundness_extract (s:statement)(t1 t2:transcript): witness.
@@ -60,6 +62,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 
  theory Computational.
 
+   (* TODO: better comments what these things are for *)
    (* example of a computational special soundness *)
    abstract theory Statement.
    axiom computational_special_soundness: forall (P <: RewMaliciousProver), 
@@ -257,7 +260,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
   qed.
 
 
-import StdOrder.RealOrder.
+import StdOrder.RealOrder.      (* TODO: At the beginning? *)
 
    (*  depending on the size of challenge_set either computational_soundness 
        or computational_soundness_II provide a better bound *)
@@ -382,5 +385,6 @@ import StdOrder.RealOrder.
      rewrite Pr[mu_eq]. smt(perfect_special_soundness). auto. auto. qed.
     end section.
   end Perfect.
-end SpecialSoundnessTheory.
+
+(* end SpecialSoundnessTheory. *)
 
