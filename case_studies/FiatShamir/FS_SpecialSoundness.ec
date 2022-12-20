@@ -12,6 +12,12 @@ op special_soundness_extract (p : qr_stat) (t1 t2 : transcript): qr_wit
    if ch1 then  (inv r2) * r1 else (inv r1) * r2.
 
 
+
+ 
+clone export SpecialSoundnessTheory as SST with op special_soundness_extract <- special_soundness_extract
+proof *.
+
+
 (* proof of perfect special soundness  *)
 lemma qr_perfect_special_soundness (statement:qr_stat) 
  (transcript1 transcript2: transcript):
@@ -29,7 +35,6 @@ rewrite /special_soundness_extract.
 have -> : statement
    = ((inv  transcript1.`1))  * (transcript1.`3) * (transcript1.`3 ). 
 smt(@ComRing).
-
 rewrite H1.
 rewrite H7.  smt(@ComRing). 
 rewrite /valid_transcript_pair. rewrite /verify_transcript.

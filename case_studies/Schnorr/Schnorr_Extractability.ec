@@ -6,8 +6,6 @@ import FDistr.
 require import Schnorr_Basics.
 require import Schnorr_SpecialSoundness.
 
-clone import SpecialSoundnessTheory as SST with op special_soundness_extract <- special_soundness_extract.
-
 
 section.
 declare module P <: RewMaliciousProver{-HV}.
@@ -31,7 +29,7 @@ lemma dl_statistical_PoK &m s:
    (Pr[Soundness(P, HV).run(s) @ &m : res]^2
       - 1%r / (size (to_seq (support dt)))%r 
            * Pr[Soundness(P, HV).run(s) @ &m : res]).
-apply (SST.Perfect.statistical_extractability P  _ _ _ _ &m s  ).
+apply (Perfect.statistical_extractability P  _ _ _ _ &m s  ).
 apply rewindable_P_plus. apply P_response_ll. apply P_commitment_ll.
 apply dl_perfect_special_soundness.
 qed.

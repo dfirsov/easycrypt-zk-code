@@ -5,10 +5,12 @@ import FDistr.
 
 require import Schnorr_Basics.
 
-
 (* perfect witness extraction from two valid transcripts  *)
 op special_soundness_extract (p : dl_stat) (t1 t2 : transcript): dl_wit
  = (inv (t1.`2 - t2.`2)) * (t1.`3  - t2.`3).
+
+
+clone include SpecialSoundnessTheory with op special_soundness_extract <- special_soundness_extract.
 
 section. 
 

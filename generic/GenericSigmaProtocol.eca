@@ -1,6 +1,6 @@
 
 
-(* this imports all generic (Generic*.ec) theories. *)
+(* this imports all generic (Generic*.eca) theories. *)
 require GenericSpecialSoundness.
 clone include GenericSpecialSoundness. 
 

@@ -13,15 +13,15 @@ clone import Statistical with op epsilon <- 0%r,   (* conditional probability of
 proof*.
 realize epsilon_pos. auto. qed.
 
-(* importing the rewinding framework  *)
-require RewBasics.
-clone import RewBasics as Rew with 
+(* importing the rewinding framework *)
+require  RewBasics.
+clone import RewBasics as Rew with
   type sbits <- sbits,
-  op pair_sbits <- pair_sbits,
-  op unpair <- unpair
+  op pair_sbits <- FS_pair_sbits,
+  op unpair <- FS_unpair
 proof *.
-realize ips. apply ips. qed.
-realize unpair_pair. apply unpair_pair. qed.
+realize ips. apply FS_ips. qed.
+realize unpair_pair. apply FS_unpair_pair. qed.
 
 
 section. (* modules and their losslessness assumptions  *)
@@ -52,6 +52,7 @@ declare axiom rewindable_V_plus :
 
 
 (* one-round zero-knowledge *)
+
 lemma qr_statistical_zk stat wit &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKReal(HP, V, D).run(stat, wit) @ &m : res] in

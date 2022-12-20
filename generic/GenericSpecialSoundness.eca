@@ -1,9 +1,11 @@
 pragma Goals:printall.
 require import AllCore List Distr Real RealExp.
+import StdOrder.RealOrder.
 
 require GenericExtractability.
 clone include GenericExtractability. (* inherit defs. *)
 
+abstract theory SpecialSoundnessTheory.
 
 (* importing rewinding library  *)
 require RewBasics.
@@ -47,9 +49,6 @@ module SpecialSoundnessAdversary(P : RewMaliciousProver)
     return ((i,c1,r1), (i,c2,r2));
   }
 }.
-
-
-abstract theory SpecialSoundnessTheory.
 
 
 op special_soundness_extract (s:statement)(t1 t2:transcript): witness.
@@ -277,7 +276,7 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
   qed.
 
 
-import StdOrder.RealOrder.
+
 
    (*  depending on the size of challenge_set either computational_soundness 
        or computational_soundness_II provide a better bound *)

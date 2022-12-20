@@ -2,7 +2,7 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr AuxResults.
 
 (* All generic definitions associated with sigma protocols.  *)
-require  GenericSigmaProtocol.
+require GenericSigmaProtocol.
 
 
 (* standard library formalization of zmod fields, rings, etc.  *)
@@ -22,10 +22,10 @@ axiom d_prop5 : weight zmod_distr = 1%r.
 
 (* parameters needed for rewinding library  *)
 type sbits.
-op pair_sbits : sbits * sbits -> sbits.
-op unpair: sbits -> sbits * sbits.
-axiom ips: injective pair_sbits. 
-axiom unpair_pair x : unpair (pair_sbits x) = x.
+op FS_pair_sbits : sbits * sbits -> sbits.
+op FS_unpair: sbits -> sbits * sbits.
+axiom FS_ips: injective FS_pair_sbits. 
+axiom FS_unpair_pair x : FS_unpair (FS_pair_sbits x) = x.
 
 
 (* synonyms for readability *)
@@ -35,11 +35,7 @@ type qr_com  = zmod.            (* commitment *)
 type qr_resp = zmod.            (* response *)
 
 (* defining relations for completeness, soundness, and ZK *)
-op completeness_relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
-op soundness_relation = completeness_relation.
-op zk_relation = completeness_relation.
-
-
+op relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
 
 (* Schnorr's verification function  *)
 op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
@@ -51,25 +47,26 @@ op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
 
 
 (* cloning the generic definition with specific FiatShamir details  *)
-clone export GenericSigmaProtocol as FiatShamirProtocol with 
+clone include GenericSigmaProtocol with 
   type statement       <- qr_stat,
   type commitment      <- qr_com,  
   type witness         <- qr_wit,
   type response        <- qr_resp,
   type challenge       <- bool,
   type sbits           <- sbits,
-  op pair_sbits        <- pair_sbits,
-  op unpair            <- unpair,
-  op challenge_set     <=  (false :: true :: []),
+  op pair_sbits        <- FS_pair_sbits,
+  op unpair            <- FS_unpair,
+  op challenge_set     <=  [false; true],
   op verify_transcript <- verify_transcript,
-  op soundness_relation    <- soundness_relation,
-  op completeness_relation <- completeness_relation,
-  op zk_relation           <- zk_relation
+  op soundness_relation    <= relation,
+  op completeness_relation <= relation,
+  op zk_relation           <= relation
 proof*.
 realize challenge_set_size. auto. qed.
 realize challenge_set_unique. auto. qed.
-realize ips. apply ips. qed.
-realize unpair_pair. apply unpair_pair. qed.
+realize ips. apply FS_ips. qed.
+realize unpair_pair. apply FS_unpair_pair. qed.
+
 
 
 

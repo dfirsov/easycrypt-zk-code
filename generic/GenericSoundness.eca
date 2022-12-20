@@ -5,6 +5,7 @@ require import WhileNoSuccess.
 require GenericCompleteness.
 clone include GenericCompleteness. (* inherit defs.  *)
 
+
 op soundness_relation : relation.
 
 module type MaliciousProver = {  
