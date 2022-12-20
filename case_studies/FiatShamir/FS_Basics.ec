@@ -8,7 +8,7 @@ require  GenericSigmaProtocol.
 (* standard library formalization of zmod fields, rings, etc.  *)
 (* for FiatShamir we must use ring since in ZModField QR is efficiently computable *)
 require import ZModP.           
-clone import ZModRing as ZMR.         
+clone import ZModRing as ZMR.
 
 (* more intuitive synonym *)
 abbrev invertible = unit.       
@@ -19,6 +19,13 @@ axiom d_prop0 : is_uniform zmod_distr.
 axiom d_prop3 (r : zmod) :  invertible r => r \in zmod_distr.
 axiom d_prop4 r : r \in zmod_distr => invertible r.
 axiom d_prop5 : weight zmod_distr = 1%r.
+
+(* parameters needed for rewinding library  *)
+type sbits.
+op pair_sbits : sbits * sbits -> sbits.
+op unpair: sbits -> sbits * sbits.
+axiom ips: injective pair_sbits. 
+axiom unpair_pair x : unpair (pair_sbits x) = x.
 
 
 (* synonyms for readability *)
@@ -32,6 +39,8 @@ op completeness_relation (s:qr_stat) (w:qr_wit) = s = (w * w) /\ invertible s.
 op soundness_relation = completeness_relation.
 op zk_relation = completeness_relation.
 
+
+
 (* Schnorr's verification function  *)
 op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
  let c = x.`1 in 
@@ -40,6 +49,7 @@ op verify_transcript (p: qr_stat) (x : qr_com * bool * qr_resp) : bool =
  unit c /\ unit p /\ if b then c * p = r * r 
                           else c = r * r.
 
+
 (* cloning the generic definition with specific FiatShamir details  *)
 clone export GenericSigmaProtocol as FiatShamirProtocol with 
   type statement       <- qr_stat,
@@ -47,11 +57,20 @@ clone export GenericSigmaProtocol as FiatShamirProtocol with
   type witness         <- qr_wit,
   type response        <- qr_resp,
   type challenge       <- bool,
+  type sbits           <- sbits,
+  op pair_sbits        <- pair_sbits,
+  op unpair            <- unpair,
   op challenge_set     <=  (false :: true :: []),
   op verify_transcript <- verify_transcript,
   op soundness_relation    <- soundness_relation,
   op completeness_relation <- completeness_relation,
-  op zk_relation           <- zk_relation.
+  op zk_relation           <- zk_relation
+proof*.
+realize challenge_set_size. auto. qed.
+realize challenge_set_unique. auto. qed.
+realize ips. apply ips. qed.
+realize unpair_pair. apply unpair_pair. qed.
+
 
 
 (* standard implementation of Honest Prover *)

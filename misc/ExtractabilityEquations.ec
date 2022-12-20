@@ -244,7 +244,7 @@ axiom dll : is_lossless d.
 op allcs : ct list.
 axiom allcs_uniq : uniq allcs.
 axiom allcs_all x : mu1 d x <> 0%r => x \in allcs.
-axiom ss c : mu1 d c = 1%r/(size allcs)%r.
+axiom ss c : c \in allcs => mu1 d c = 1%r/(size allcs)%r.
 
 
 clone import AveragingAux as BP with type ct  <- ct,
@@ -510,8 +510,13 @@ have ->: big (fun r => fst r = snd r)  (fun (c1c2 : ct * ct) =>
                    Pr[ C1.main(c1c2.`1,p) @ &m :  M p (c1c2.`1, res) ])) 
                    (cartprod2 allcs).
 apply eq_big. auto. 
+progress. 
+case (mu1 d i.`1 = 0%r). progress. rewrite H0. simplify. auto.
 progress.
-rewrite ss. rewrite ss. simplify. auto. simplify. 
+rewrite ss. apply allcs_all. auto.
+rewrite ss.  rewrite - H. apply allcs_all. auto.
+simplify. 
+auto. simplify. 
 have ->: big (fun (r : ct * ct) => r.`1 = r.`2)
   (fun (c1c2 : ct * ct) =>
      (1%r/(size allcs)%r) * (mu1 d c1c2.`1 * Pr[C1.main(c1c2.`1,p) @ &m : M p (c1c2.`1, res)]))

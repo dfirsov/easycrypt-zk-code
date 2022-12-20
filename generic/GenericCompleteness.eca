@@ -87,7 +87,8 @@ theory CompletenessTheory.
     declare module V <: HonestVerifier{-P}.
 
     local clone import IterUntilSucc as WNBP with type rt <- bool,
-                                                  type iat <- statement * witness.
+                                                  type iat <- statement * witness
+    proof *.
 
     (* statistical completeness for sequentially composed sigma protocol   *)
     lemma completeness_seq &m statement witness n deltoid:
@@ -153,7 +154,8 @@ theory CompletenessTheory.
        Pr[Completeness(P,V).run(statement, witness) @ &n : res]
              = 1%r.
 
-    local clone import Statistical as SC.
+    local clone import Statistical as SC
+    proof *.
 
     (* perfect completeness for sequentially composed sigma protocol   *)
     lemma completeness_seq &m statement witness n:

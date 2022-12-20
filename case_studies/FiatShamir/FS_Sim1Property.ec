@@ -2,9 +2,25 @@ pragma Goals:printall.
 require import AllCore DBool Bool List Distr AuxResults RealExp.
 require import FS_Basics.
 
-clone import ZeroKnowledgeTheory as ZKT.
-clone import OneShotSimulator as OSS.
 import ZMR.
+
+op n : int.
+axiom n_pos : 1 <= n.
+
+clone import ZeroKnowledgeTheory as ZKT with
+  op n <= n                     
+proof*. 
+realize n_pos. apply n_pos. qed.
+
+op N : int.
+axiom N_pos : 0 <= N.
+  
+clone import OneShotSimulator as OSS with
+  op N <= N
+proof *.
+realize N_pos. apply N_pos. qed.
+
+
 
 
 (* one-time simulator *)

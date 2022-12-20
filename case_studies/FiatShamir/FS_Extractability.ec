@@ -6,7 +6,8 @@ require import AuxResults FS_Basics List.
 require import FS_SpecialSoundness.
 
 
-clone import SpecialSoundnessTheory as SST with op special_soundness_extract <- special_soundness_extract.
+clone import SpecialSoundnessTheory as SST with op special_soundness_extract <- special_soundness_extract
+proof *.
 
 section.
 declare module P <: RewMaliciousProver {-HV}.

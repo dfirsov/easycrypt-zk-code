@@ -66,7 +66,8 @@ abstract theory Statistical.
   declare module P <: MaliciousProver {-HV}.
 
   local clone import IterUntilSucc as WNBP with type rt <- bool,
-                                                type iat <- statement.
+                                                type iat <- statement
+  proof *.
 
   (* premise of one-run soundness bound  *)
   declare axiom soundness &n statement:

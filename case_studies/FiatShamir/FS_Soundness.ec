@@ -36,8 +36,11 @@ apply qr_perfect_special_soundness. auto.
 qed.
 
 
-clone import SoundnessTheory.
-clone import Statistical with op soundness_error <= fun _ => 1%r/2%r.
+clone import SoundnessTheory
+proof*.
+
+clone import Statistical with op soundness_error <= fun _ => 1%r/2%r
+proof*.
 
 (* automatic conclusion of iterated soundness *)
 lemma qr_soundness_iter &m s n:

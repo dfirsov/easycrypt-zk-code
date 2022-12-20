@@ -23,12 +23,12 @@ check misc/WhileNoSuccess.ec
 
 
 ## Generic sigma protocol defs/results
-check generic/GenericSigmaProtocol.ec
-check generic/GenericCompleteness.ec
-check generic/GenericSoundness.ec
-check generic/GenericZeroKnowledge.ec
-check generic/GenericExtractability.ec
-check generic/GenericSpecialSoundness.ec
+check generic/GenericSigmaProtocol.eca
+check generic/GenericCompleteness.eca
+check generic/GenericSoundness.eca
+check generic/GenericZeroKnowledge.eca
+check generic/GenericExtractability.eca
+check generic/GenericSpecialSoundness.eca
 
 
 ## instance of Fiat-Shamir protocol

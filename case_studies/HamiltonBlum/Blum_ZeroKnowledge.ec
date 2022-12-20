@@ -73,6 +73,7 @@ apply (rewindable_A_plus V). apply rewindable_V_plus.
 auto.
 qed.
 
+
 lemma hc_statistical_zk_iter &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKRealAmp(HP, V, D).run(stat, wit) @ &m : res] in
@@ -111,7 +112,7 @@ while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll. 
 skip. smt(). skip. smt().
 apply V_summitup_ll. apply V_challenge_ll. 
-proc. call D_guess_prop. sim. 
+proc. call D_guess_prop. sim.  progress.
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 proc. call D_guess_ll. sp.
 while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress. wp. 

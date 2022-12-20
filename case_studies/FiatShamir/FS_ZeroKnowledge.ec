@@ -4,16 +4,24 @@ require import FS_Basics FS_Sim1Property.
 import OSS.
 
 
-clone import ZKT.SequentialComposition.
+clone import ZKT.SequentialComposition
+proof*.
 
 (* importing statistical zero knowledge  *)
 clone import Statistical with op epsilon <- 0%r,   (* conditional probability of indistinguishability *)
-                              op sigma <- 1%r/2%r. (* success-event *)
-
+                              op sigma <- 1%r/2%r (* success-event *)
+proof*.
+realize epsilon_pos. auto. qed.
 
 (* importing the rewinding framework  *)
 require RewBasics.
-clone import RewBasics as Rew with type sbits <- sbits.
+clone import RewBasics as Rew with 
+  type sbits <- sbits,
+  op pair_sbits <- pair_sbits,
+  op unpair <- unpair
+proof *.
+realize ips. apply ips. qed.
+realize unpair_pair. apply unpair_pair. qed.
 
 
 section. (* modules and their losslessness assumptions  *)
@@ -48,7 +56,7 @@ lemma qr_statistical_zk stat wit &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKReal(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res] in
-          `|ideal_prob - real_prob| <= 2%r * (1%r / 2%r) ^ OSS.N.
+          `|ideal_prob - real_prob| <= 2%r * (1%r / 2%r) ^ FS_Sim1Property.N.
 proof.
 progress.
 apply (statistical_zk HP Sim1  V D _ _ _ _ _  stat wit &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
@@ -80,9 +88,9 @@ lemma qr_statistical_zk_iter stat wit &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKRealAmp(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimAmp(SimN(Sim1)), V, D).run(stat, wit) @ &m : res] in
-          `|ideal_prob - real_prob| <= ZKT.n%r * (2%r * (1%r / 2%r) ^ OSS.N).
+          `|ideal_prob - real_prob| <= ZKT.n%r * (2%r * (1%r / 2%r) ^  OSS.N).
 progress.
-apply (zk_seq HP (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  (2%r * (1%r / 2%r) ^ OSS.N) stat wit). 
+apply (zk_seq HP (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  (2%r * (1%r / 2%r) ^ FS_Sim1Property.N) stat wit). 
 progress.  apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. apply D_guess_ll.  conseq D_guess_prop. 
@@ -91,7 +99,7 @@ apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ stat wit &n).
 apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll.
 proc. 
 call D_guess_ll. sp.
-while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (FS_Sim1Property.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt(). auto. auto. progress.
 proc. 
@@ -106,7 +114,7 @@ apply (rewindable_A_plus V). apply rewindable_V_plus.
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. 
 call D_guess_ll. sp.
-while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (FS_Sim1Property.n - ZKT.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll. 
 skip. smt(). skip. smt().
 auto. auto. progress.

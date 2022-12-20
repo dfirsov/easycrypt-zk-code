@@ -7,7 +7,12 @@ clone include GenericExtractability. (* inherit defs. *)
 
 (* importing rewinding library  *)
 require RewBasics.
-clone import RewBasics as Rew with type sbits <- sbits.
+clone import RewBasics as Rew with type sbits <- sbits,
+                                   op pair_sbits <- pair_sbits,
+                                   op unpair <- unpair
+proof *.
+realize ips. apply ips. qed.
+realize unpair_pair. apply unpair_pair. qed.
 
 module type SpecialSoundnessAdversary = { 
   proc attack(statement:statement) : transcript * transcript
@@ -77,8 +82,23 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
                                       type ct <- challenge,
                                       type rt <- response,
                                       type sbits <- sbits,
+                                      op RWI.pair_sbits <- pair_sbits,
+                                      op RWI.unpair <- unpair,
                                       op d <- duniform challenge_set,
-                                      op allcs <- challenge_set.
+                                      op allcs <- challenge_set
+   proof *.
+   realize RWI.ips. apply ips. qed.
+   realize RWI.RW.ips. apply ips. qed.
+   realize RWI.unpair_pair. apply unpair_pair. qed.
+   realize RWI.RW.unpair_pair. apply unpair_pair. qed.
+   realize duni. smt(@Distr). qed.   
+   realize dll.  apply duniform_ll.  smt(challenge_set_size). qed.
+   realize allcs_uniq. smt(challenge_set_unique). qed.
+   realize allcs_all. smt(@Distr). qed.
+   realize ss.  progress.
+   rewrite duniform1E_uniq. apply challenge_set_unique. rewrite H. auto.
+   qed.
+
 
    section.
 

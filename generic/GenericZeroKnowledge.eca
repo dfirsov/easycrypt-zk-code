@@ -67,6 +67,7 @@ module ZKIdeal(S: Simulator, V: RewMaliciousVerifier, D: ZKDistinguisher) = {
 
 abstract theory ZeroKnowledgeTheory.
 
+
 op n : int.
 axiom n_pos : 1 <= n.
 
@@ -74,9 +75,8 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
                                         type output <- summary,
                                         type outputA <- bool,
                                         type argt <- statement * witness,
-                                        op q <- n.
-
-
+                                        op q <- n
+proof *.
 
   abstract theory Statement.
   op zk_function : statement -> real.
@@ -92,8 +92,7 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   end Statement.
 
 
-  theory SequentialComposition.
-
+  abstract theory SequentialComposition.
 
 
   module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
@@ -128,10 +127,11 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   }.
 
 
-  require HybridArgumentWithParameter MemoryProps.
+  require MemoryProps.
 
   clone import MemoryProps with type at2 <- statement * witness,
-                                type at1 <- statement * witness.
+                                type at1 <- statement * witness
+  proof *.
 
 
   section.
@@ -757,9 +757,10 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
   }.
 
 
-  theory Computational.
+  abstract theory Computational.
 
   section.
+
 
   declare module HonestProver <: HonestProver{-Hyb.Count, -Hyb.HybOrcl}.
   declare module Sim1 <: Simulator1{-Hyb.Count, -Hyb.HybOrcl}.
@@ -896,7 +897,7 @@ sim.  skip. progress. auto. auto.
   end Computational.
 
 
-  theory Statistical.
+  abstract theory Statistical.
 
   op epsilon : real.
   op sigma   : real.
