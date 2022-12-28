@@ -4,7 +4,6 @@ require import FS_Basics.
 
 require import FS_SpecialSoundness.
 require import FS_Extractability.
-import SST.
 
 section.
 
@@ -29,17 +28,14 @@ lemma qr_soundness &m s:
      Pr[Soundness(P, HV).run(s) @ &m : res]
      <= 1%r/2%r.
 progress.
-apply (SST.Perfect.statistical_soundness P _).
+apply (SpecialSoundness.Perfect.statistical_soundness P _).
 apply rewindable_P_plus.
 apply P_response_ll. apply P_commitment_ll.
 apply qr_perfect_special_soundness. auto.
 qed.
 
 
-clone import SoundnessTheory
-proof*.
-
-clone import Statistical with op soundness_error <= fun _ => 1%r/2%r
+clone import StatisticalSoundness with op soundness_error <= fun _ => 1%r/2%r
 proof*.
 
 (* automatic conclusion of iterated soundness *)

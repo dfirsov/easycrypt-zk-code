@@ -3,15 +3,16 @@ require import AllCore DBool Bool List Distr Int AuxResults DJoin.
 require import FS_Basics FS_Sim1Property.
 import OSS.
 
-
-clone import ZKT.SequentialComposition
+clone import ZK.SequentialComposition
 proof*.
 
-(* importing statistical zero knowledge  *)
-clone import Statistical with op epsilon <- 0%r,   (* conditional probability of indistinguishability *)
-                              op sigma <- 1%r/2%r (* success-event *)
-proof*.
-realize epsilon_pos. auto. qed.
+import Statistical.
+
+(* (* importing statistical zero knowledge  *) *)
+(* clone import Statistical with op epsilon <- 0%r,   (* conditional probability of indistinguishability *) *)
+(*                               op sigma <- 1%r/2%r (* success-event *) *)
+(* proof*. *)
+(* realize epsilon_pos. auto. qed. *)
 
 (* importing the rewinding framework *)
 require  RewBasics.
@@ -25,8 +26,8 @@ realize unpair_pair. apply FS_unpair_pair. qed.
 
 
 section. (* modules and their losslessness assumptions  *)
-declare module V <: RewMaliciousVerifier{-ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count,-HP}.
-declare module D <: ZKDistinguisher{-ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count, -HP}.
+declare module V <: RewMaliciousVerifier{-ZK.Hyb.HybOrcl,-ZK.Hyb.Count,-HP}.
+declare module D <: ZKDistinguisher{-ZK.Hyb.HybOrcl,-ZK.Hyb.Count, -HP}.
 
 declare axiom Sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge 
   => islossless V0.summitup => islossless Sim1(V0).run.
@@ -59,8 +60,8 @@ lemma qr_statistical_zk stat wit &m:
         let ideal_prob = Pr[ZKIdeal(SimN(Sim1), V, D).run(stat, wit) @ &m : res] in
           `|ideal_prob - real_prob| <= 2%r * (1%r / 2%r) ^ FS_Sim1Property.N.
 proof.
-progress.
-apply (statistical_zk HP Sim1  V D _ _ _ _ _  stat wit &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
+  progress.
+apply (statistical_zk 0%r (1%r/2%r) _ HP Sim1  V D _ _ _ _ _  stat wit &m);auto. apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
 
 apply D_guess_ll.  conseq  D_guess_prop. auto.
    apply (sim1_rew_ph V). 
@@ -83,24 +84,24 @@ qed.
        
 (* iterated zero-knowledge  *)
 (* Note 1: The proof mostly consists of establishing "losslessness" of involved modules. *)
-(* Note 2: ZKT.n and OSS.N are abstract parameters which could be instantiated when cloning the ZK theory. The reason for them
+(* Note 2: ZK.n and OSS.N are abstract parameters which could be instantiated when cloning the ZK theory. The reason for them
 being parameters is a restriction induced by HybridArgument formalization which uses global paremters instead of universally quantified    ones *)
 lemma qr_statistical_zk_iter stat wit &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKRealAmp(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimAmp(SimN(Sim1)), V, D).run(stat, wit) @ &m : res] in
-          `|ideal_prob - real_prob| <= ZKT.n%r * (2%r * (1%r / 2%r) ^  OSS.N).
+          `|ideal_prob - real_prob| <= ZK.n%r * (2%r * (1%r / 2%r) ^  OSS.N).
 progress.
 apply (zk_seq HP (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  (2%r * (1%r / 2%r) ^ FS_Sim1Property.N) stat wit). 
 progress.  apply (simn_simulate_ll V0). auto. auto.
 apply V_summitup_ll. apply V_challenge_ll. apply P_response_ll.
 apply P_commitment_ll. apply D_guess_ll.  conseq D_guess_prop. 
 smt(@RealExp). progress.
-apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ stat wit &n).
+apply (statistical_zk 0%r (1%r/2%r) _ HP Sim1  V (Di(D, SimN(Sim1), V)) _ _ _ _ _ stat wit &n); auto.
 apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll.
 proc. 
 call D_guess_ll. sp.
-while (true) (FS_Sim1Property.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (FS_Sim1Property.n - ZK.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt(). auto. auto. progress.
 proc. 
@@ -115,7 +116,7 @@ apply (rewindable_A_plus V). apply rewindable_V_plus.
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. 
 call D_guess_ll. sp.
-while (true) (FS_Sim1Property.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (FS_Sim1Property.n - ZK.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll. 
 skip. smt(). skip. smt().
 auto. auto. progress.
@@ -130,7 +131,7 @@ apply rewindable_V_plus. apply V_summitup_ll.
 apply V_challenge_ll. 
 proc.
 call D_guess_ll. sp.
-while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (ZK.n - ZK.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt(). proc. call D_guess_prop. sim. auto. 
 progress.
@@ -139,7 +140,7 @@ apply rewindable_V_plus. apply V_summitup_ll.
 apply V_challenge_ll. apply D_guess_ll. 
 proc*.
 call D_guess_prop. skip. auto. smt().
-auto. auto. 
+auto. 
 qed.
 
 

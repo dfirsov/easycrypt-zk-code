@@ -7,7 +7,7 @@ import ZMR.
 op n : int.
 axiom n_pos : 1 <= n.
 
-clone import ZeroKnowledgeTheory as ZKT with
+clone import ZeroKnowledge as ZK with
   op n <= n                     
 proof*. 
 realize n_pos. apply n_pos. qed.
@@ -82,7 +82,7 @@ qed.
 *)
 section.
 
-declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
+declare module V <: RewMaliciousVerifier {-HP, -ZK.Hyb.Count, -ZK.Hyb.HybOrcl}.
 
 
 declare axiom V_summitup_ll : islossless V.summitup.
@@ -143,7 +143,7 @@ end section.
 
 section.
 
-declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
+declare module V <: RewMaliciousVerifier {-HP, -ZK.Hyb.Count, -ZK.Hyb.HybOrcl}.
 declare module D <: ZKDistinguisher.
 
 (* rewindability assumption  *)
@@ -164,7 +164,7 @@ declare axiom rewindable_V_plus2 :
 declare axiom summitup_ll  :  islossless V.summitup.
 declare axiom challenge_ll :  islossless V.challenge.
 declare axiom D_guess_ll : islossless D.guess.
-declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 
 (* transformed simulator with independent coin flip *)
 local module Sim1'  = {
@@ -206,7 +206,7 @@ local module Sim1'  = {
 
 local lemma qrp_zk2_eq ya wa  : zk_relation ya wa =>
   equiv [ZKReal(HP, V, D).run ~ Sim1'.run
-         : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl } /\ arg{1} = (ya, wa)
+         : ={arg, glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl } /\ arg{1} = (ya, wa)
           ==> res{1} = res{2}.`2 ].
 move => isqr. proc.
 call D_guess_prop.
@@ -220,8 +220,8 @@ qed.
 
 local lemma exss ya wa : zk_relation ya wa =>
  equiv[ Sim1(V).sinit ~ Sim1'.sinit
-   : arg{1} = (ya) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==>
-    ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\  (res{1}.`1, res{1}.`2) = (res{2}.`1, res{2}.`2)
+   : arg{1} = (ya) /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==>
+    ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\  (res{1}.`1, res{1}.`2) = (res{2}.`1, res{2}.`2)
         /\ (res{1}.`1 = true  => res{1}.`2 = res{1}.`3 * res{1}.`3 * (inv ya) 
                 /\ res{1}.`3 * (inv wa)   = res{2}.`3)
         /\ (res{1}.`1 = false => res{1}.`2= res{1}.`3 * res{1}.`3
@@ -229,7 +229,7 @@ local lemma exss ya wa : zk_relation ya wa =>
                 /\ res{1}.`3  = res{2}.`3 ) ].
 proof. 
 move => [isqr invrtbl]. proc. swap 2 -1.
-seq 1 1 : (={bb} /\ (y{1}) = (ya) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}). rnd.    skip. progress. 
+seq 1 1 : (={bb} /\ (y{1}) = (ya) /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}). rnd.    skip. progress. 
 exists* bb{1}. elim*. progress.
 wp. case (bb_L = true).     
 rnd (fun (x : zmod) => (x * inv wa ))
@@ -249,11 +249,11 @@ qed.
 
 local lemma qkok ya wa P : zk_relation ya wa =>
   equiv [ RD(Sim1(V),D).run ~ Sim1'.run
-   :   ={glob V,arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\  (ya,wa) = (Ny{2},w{2})
+   :   ={glob V,arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\  (ya,wa) = (Ny{2},w{2})
        ==>  (fst res{1}.`2) /\ P res{1}.`1 <=> (res{2}.`1 /\ P res{2}.`2) ].
 move => [isqr invrtbl]. proc.
 inline Sim1(V).run. sp.
-seq 2 1 : (={glob V,b',z, Ny,w, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
+seq 2 1 : (={glob V,b',z, Ny,w, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} 
          /\ Ny{1} = a{1}
          /\ (b'{1} = true => z{1} = r0{1} * r0{1} * (inv ya)
                      /\ r0{1} * (inv wa) = r{2} )
@@ -265,7 +265,7 @@ move => fA [s1 [s2 [s3]]] [s4 [ s5 [s6 s7]]].
 exists* (glob V){1}. elim*. progress.
 call {1} (s2 V_L).
 skip. progress. smt().  smt().
-seq 1 1 : (={glob V,b',z,Ny,w, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
+seq 1 1 : (={glob V,b',z,Ny,w, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} 
          /\ Ny{1} = a{1}
          /\ b0{1} = b{2}
          /\ (b'{1} = true => z{1} = r0{1} * r0{1} * (inv ya)
@@ -321,7 +321,7 @@ qed.
 
 
 local lemma ssim ya wa  : zk_relation ya wa =>
- equiv [ RD(Sim1(V),D).run ~ Sim1'.run : ={glob V, glob D, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
+ equiv [ RD(Sim1(V),D).run ~ Sim1'.run : ={glob V, glob D, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} 
            /\  ((ya),wa) = (Ny{2},w{2}) 
        ==> (fst res{1}.`2) = res.`1{2} ].
 move => ii.
@@ -334,7 +334,7 @@ local lemma sim1'not &m ya wa  :
      Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = 1%r/2%r.
 proof.
 have ->: Pr[Sim1'.run(ya, wa) @ &m : ! res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m : ! res.`1]. 
-byequiv (_: ={glob V, glob D, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _) . proc. 
+byequiv (_: ={glob V, glob D, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _) . proc. 
 call D_guess_prop. progress.
 call (_:true). wp.  simplify.
 call (_:true). inline*. wp.  rnd.  rnd. skip. progress. smt(). auto. auto.
@@ -352,7 +352,7 @@ local lemma sim1'notnot &m ya wa:
      Pr[Sim1'.run(ya, wa) @ &m :  res.`1] = 1%r/2%r.
 proof.
 have ->: Pr[Sim1'.run(ya, wa) @ &m :  res.`1] = Pr[Sim1'.allinone(ya, wa) @ &m :  res.`1].
-byequiv (_: ={arg,glob D, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). proc.
+byequiv (_: ={arg,glob D, glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _). proc.
 call D_guess_prop. progress.
 call (_:true). wp.  simplify.
 call (_:true). inline*. wp.  rnd.  rnd. skip. progress.  auto. auto.
@@ -377,7 +377,7 @@ rewrite H. clear H.
 have <-: Pr[Sim1'.run(ya,wa) @ &m : ! res.`1] = inv 2%r.
 apply sim1'not.
 byequiv 
- (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> (fst res.`2){1} = res.`1{2}).
+ (_: ={glob D, glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> (fst res.`2){1} = res.`1{2}).
 conseq (ssim ya wa ii). progress. auto. smt(). 
 qed.
 
@@ -388,7 +388,7 @@ bypr. progress.
 rewrite H. clear H.
 have <-: Pr[Sim1'.run(ya,wa) @ &m :  res.`1] = inv 2%r.
 apply sim1'notnot.
-byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> (fst res.`2){1} = res.`1{2}). 
+byequiv (_: ={glob D, glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> (fst res.`2){1} = res.`1{2}). 
 conseq (ssim ya wa ii). auto. auto. smt().
 qed.
 
@@ -396,7 +396,7 @@ qed.
     
 local lemma qrp_zk2_pr_l &m ya wa : zk_relation ya wa =>
     Pr[ZKReal(HP, V,D).run(ya,wa) @ &m : res  ] = Pr[ Sim1'.run(ya,wa) @ &m : res.`2  ].
-proof. move => isqr. byequiv (: arg{2} = (ya,wa) /\ ={glob V, glob D, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _).
+proof. move => isqr. byequiv (: arg{2} = (ya,wa) /\ ={glob V, glob D, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _).
 conseq (_: _ ==> res{1} = res{2}.`2). progress.
 conseq (qrp_zk2_eq ya wa  _). auto. auto. auto. auto.
 qed.
@@ -408,7 +408,7 @@ local lemma sd &m ya wa  :
     = (1%r/2%r) * Pr[ Sim1'.run(ya,wa) @ &m : res.`2 ].
 have : Pr[ Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2 ]
  = Pr[ Sim1'.run(ya,wa) @ &m : !res.`1 /\ res.`2 ].
-byequiv (_: ={glob Sim1',arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _).  
+byequiv (_: ={glob Sim1',arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _).  
 proc.  inline*.
 call D_guess_prop. wp. 
 call (_:true). wp. 
@@ -438,7 +438,7 @@ proof.
 move => ii.
 have ->:     Pr[RD(Sim1(V), D).run(ya, wa) @ &m : fst res.`2 /\ res.`1]
  = Pr[Sim1'.run(ya,wa) @ &m : res.`1 /\ res.`2].
-byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> _). 
+byequiv (_: ={glob D, glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{1} =  (ya,wa) ==> _). 
 conseq (qkok ya wa (fun x => x) _). progress;smt(). auto. auto.
 auto. rewrite (sd &m ya wa).
 rewrite (qrp_zk2_pr_l &m ya wa). auto. auto.
@@ -475,7 +475,7 @@ have ->: Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] * 2%r / 2%r
 smt().
 have : Pr[ZKReal(HP, V, D).run(p, w) @ &m : res] =
   Pr[ZKD(HP, V, D).main(p, w) @ &m : res] .
-byequiv (_: ={glob D, glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} =  (p,w) ==> _). proc. call D_guess_prop. sim. smt(). auto. smt().
+byequiv (_: ={glob D, glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{1} =  (p,w) ==> _). proc. call D_guess_prop. sim. smt(). auto. smt().
 qed.
 
 

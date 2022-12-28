@@ -5,7 +5,9 @@ import StdOrder.RealOrder.
 require GenericExtractability.
 clone include GenericExtractability. (* inherit defs. *)
 
-abstract theory SpecialSoundnessTheory.
+abstract theory SpecialSoundness.
+
+op special_soundness_extract (s:statement)(t1 t2:transcript): witness.
 
 (* importing rewinding library  *)
 require RewBasics.
@@ -51,8 +53,6 @@ module SpecialSoundnessAdversary(P : RewMaliciousProver)
 }.
 
 
-op special_soundness_extract (s:statement)(t1 t2:transcript): witness.
-
 module (Extractor : Extractor)(P : RewMaliciousProver) = {  
   module SA = SpecialSoundnessAdversary(P)
   proc extract(p : statement) : witness = {
@@ -63,16 +63,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 }.
 
  theory Computational.
-
-   (* example of a computational special soundness *)
-   abstract theory Statement.
-   axiom computational_special_soundness: forall (P <: RewMaliciousProver), 
-     forall s &m, exists special_soundness_error,
-       Pr[ SpecialSoundnessAdversary(P).attack(s) @&m: valid_transcript_pair s res.`1 res.`2
-         /\ !(soundness_relation s (special_soundness_extract s res.`1 res.`2))]
-        <= special_soundness_error.
-   end Statement.
-
 
    require import ExtractabilityEquations.
    clone import ExtractabilityEquationsTheory as GKE with type pt <- statement,
@@ -340,12 +330,6 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
 
   theory Perfect.
   
-    abstract theory Statement.
-    axiom perfect_special_soundness p : 
-      (forall t1 t2, valid_transcript_pair p t1 t2 =>
-        soundness_relation p (special_soundness_extract p t1 t2)).
-    end Statement.
-
     import Computational.
 
     section.
@@ -401,5 +385,5 @@ module (Extractor : Extractor)(P : RewMaliciousProver) = {
      rewrite Pr[mu_eq]. smt(perfect_special_soundness). auto. auto. qed.
     end section.
   end Perfect.
-end SpecialSoundnessTheory.
+end SpecialSoundness.
 

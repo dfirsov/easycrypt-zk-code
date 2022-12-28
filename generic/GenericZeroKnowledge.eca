@@ -5,7 +5,6 @@ require GenericSoundness.
 clone include GenericSoundness. (* inherit defs. *)
 
 
-
 require Sim1Equations HybridArgumentWithParameter.
 
 (* we can instantiate sbits with list of Booleans  *)
@@ -67,12 +66,17 @@ module ZKIdeal(S: Simulator, V: RewMaliciousVerifier, D: ZKDistinguisher) = {
 }.
 
 
-abstract theory ZeroKnowledgeTheory.
+abstract theory ZeroKnowledge.
 
+(* Number of repetitions in sequential composition.
 
+Ideally, this would be a parameter of the theory TODO below and not of ZeroKnowledge.
+However, we need to specify this already when cloning HybridArgumentWithParameter below and therefore it needs to be a parameter of ZeroKnowledge.
+*)
 op n : int.
 axiom n_pos : 1 <= n.
 
+(* We actually only need this in TODO below. However, if we clone this before defining the module TODO below, EasyCrypt will not assume that TODO and TODO have disjoint variables which breaks the proofs later. *)
 clone import HybridArgumentWithParameter as Hyb with type input <- unit,
                                         type output <- summary,
                                         type outputA <- bool,
@@ -80,21 +84,8 @@ clone import HybridArgumentWithParameter as Hyb with type input <- unit,
                                         op q <- n
 proof *.
 
-  abstract theory Statement.
-  op zk_function : statement -> real.
-  axiom statistical_zk: exists (HP <: HonestProver) 
-                               (Sim <: Simulator), 
-   forall s w &m 
-         (V <: RewMaliciousVerifier)
-         (D <: ZKDistinguisher),
-    zk_relation s w =>
-     `|Pr[ ZKReal(HP,V,D).run(s,w)@&m: res]
-         - Pr[ZKIdeal(Sim,V,D).run(s,w)@&m: res]|
-       <= zk_function s.  
-  end Statement.
 
-
-  abstract theory SequentialComposition.
+  theory SequentialComposition.
 
 
   module ZKRealAmp(P: HonestProver, V: MaliciousVerifier, D: ZKDistinguisher) = {
@@ -759,7 +750,7 @@ proof *.
   }.
 
 
-  abstract theory Computational.
+  theory Computational.
 
   section.
 
@@ -899,13 +890,13 @@ sim.  skip. progress. auto. auto.
   end Computational.
 
 
-  abstract theory Statistical.
-
-  op epsilon : real.
-  op sigma   : real.
-  axiom epsilon_pos : 0%r <= epsilon.
+  theory Statistical.
 
   section.
+  
+  declare op epsilon : real.
+  declare op sigma   : real.
+  declare axiom epsilon_pos : 0%r <= epsilon.
 
   local clone include Computational.
 
@@ -950,4 +941,4 @@ sim.  skip. progress. auto. auto.
   end section.  
   end Statistical.
   end OneShotSimulator.
-end ZeroKnowledgeTheory.
+end ZeroKnowledge.

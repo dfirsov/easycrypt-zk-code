@@ -14,7 +14,7 @@ op special_soundness_extract (p : qr_stat) (t1 t2 : transcript): qr_wit
 
 
  
-clone export SpecialSoundnessTheory as SST with op special_soundness_extract <- special_soundness_extract
+clone export SpecialSoundness with op special_soundness_extract <- special_soundness_extract
 proof *.
 
 

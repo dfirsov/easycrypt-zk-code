@@ -42,25 +42,10 @@ module SoundnessAmp(P: MaliciousProver, V: HonestVerifier) = {
   } 
 }. 
 
-abstract theory SoundnessTheory.
 
-
-abstract theory Statistical.
+abstract theory StatisticalSoundness.
 
   op soundness_error : statement -> real.
-
-  (* example of a one-run soundness statement *)
-  abstract theory Statement.
-  section.
-  declare axiom soundness: exists (HV <: HonestVerifier),
-                   forall (P <: MaliciousProver),
-   forall statement &m,
-      ! in_language soundness_relation statement =>
-      Pr[Soundness(P,HV).run(statement) @ &m : res]
-            <= soundness_error statement.
-  end section.
-  end Statement.
-
   
   section.
 
@@ -107,6 +92,6 @@ abstract theory Statistical.
   qed.
   end section.
 
-end Statistical.
-end SoundnessTheory.
+end StatisticalSoundness.
+
 
