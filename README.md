@@ -10,7 +10,6 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
 - *[misc/](misc/)* - miscellaneous useful results.
 - *[checkall](checkall)* - script for running the EasyCrypt proof-checker on the entire development.
 - *[rewinding/](rewinding/)* - rewinding and probabilistic reflection library.
-- *[FORMALIZATION_CAVEATS.md](FORMALIZATION_CAVEATS.md)* - description of formalization challenges and choices.
 - *[MANUAL.md](MANUAL.md)* - brief description of structure of the generic development.
 
 ## Setup
