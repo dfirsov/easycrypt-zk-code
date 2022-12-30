@@ -144,7 +144,7 @@ op my_extract (p : hc_stat) (c : hc_com)   (r1 r2 : hc_resp) : int list  =
 op special_soundness_extract (p : hc_stat) (r1 r2 : transcript) : int list = 
  my_extract p r1.`1  r1.`3 r2.`3.
 
-clone include SpecialSoundnessTheory  with  
+clone export SpecialSoundness  with  
   op special_soundness_extract <- special_soundness_extract.
 
 

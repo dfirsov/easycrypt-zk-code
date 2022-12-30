@@ -139,7 +139,7 @@ lemma hc_completeness_iter: forall (statement:hc_stat) (witness:hc_wit) &m n,
        completeness_relation statement witness =>
       Pr[CompletenessAmp(HP,HV).run(statement, witness,n) @ &m : res] = 1%r.
 progress.
-apply (BlumProtocol.CompletenessTheory.Perfect.completeness_seq HP HV).
+apply (PerfectCompleteness.completeness_seq HP HV).
 progress.
 apply hc_completeness. auto. auto. auto.
 qed.

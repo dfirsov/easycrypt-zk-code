@@ -6,7 +6,8 @@ require import PrArg FSet StdRing StdOrder StdBigop.
 require Djoinmap.
 
 require import Permutation Blum_Basics.
-clone import ZeroKnowledgeTheory as ZKT.
+
+clone import ZeroKnowledge as ZK.
 clone import OneShotSimulator as OSS.
 
 import DJM.
@@ -54,7 +55,7 @@ module Sim1(V : RewMaliciousVerifier)  = {
 
 
 section.
-declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
+declare module V <: RewMaliciousVerifier {-HP, -ZK.Hyb.Count, -ZK.Hyb.HybOrcl}.
 
 declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom V_challenge_ll : islossless V.challenge.
@@ -134,14 +135,14 @@ op statProb : hc_stat.
 op statWit : hc_wit.
 declare axiom statGood : zk_relation statProb statWit.
 
-declare module V <: RewMaliciousVerifier {-HP, -ZKT.Hyb.Count, -ZKT.Hyb.HybOrcl}.
+declare module V <: RewMaliciousVerifier {-HP, -ZK.Hyb.Count, -ZK.Hyb.HybOrcl}.
 declare module D <: ZKDistinguisher {-HP}.
 
 declare axiom V_summitup_ll : islossless V.summitup.
 declare axiom D_run_ll : islossless D.guess.
 declare axiom V_summitup_ll2 : islossless V.summitup.
 declare axiom V_challenge_ll2 : islossless V.challenge.
-declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
+declare axiom D_guess_prop : equiv [ D.guess ~ D.guess : ={arg, glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} 
   ==> ={res} ].
 
 (* rewindability assumption  *)
@@ -351,12 +352,12 @@ auto.
 qed.
 
 
-local lemma sim1_1' : equiv [Sim1_1(V).simulate ~ Sim1_1'(V).simulate : ={glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res}].
+local lemma sim1_1' : equiv [Sim1_1(V).simulate ~ Sim1_1'(V).simulate : ={glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res}].
 proc. 
 inline Sim1_1(V).sinit.
 inline Sim1_1'(V).sinit.
-seq 5 5 : (={pa,wa,bb,r,glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}).
-seq 4 4 : (={pa,wa,p_a,w_a,bb,glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}). 
+seq 5 5 : (={pa,wa,bb,r,glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}).
+seq 4 4 : (={pa,wa,p_a,w_a,bb,glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}). 
 rnd. wp. skip. progress.
 if. progress. sim.
 inline Sim1_1(V).ZKP_HP.run.
@@ -374,7 +375,7 @@ call (_:true). call (_:true). wp. skip. progress.
 qed.
 
 
-local lemma sim1'_unhider : equiv [Sim1_1'(V).simulate ~ HidingGame(BlumUnhider2).main : ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} = (statProb, statWit) /\ arg{2} = true ==> (res.`1{1} /\ res.`2{1}) = res{2}].
+local lemma sim1'_unhider : equiv [Sim1_1'(V).simulate ~ HidingGame(BlumUnhider2).main : ={glob V,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{1} = (statProb, statWit) /\ arg{2} = true ==> (res.`1{1} /\ res.`2{1}) = res{2}].
 proof. proc.
 inline*. wp. call D_guess_prop. call(_:true). call (_:true). wp. sp. swap {2} 7 -6.
 seq 1 1 : (={glob V, glob Hyb.HybOrcl, glob Hyb.Count,bb} /\ p_a{1} = pa{1} /\ w_a{1} = wa{1} /\ (pa{1},wa{1}) =(statProb,statWit) /\ b{2} = true).    
@@ -400,7 +401,7 @@ qed.
 
 local lemma sim_0_1 (g : hc_stat) (w: hc_wit):  K = size w => zk_relation g w =>
   equiv [ Sim1_0(V,D).simulate ~ Sim1_1(V).simulate : 
-               g = arg{2}.`1 /\ w = arg{2}.`2 /\ ={arg} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               g = arg{2}.`1 /\ w = arg{2}.`2 /\ ={arg} /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 proof. move => sas ishc. proc.
 inline Sim1_0(V,D).sinit.
 inline Sim1_1(V).sinit. 
@@ -410,7 +411,7 @@ seq 1 1 : (p_a{2} = pa{2} /\ (g,w) = (pa,wa){2} /\
   g = p_a{2} /\
   p_a{1} = pa{1} /\
   g = p_a{1} /\
-  pa{1} = pa{2} /\ ={glob V,wa, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2}).
+  pa{1} = pa{2} /\ ={glob V,wa, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ bb{1} = bb{2}).
 rnd. skip. progress.  
 if. auto. 
 call D_guess_prop.
@@ -418,10 +419,10 @@ call (_:true).
 wp. inline*. wp.  call (_:true).
  wp.  rnd.  wp. rnd. wp. skip. progress.
 rewrite H. simplify. auto. 
-seq 1 1 : (={r,bb, glob V,pa,wa, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ !bb{1}). 
+seq 1 1 : (={r,bb, glob V,pa,wa, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ !bb{1}). 
 inline*.  
 (* seq  13 13 : ( *)
-(*    !b1{1} /\ b1{1} = b1{2} /\ ={pa,c,wa, HP.pi_w, HP.pi_gwco,bb, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ !bb{1} ). *)
+(*    !b1{1} /\ b1{1} = b1{2} /\ ={pa,c,wa, HP.pi_w, HP.pi_gwco,bb, glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ !bb{1} ). *)
 wp.  rnd. wp. 
 rnd  
  (fun (f : permutation) => compose f (inv (mk_perm wa{2})))
@@ -508,12 +509,12 @@ local module Sim1_2'(V : MaliciousVerifier) = {
 }.
 
 
-local lemma sim12_2' : equiv [Sim1_2(V).simulate ~ Sim1_2'(V).simulate : ={glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res}].
+local lemma sim12_2' : equiv [Sim1_2(V).simulate ~ Sim1_2'(V).simulate : ={glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res}].
 proc. 
 inline Sim1_2(V).sinit.
 inline Sim1_2'(V).sinit.
-seq 5 5 : (={pa,wa,bb,r,glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}).
-seq 4 4 : (={pa,wa,p_a,w_a,bb,glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}). 
+seq 5 5 : (={pa,wa,bb,r,glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}).
+seq 4 4 : (={pa,wa,p_a,w_a,bb,glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}). 
 rnd. wp. skip. progress.
 if. progress. sim.
 inline Sim1_1(V).ZKP_HP.run.
@@ -530,7 +531,7 @@ call (_:true). call (_:true). wp. skip. progress.
 qed.
 
 
-local lemma sim2'_unhider : equiv [Sim1_2'(V).simulate ~ HidingGame(BlumUnhider2).main : ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{1} = (statProb, statWit) /\ arg{2} = false ==> (res.`1{1} /\ res.`2{1}) = res{2}].
+local lemma sim2'_unhider : equiv [Sim1_2'(V).simulate ~ HidingGame(BlumUnhider2).main : ={glob V,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{1} = (statProb, statWit) /\ arg{2} = false ==> (res.`1{1} /\ res.`2{1}) = res{2}].
 proof. proc.
 inline*. wp. call D_guess_prop. call(_:true). call (_:true). wp. sp. swap {2} 7 -6.
 seq 1 1 : (={glob V, glob Hyb.HybOrcl, glob Hyb.Count,bb} /\ p_a{1} = pa{1} /\ w_a{1} = wa{1} /\ (pa{1},wa{1}) =(statProb,statWit) /\ b{2} = false).
@@ -559,18 +560,18 @@ local lemma comm_scheme_hiding1 &m:
    <= eps.
 have ->: Pr[Sim1_1(V).simulate(statProb, statWit) @ &m : res.`1 /\ res.`2]
  = Pr[Sim1_1'(V).simulate(statProb, statWit) @ &m : res.`1 /\ res.`2].
-byequiv(_: ={glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). conseq sim1_1'.
+byequiv(_: ={glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _). conseq sim1_1'.
 auto. auto. auto.
 have ->: Pr[Sim1_1'(V).simulate(statProb, statWit) @ &m : res.`1 /\ res.`2]
  = Pr[HidingGame(BlumUnhider2).main(true) @ &m : res].
-byequiv(_: ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = true /\ arg{1} = (statProb, statWit) ==> _). conseq sim1'_unhider. progress. progress. auto. auto.
+byequiv(_: ={glob V,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{2} = true /\ arg{1} = (statProb, statWit) ==> _). conseq sim1'_unhider. progress. progress. auto. auto.
 have ->: Pr[Sim1_2(V).simulate(statProb, statWit) @ &m : res.`1 /\ res.`2]
  = Pr[Sim1_2'(V).simulate(statProb, statWit) @ &m : res.`1 /\ res.`2].
-byequiv(_: ={glob V, arg, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). conseq sim12_2'.
+byequiv(_: ={glob V, arg, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _). conseq sim12_2'.
 auto. auto. auto.
 have ->: Pr[Sim1_2'(V).simulate(statProb, statWit) @ &m : res.`1 /\ res.`2]
  = Pr[HidingGame(BlumUnhider2).main(false) @ &m : res].
-byequiv(_: ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = false /\ arg{1} = (statProb, statWit) ==> _). conseq sim2'_unhider. progress. progress. auto. auto.
+byequiv(_: ={glob V,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{2} = false /\ arg{1} = (statProb, statWit) ==> _). conseq sim2'_unhider. progress. progress. auto. auto.
 apply (comm_scheme_hiding_eps &m BlumUnhider2).
 qed.
 
@@ -651,7 +652,7 @@ local module Sim1_3(V : MaliciousVerifier) = {
 
 local lemma sim_2_3 (g : hc_stat)(w: hc_wit): zk_relation g w =>
   equiv [ Sim1_2(V).simulate ~ Sim1_3(V).simulate : 
-               arg{1}.`1 = g /\ arg{1}.`2 = w /\ ={arg} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               arg{1}.`1 = g /\ arg{1}.`2 = w /\ ={arg} /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 move => ishc.
 proc.
 inline Sim1_2(V).sinit.
@@ -664,11 +665,11 @@ seq 1 1 : (p_a{2} = pa{2} /\
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
   g = p_a{1} /\
-   (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2}).
+   (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ bb{1} = bb{2}).
 rnd. skip. progress. 
 case (bb{1} = true).
 rcondt {1} 1. progress.  
-seq 4 4 : ((b{1} = b'{1}) = (b{2} = b'{2}) /\ ={pa,wa, result, glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}). sim.
+seq 4 4 : ((b{1} = b'{1}) = (b{2} = b'{2}) /\ ={pa,wa, result, glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}). sim.
 call D_guess_prop. skip. progress.
 rcondf {1} 1. progress. skip. smt().
 seq 1 1 : (p_a{2} = pa{2} /\
@@ -677,7 +678,7 @@ seq 1 1 : (p_a{2} = pa{2} /\
   p_a{1} = pa{1} /\
   w_a{1} = wa{1} /\
   g = p_a{1} /\
- (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ bb{1} = bb{2} /\ r{1} = r{2}).
+ (pa{1}, wa{1}) = (pa{2}, wa{2}) /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ bb{1} = bb{2} /\ r{1} = r{2}).
 symmetry.
 inline*. wp.  rnd. wp.  rnd. wp.  skip. auto.
 call D_guess_prop. call (_:true). call (_:true). wp. skip. progress.
@@ -701,9 +702,9 @@ local module Sim1_4(V : MaliciousVerifier) = {
 
 local lemma sim_3_4:
   equiv [ Sim1_3(V).simulate ~ Sim1_4(V).simulate : 
-               arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               arg{1} = arg{2} /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 proc. 
-seq 3 5 : (={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl, pa,wa,result} /\ (b{1} = b'{1}) = (b{2} = bb{2})).
+seq 3 5 : (={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl, pa,wa,result} /\ (b{1} = b'{1}) = (b{2} = bb{2})).
 sim.
 inline*. sp. wp. rnd. wp. rnd. wp.  rnd. skip. progress.
 call D_guess_prop. skip. progress.
@@ -727,7 +728,7 @@ local module Sim1_5(V : MaliciousVerifier) = {
 
 local lemma sim_4_5: 
   equiv [ Sim1_4(V).simulate ~ Sim1_5(V).simulate : 
-               arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               arg{1} = arg{2} /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 proc. 
 call D_guess_prop. 
 inline*. sp. wp. call (_:true). 
@@ -753,7 +754,7 @@ local module Sim1_6(V : MaliciousVerifier) = {
 
 local lemma sim_5_6: 
   equiv [ Sim1_5(V).simulate ~ Sim1_6(V).simulate : 
-               arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               arg{1} = arg{2} /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 proc. swap {1} 5 -1. call D_guess_prop.  swap {2} 3 -1. call (_:true). inline*. wp.  call (_:true). wp.
 rnd.  wp.  rnd. wp.  rnd. wp. skip. progress.
 qed.
@@ -776,10 +777,10 @@ local module Sim1_7(V : MaliciousVerifier) = {
 
 local lemma sim_6_7: 
   equiv [ Sim1_6(V).simulate ~ Sim1_7(V).simulate : 
-               arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+               arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
    res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2} ].
 proc. sp. 
-seq 3 3 : (={b,bb,r1,  wa, pa, glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}).
+seq 3 3 : (={b,bb,r1,  wa, pa, glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}).
 call (_:true). rnd. simplify.
 inline*. wp.  rnd. wp.  rnd. wp.  skip. progress.
 case (b{1} <> bb{1}).
@@ -811,7 +812,7 @@ local module Sim1_8(V : MaliciousVerifier) = {
 
 local lemma sim_7_8: 
   equiv [ Sim1_7(V).simulate ~ Sim1_8(V).simulate : 
-               arg{1} = arg{2} /\ ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               arg{1} = arg{2} /\ ={glob V,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 proc. swap {1} 3 4.
 seq 6 6 : (={rb}). call D_guess_prop. call (_:true). inline*. wp. call (_:true). wp.  rnd. wp.
 rnd. wp. skip. progress.
@@ -835,7 +836,7 @@ local module Sim1_9(V : MaliciousVerifier) = {
 
 local lemma sim_8_9: 
   equiv [ Sim1_8(V).simulate ~ Sim1_9(V).simulate : 
-               arg{1} = arg{2} /\ ={glob V, glob HP,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> ={res} ].
+               arg{1} = arg{2} /\ ={glob V, glob HP,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> ={res} ].
 proc. inline*. rnd. wp. call D_guess_prop. progress. call (_:true). wp.  call (_:true). wp.  rnd. wp. 
 rnd.  wp. skip. progress.
 qed.
@@ -843,37 +844,37 @@ qed.
 
 local lemma sim_2_9 g w: zk_relation g w =>
   equiv [ Sim1_2(V).simulate ~ Sim1_9(V).simulate : 
-              g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+              g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2} ].
 move => ishc.
 transitivity Sim1_3(V).simulate 
-(g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl, glob HP} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+(g = arg{1}.`1 /\ w = arg{1}.`2 /\ arg{1} = arg{2} /\ ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl, glob HP} ==> 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq (sim_2_3 g w ishc). smt(). auto. 
 transitivity Sim1_4(V).simulate 
-(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_3_4. auto. auto.
 transitivity Sim1_5(V).simulate 
-(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_4_5. auto. auto.
 transitivity Sim1_6(V).simulate 
-(arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+(arg{1} = arg{2} /\ ={glob V,  glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_5_6. auto. auto.
 transitivity Sim1_7(V).simulate 
-(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_6_7. auto. 
 transitivity Sim1_8(V).simulate 
-(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
-  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> 
+(arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
+  res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}) (arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> 
   res.`1{1} /\ res.`2{1} <=>  res.`1{2} /\ res.`2{2}). progress. smt(). smt().
 conseq sim_7_8. auto. auto.
 conseq sim_8_9. auto. auto.
@@ -882,7 +883,7 @@ qed.
 
 local lemma sim_9_10: 
   equiv [ Sim1_9(V).simulate ~ ZKD(HP,V,D).main : 
-               arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} 
+               arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} 
                   ==> res.`2{1} = res{2} ].
 proc*.  
 inline Sim1_9(V).simulate.
@@ -904,7 +905,7 @@ qed.
 local lemma sim_9_pr2 &m pa wa: 
    Pr[ Sim1_9(V).simulate(pa,wa) @ &m : res.`2 /\ res.`1 ]
    = Pr[ Sim1_9(V).simulate(pa, wa) @ &m : res.`2 /\ !res.`1  ].
-proof. byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl, arg} ==> _).
+proof. byequiv (_: ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl, arg} ==> _).
 proc. seq 1 1 : (={rb}). 
 inline*. wp. call D_guess_prop. wp. call (_:true). wp. call (_:true). wp. rnd.
 wp. rnd. wp.  skip. progress. 
@@ -929,17 +930,17 @@ proof. move => ishc.
 have ->: 
   Pr[ ZKD(HP,V,D).main(statProb,statWit) @ &m : res ]
   = Pr[ Sim1_9(V).simulate(statProb,statWit) @ &m : res.`2 ]. 
- byequiv (_: arg{1} = arg{2} /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl}  ==> _). 
+ byequiv (_: arg{1} = arg{2} /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl}  ==> _). 
  symmetry. conseq sim_9_10. progress;auto. auto. auto. auto.
 have ->: 
    Pr[Sim1_0(V,D).simulate(statProb,statWit) @ &m : res.`1 /\ res.`2]
     = Pr[ Sim1_1(V).simulate(statProb,statWit) @ &m : res.`1 /\ res.`2 ].
-   byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = (statProb, statWit) /\ arg{1} = (statProb, statWit) ==> _). 
+   byequiv (_: ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{2} = (statProb, statWit) /\ arg{1} = (statProb, statWit) ==> _). 
 conseq (sim_0_1 statProb statWit _ _ ).   simplify. progress. smt(). auto. auto. auto.
 have h: 
    Pr[Sim1_0(V,D).simulate(statProb,statWit) @ &m : res.`1]
     = Pr[ Sim1_1(V).simulate(statProb,statWit) @ &m : res.`1].
-   byequiv (_: ={glob V, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ arg{2} = (statProb, statWit) /\ arg{1} = (statProb, statWit) ==> _). conseq (sim_0_1 statProb statWit _ _). smt(). smt(). auto. auto. auto.
+   byequiv (_: ={glob V, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ arg{2} = (statProb, statWit) /\ arg{1} = (statProb, statWit) ==> _). conseq (sim_0_1 statProb statWit _ _). smt(). smt(). auto. auto. auto.
 rewrite sim_9_pr3.
 apply (ler_trans (2%r * 
     `|Pr[Sim1_1(V).simulate(statProb,statWit) @ &m : res.`1 /\ res.`2] -
@@ -959,7 +960,7 @@ apply comm_scheme_hiding2'.
 have ->: Pr[Sim1_9(V).simulate(statProb, statWit) @ &m : res.`2 /\ res.`1] =
  Pr[Sim1_2(V).simulate(statProb,statWit) @ &m : res.`1 /\ res.`2].
 byequiv (_: (statProb,statWit) = arg{1} /\ arg{1} = arg{2} 
- /\ ={glob V, glob HP, glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _). 
+ /\ ={glob V, glob HP, glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _). 
 symmetry. conseq (sim_2_9 statProb statWit ishc). smt(). smt(). auto. auto.
 smt (comm_scheme_hiding1).
 qed.    
@@ -1008,8 +1009,8 @@ progress.
 have ->: Pr[RD(Sim1(V), D).run(statProb, statWit) @ &m : fst res.`2 /\ res.`1]
  = Pr[ Sim1_0(V,D).simulate(statProb,statWit) @ &m : res.`1 /\ res.`2 ].
 progress. byequiv (_: (statProb,statWit) = arg{1} /\ arg{1} = arg{2}
- /\ ={glob V,  glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} ==> _).  proc. simplify.
-seq 1 3 : (={glob ZKT.Hyb.Count, glob ZKT.Hyb.HybOrcl} /\ (statProb = a{1} ) /\
+ /\ ={glob V,  glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} ==> _).  proc. simplify.
+seq 1 3 : (={glob ZK.Hyb.Count, glob ZK.Hyb.HybOrcl} /\ (statProb = a{1} ) /\
   (a{1} = pa{2} /\ w{1} = wa{2}) /\ r.`2{1} = result{2} /\ (r{1}.`1  <=> b{2} = b'{2}) /\ (b{2} = b'{2} => ={glob V})  ).
 inline Sim1(V).run. wp. sp. simplify.
 seq 4 3 :   (={Hyb.Count.c, Hyb.HybOrcl.l, Hyb.HybOrcl.l0} /\

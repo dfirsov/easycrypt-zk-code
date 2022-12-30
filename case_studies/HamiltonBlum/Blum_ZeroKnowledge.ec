@@ -4,6 +4,7 @@ require import Permutation Blum_Basics.
 require Blum_Sim1Property.
 
 
+
 require RewBasics.
 clone import RewBasics as Rew with type sbits <- sbits.
 
@@ -11,20 +12,20 @@ op stat : hc_stat.
 op wit : hc_wit.
 
 clone import Blum_Sim1Property as BSP with op statProb <- stat,
-                                     op statWit <- wit.
+                                           op statWit <- wit.
+
 
 import OSS.
-clone import ZKT.SequentialComposition.
-clone import Statistical with op epsilon <- 2%r * eps + 20%r * eps2,
-                              op sigma <- (1%r/2%r - eps2).
+clone import ZK.SequentialComposition.
+
 
 
 section.
 
 
 declare axiom stat_wit : zk_relation stat wit.
-declare module V <: RewMaliciousVerifier{-HP, -ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count}.
-declare module D <: ZKDistinguisher{-HP,-ZKT.Hyb.HybOrcl,-ZKT.Hyb.Count}.
+declare module V <: RewMaliciousVerifier{-HP, -ZK.Hyb.HybOrcl,-ZK.Hyb.Count}.
+declare module D <: ZKDistinguisher{-HP,-ZK.Hyb.HybOrcl,-ZK.Hyb.Count}.
 
 declare axiom Sim1_run_ll : forall (V0 <: RewMaliciousVerifier), islossless V0.challenge => islossless V0.summitup => islossless Sim1(V0).run.
 declare axiom V_summitup_ll : islossless V.summitup. 
@@ -54,7 +55,7 @@ lemma hc_statistical_zk   &m:
           `|ideal_prob - real_prob| <= (2%r * eps + 20%r * eps2) + 2%r * (1%r- (1%r/2%r - eps2)) ^ OSS.N.
 proof.
 progress.
-apply (statistical_zk HP Sim1 V D _ _ _ _ _  stat wit &m). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
+apply (Statistical.statistical_zk (2%r * eps + 20%r * eps2) (1%r/2%r - eps2) _ HP Sim1 V D _ _ _ _ _  stat wit &m). smt(eps_ge0 eps2_ge0). apply Sim1_run_ll. apply V_summitup_ll. apply V_challenge_ll. 
 apply D_guess_ll. 
 proc*. call D_guess_prop. skip.  auto.
 move => x.
@@ -78,7 +79,7 @@ lemma hc_statistical_zk_iter &m:
         zk_relation stat wit =>
         let real_prob = Pr[ZKRealAmp(HP, V, D).run(stat, wit) @ &m : res] in
         let ideal_prob = Pr[ZKIdeal(SimAmp(SimN(Sim1)), V, D).run(stat, wit) @ &m : res] in
-          `|ideal_prob - real_prob| <= ZKT.n%r * ((2%r * eps + 20%r * eps2) + 2%r * (1%r- (1%r/2%r - eps2)) ^ OSS.N).
+          `|ideal_prob - real_prob| <= ZK.n%r * ((2%r * eps + 20%r * eps2) + 2%r * (1%r- (1%r/2%r - eps2)) ^ OSS.N).
 progress.
 apply (zk_seq HP (SimN(Sim1)) V D _ _ _ _ _ _ _ &m  ((2%r * eps + 20%r * eps2) + 2%r * (1%r- (1%r/2%r - eps2)) ^ OSS.N) stat wit). 
 progress.  
@@ -88,12 +89,12 @@ apply P_commitment_ll. apply D_guess_ll.
 apply D_guess_prop.
 smt(eps2_ge0 eps_ge0 N_pos @RealExp).
 progress.
-apply (statistical_zk HP Sim1  V (Di(D, SimN(Sim1), V))  _ _ _ _ _ stat wit &n ).
+apply (Statistical.statistical_zk (2%r * eps + 20%r * eps2) (1%r/2%r - eps2) _ HP Sim1  V (Di(D, SimN(Sim1), V))  _ _ _ _ _ stat wit &n ). smt(eps_ge0 eps2_ge0).
 apply Sim1_run_ll.
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. 
 call D_guess_ll. sp.
-while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (ZK.n - ZK.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V). apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt().
 proc. 
@@ -108,14 +109,14 @@ rewrite (sim1_error stat_wit V (Di(D, SimN(Sim1), V))).
 apply V_summitup_ll.  
 proc. 
 call D_guess_ll. sp.
-while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress.
+while (true) (ZK.n - ZK.Hyb.HybOrcl.l). progress.
 wp. call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll. 
 skip. smt(). skip. smt().
 apply V_summitup_ll. apply V_challenge_ll. 
 proc. call D_guess_prop. sim.  progress.
 apply (rewindable_A_plus V). apply rewindable_V_plus.
 proc. call D_guess_ll. sp.
-while (true) (ZKT.n - ZKT.Hyb.HybOrcl.l). progress. wp. 
+while (true) (ZK.n - ZK.Hyb.HybOrcl.l). progress. wp. 
 call (simn_simulate_ll V).  apply V_challenge_ll. apply V_summitup_ll.  skip. smt().
 skip. smt(). apply V_summitup_ll. auto.
 progress.
