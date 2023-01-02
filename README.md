@@ -14,7 +14,7 @@ This repository contains the EasyCrypt code associated with the paper "D. Firsov
 
 ## Setup
 * For this project we used the first stable release of EasyCrypt (1.0) theorem prover ([GIT tag r2022.04](https://github.com/EasyCrypt/easycrypt/releases/tag/r2022.04), hash 577c882) 
-* EasyCrypt was configured with support from the following SMT solvers: Why3@1.5.0, Z3@4.8.7, CVC4@1.6, Alt-Ergo@2.4.1.
+* EasyCrypt was configured with support from the following SMT solvers: Why3@1.4.1, Z3@4.8.7, CVC4@1.6, Alt-Ergo@2.4.2.
 * To check the development run:
 
       $> cd DEVELOPMENT_FOLDER
