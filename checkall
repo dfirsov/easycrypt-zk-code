@@ -19,12 +19,18 @@ check() {
 
 # list of files to check
 
+## misc
 check misc/AuxResults.ec
+check misc/Djoinmap.ec
 check misc/ExtractabilityEquations.ec
+check misc/HybridArgumentWithParameter.ec
+check misc/MeansWithParameter.ec
+check misc/MemoryProps.ec
+check misc/Permutation.ec
+check misc/PrIntervalToSum.ec
 check misc/Sim1Equations.ec
-check misc/WhileSplit.ec
 check misc/WhileNoSuccess.ec
-
+check misc/WhileSplit.ec
 
 ## Generic sigma protocol defs/results
 check generic/GenericSigmaProtocol.eca

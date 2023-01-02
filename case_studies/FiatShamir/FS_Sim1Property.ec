@@ -124,7 +124,7 @@ wp.
 seq 3 : (vstat = fA V_v /\ x.`1 = V_v) 1%r.
 call (_:true).  call (_:true). call (_:true). rnd. rnd. skip. auto. skip. auto.
 simplify. call V_summitup_ll. call V_challenge_ll.
-inline*.  wp. rnd. rnd. wp. skip. progress. smt(@Distr). smt (d_prop5).
+inline*.  wp. rnd. rnd. wp. skip. progress. smt(@Distr). smt (zmod_distr_weight).
 case (b = b').
 rcondf 1. skip. auto. skip. auto.
 rcondt 1. skip. auto. call (s5 V_v). skip. auto. 
@@ -234,11 +234,11 @@ exists* bb{1}. elim*. progress.
 wp. case (bb_L = true).     
 rnd (fun (x : zmod) => (x * inv wa ))
       (fun (x : zmod) => (x * wa )). skip. progress.
-smt(@ZMR). apply (d_prop0). auto.
+smt(@ZMR). apply (zmod_distr_uni). auto.
   have : unit wa.  smt(@ZMR).
-  have : unit rR. smt(d_prop4).
-move => i1 i2.  apply d_prop3. apply ZModpRing.unitrMl. auto. auto.
-apply d_prop3. apply ZModpRing.unitrMl.  smt(@ZMR). smt(d_prop4). 
+  have : unit rR. smt(zmod_distr_inv).
+move => i1 i2.  apply zmod_distr_inv_closed. apply ZModpRing.unitrMl. auto. auto.
+apply zmod_distr_inv_closed. apply ZModpRing.unitrMl.  smt(@ZMR). smt(zmod_distr_inv). 
 smt(@ZMR). 
 smt (@ZModpRing). 
 rnd. skip. progress. smt(@ZMR). smt(). smt(@ZMR).
@@ -343,7 +343,7 @@ swap [2..3] 4. wp.
 seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
  auto. call D_guess_ll.
 call summitup_ll. wp. 
-call challenge_ll. rnd.  skip. smt(d_prop5). 
+call challenge_ll. rnd.  skip. smt(zmod_distr_weight). 
 rnd. skip. progress. smt (@DBool).
 exfalso. auto. auto.  auto. auto.
 qed.
@@ -361,7 +361,7 @@ swap [2..3] 4. wp.
 seq 5 : true (1%r) (1%r/2%r) 1%r 0%r.
 auto. call D_guess_ll.
 call summitup_ll. wp.
-call challenge_ll. wp. rnd. skip. progress. smt(d_prop5).
+call challenge_ll. wp. rnd. skip. progress. smt(zmod_distr_weight).
 rnd. skip. progress.
 smt (@DBool). 
 exfalso. auto. auto.  auto. auto.

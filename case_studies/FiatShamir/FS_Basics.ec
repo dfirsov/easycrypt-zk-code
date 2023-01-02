@@ -15,10 +15,10 @@ abbrev invertible = unit.
 
 (* uniform distribution of invertible elements, could be constructed from DZmodP   *)
 op zmod_distr : zmod distr.
-axiom d_prop0 : is_uniform zmod_distr.
-axiom d_prop3 (r : zmod) :  invertible r => r \in zmod_distr.
-axiom d_prop4 r : r \in zmod_distr => invertible r.
-axiom d_prop5 : weight zmod_distr = 1%r.
+axiom zmod_distr_uni : is_uniform zmod_distr.
+axiom zmod_distr_inv_closed (r : zmod) :  invertible r => r \in zmod_distr.
+axiom zmod_distr_inv r : r \in zmod_distr => invertible r.
+axiom zmod_distr_weight : weight zmod_distr = 1%r.
 
 (* parameters needed for rewinding library  *)
 type sbits.
@@ -53,19 +53,20 @@ clone include GenericSigmaProtocol with
   type witness         <- qr_wit,
   type response        <- qr_resp,
   type challenge       <- bool,
-  type sbits           <- sbits,
-  op pair_sbits        <- FS_pair_sbits,
-  op unpair            <- FS_unpair,
   op challenge_set     <=  [false; true],
   op verify_transcript <- verify_transcript,
   op soundness_relation    <= relation,
   op completeness_relation <= relation,
-  op zk_relation           <= relation
+  op zk_relation           <= relation,
+  (* rewindability parameters *)
+  type sbits           <- sbits, 
+  op pair_sbits        <- FS_pair_sbits, 
+  op unpair            <- FS_unpair
 proof*.
-realize challenge_set_size. auto. qed.
-realize challenge_set_unique. auto. qed.
-realize ips. apply FS_ips. qed.
-realize unpair_pair. apply FS_unpair_pair. qed.
+realize challenge_set_size. auto. qed. (* non empty challenge set *)
+realize challenge_set_unique. auto. qed. (* elements in challange set are unique *)
+realize ips. apply FS_ips. qed.          (* rewindability encoding  *)
+realize unpair_pair. apply FS_unpair_pair. qed. (* rewindability decoding *)
 
 
 
@@ -75,7 +76,7 @@ module HP : HonestProver = {
   var r, y, w : zmod
 
   proc commitment(Ny1 : qr_stat, w1 : qr_wit) : zmod = {  
-    (y,w) <- (Ny1, w1);
+    (y,w) <- (Ny1, w1); 
     r <$ zmod_distr;
     return r * r;
   }

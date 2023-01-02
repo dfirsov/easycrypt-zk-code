@@ -14,7 +14,7 @@ local lemma is_hc_perm_2  (g : graph) (w : hc_wit) :
 progress.
   have : nseq (size w) true <> prj_path w g. smt().
 progress.
-have f : size (prj_path w g) = size w. rewrite lemma1. smt(). auto.
+have f : size (prj_path w g) = size w. rewrite prj_path_size. smt(). auto.
 apply (aux_lem (prj_path w g)  (size w)).
 auto. auto.
 qed.
@@ -90,29 +90,29 @@ progress.
 case (soundness_relation (permute_graph p g) w).
 move => q. 
 apply p0. 
-have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_prop4. auto.  smt (permute_graph_prop2). auto.
+have -> : g = permute_graph (inv p) (permute_graph p g). rewrite permute_graph_inv. auto.  smt (permute_graph_size). auto.
 rewrite /soundness_relation.
-rewrite - (permute_graph_prop3  (permute_graph p g) (inv p) w ). smt (perm_d_in0).  auto. auto.
+rewrite - (witness_under_permutation  (permute_graph p g) (inv p) w ). smt (perm_d_inv_closed).  auto. auto.
 elim p2. progress. rewrite H. auto.
-rewrite permute_graph_prop2.
+rewrite permute_graph_size.
 elim p1. progress.  rewrite H1. auto. 
 elim p2. progress.
 elim p2. progress. 
 elim p1. progress. 
-rewrite lemma8. rewrite lemma8.
+rewrite prj_path_zip. rewrite prj_path_zip.
 apply allP. progress.
-have f : x \in (zip (permute_graph p g) (zip c o1)). smt(lemma5).
+have f : x \in (zip (permute_graph p g) (zip c o1)). smt(prj_path_in).
 apply (allP Ver ( zip (permute_graph p g) (zip c o1))). auto. auto.
 have f1 : K <= size (permute_graph p g). elim p1.
-progress. smt (permute_graph_prop2).
+progress. smt (permute_graph_size).
 have f2 : K = size w. elim p2. progress. rewrite H. auto.
-smt (lemma1).
+smt (prj_path_size).
 have f1 : size (prj_path w c) = K. elim p1.  elim p2. progress.
-rewrite lemma1. rewrite H0. rewrite H. smt(). auto.
+rewrite prj_path_size. rewrite H0. rewrite H. smt(). auto.
 have f2 : size (prj_path w o1) = K. elim p1.  elim p2. progress.
-smt (lemma1).
-rewrite lemma8. 
-rewrite lemma1. 
+smt (prj_path_size).
+rewrite prj_path_zip. 
+rewrite prj_path_size. 
 elim p2. progress.
 rewrite H. elim p1. progress.
 have ->: size (zip c o1) = K * K. 
@@ -121,9 +121,9 @@ smt().
 elim p2. progress.
 elim p2. progress.
 rewrite size1_zip.
-rewrite lemma1. rewrite H. rewrite H0. smt().
+rewrite prj_path_size. rewrite H. rewrite H0. smt().
 rewrite H1. rewrite H. auto.
-rewrite lemma1.
+rewrite prj_path_size.
 rewrite H. rewrite H0. smt(). apply H.
 qed.
 end section.
@@ -213,7 +213,7 @@ have : K <= size (prj_path x.`1 p1.`2).
 elim p4. move => _. elim.
 progress. 
 have ->: size (prj_path x.`1 p1.`2) = K.
-smt (lemma1).
+smt (prj_path_size).
 auto.
 have : K <=  size x.`2.  smt().
 move => q g. 
@@ -229,15 +229,15 @@ have ->: (nth witness <: commitment * opening> (zip (prj_path x.`1 result_R.`1.`
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) x.`2)
    (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt().
 rewrite nth_zip. 
-rewrite lemma1. smt(). smt().
+rewrite prj_path_size. smt(). smt().
 simplify.
 have ->: (nth witness <: commitment * opening>  (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
    (index false (prj_path x.`1 (permute_graph p1.`1 s))))
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>) (zip (prj_path x.`1 result_R.`1.`1) (prj_path x.`1 p1.`2))
    (index false (prj_path x.`1 (permute_graph p1.`1 s)))). smt().
 rewrite nth_zip. 
-rewrite lemma1. smt(). 
-rewrite lemma1. smt(). auto.
+rewrite prj_path_size. smt(). 
+rewrite prj_path_size. smt(). auto.
 simplify. auto.
 progress. simplify.
 rewrite /special_soundness_extract.
@@ -256,14 +256,14 @@ have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.
 rewrite nth_zip. 
 elim p4. move => q. elim. move => q1 q2. elim q1.
 progress. 
-rewrite lemma1. rewrite H H0.  smt(K_pos). smt().
+rewrite prj_path_size. rewrite H H0.  smt(K_pos). smt().
  simplify.
 have ->: (nth witness <: commitment * opening> (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
    (index false (prj_path p1.`1 (permute_graph x.`1 s)))) 
  = (nth (fst witness <: commitment * opening>, snd witness <: commitment * opening>)  (zip (prj_path p1.`1 result_R.`1.`1) (prj_path p1.`1 x.`2))
    (index false (prj_path p1.`1 (permute_graph x.`1 s)))). smt().
 rewrite nth_zip. 
-elim p4. move => q. elim. move => q1 q2. elim q2. elim q1. progress. smt(lemma1). simplify. auto.
+elim p4. move => q. elim. move => q1 q2. elim q2. elim q1. progress. smt(prj_path_size). simplify. auto.
 smt().
 qed.
 

@@ -417,7 +417,7 @@ qed.
 
 
   
-local lemma zz  (da : (glob A) -> irt -> rrt distr) :  
+local lemma prob_refl_app_distr  (da : (glob A) -> irt -> rrt distr) :  
  (forall &m (M : rrt -> bool) (a : irt),
        mu (da (glob A){m} a) M = Pr[A.run(a) @ &m : M res])
  => forall &m P e (s : int) rr ia,  
@@ -455,7 +455,7 @@ have exD :  exists (D : (glob A) -> irt -> rrt distr),
         mu (D (glob A){m} a) M = Pr[A.run(a) @ &m : M res].
 apply (reflection_simple_res A).
 elim exD. progress. 
-rewrite - (zz  D H0 &m (fun x => !MyPred x)).
+rewrite - (prob_refl_app_distr  D H0 &m (fun x => !MyPred x)).
 have ->: Pr[DW.whp_d(MyPred, D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPred res]
  = Pr[M.whp(MyPred, D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPred res].
 byequiv. proc. simplify.  sp. 
@@ -491,7 +491,7 @@ have exD :  exists (D : (glob A) -> irt -> rrt distr),
         mu (D (glob A){m} a) M = Pr[A.run(a) @ &m : M res].
 apply (reflection_simple_res A).
 elim exD. progress.
-rewrite - (zz  D H1 &m (fun x => !MyPred x)).
+rewrite - (prob_refl_app_distr  D H1 &m (fun x => !MyPred x)).
 have ->: Pr[DW.whp_d(MyPred,D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPred res]
  = Pr[M.whp(MyPred,D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPred res].
 byequiv. proc.  sp.
@@ -523,7 +523,7 @@ have exD :  exists (D : (glob A) -> irt -> rrt distr),
         mu (D (glob A){m} a) M = Pr[A.run(a) @ &m : M res].
 apply (reflection_simple_res A).
 elim exD. progress.
-rewrite - (zz  D H1 &m (fun x => !MyPred x)).
+rewrite - (prob_refl_app_distr  D H1 &m (fun x => !MyPred x)).
 have ->: Pr[DW.whp_d(MyPred,D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPred res]
  = Pr[M.whp(MyPred,D (glob A){m} i, 1, e' + 1 , ra) @ &m : !MyPred res].
 byequiv. proc.  sp.

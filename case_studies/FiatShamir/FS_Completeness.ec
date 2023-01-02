@@ -12,7 +12,7 @@ local lemma qr_complete_h ya wa : completeness_relation ya wa
 move => [qra invrtbl].
 proc. inline*.  wp.
 rnd. wp.  rnd.  wp.
-skip.  simplify. progress.  simplify. apply ZModpRing.unitrM. smt (d_prop4).
+skip.  simplify. progress.  simplify. apply ZModpRing.unitrM. smt (zmod_distr_inv).
 have -> : s{hr}  = (w{hr} * w{hr}).
 apply qra. 
 have ->: ch. clear H0. smt(). 
@@ -33,7 +33,7 @@ conseq (_: true ==> true). inline*. sp.
 wp.  progress. rnd. simplify.
 conseq (_: true ==> true). smt(@Distr).
 wp.  rnd. skip. simplify.
-progress. apply d_prop5. auto. auto. auto.
+progress. apply zmod_distr_weight. auto. auto. auto.
 qed.
 
 (* iterated completeness *)

@@ -20,8 +20,6 @@ module type Extractor(P: RewMaliciousProver) = {
 
 theory Extractability.
 
-(* Consider adding example of an extractability statement. However,
-this requires bulky rewindability premises...  *)
 
 section.
 

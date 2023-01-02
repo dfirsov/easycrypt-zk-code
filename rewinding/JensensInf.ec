@@ -422,7 +422,9 @@ smt().
          E X (f \o g) - mu X (predC M) * c.
      have muc : mu X (predC M) * c <= mu X (predC M) * Ec X (f \o g) (predC M).
       have mup : mu X (predC M) >= 0%r. smt(@Distr).
-      clear finM muXC eprop. smt().
+      clear finM muXC eprop mpMnz.  
+           have q : forall (a b c : real) ,  0%r <= a => c <= b => a * c <= a * b. smt(). apply q. smt(). smt().
+
      smt().
 smt().
 have ->: E X (f \o g) - mu X (predC M) * c + mu X (predC M) * d

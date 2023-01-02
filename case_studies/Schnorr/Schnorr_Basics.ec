@@ -1,7 +1,7 @@
 require import AllCore DBool Bool List Distr AuxResults Finite.
+
 require import CyclicGroup.
 import FDistr.
-
 
 
 require  GenericSigmaProtocol.
@@ -29,7 +29,7 @@ op verify_transcript (p : dl_stat) (x : dl_com * dl_chal * dl_resp) =
    
 
 (* instantiating generic definitions for Schnorr protocol  *)
-clone export GenericSigmaProtocol as SchnorrProtocol with 
+clone include GenericSigmaProtocol with 
   type statement       <- dl_stat,
   type commitment      <- dl_com,  
   type witness         <- dl_wit,

@@ -17,7 +17,7 @@ declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
 
 
-local lemma www &m p :   
+local lemma prob_refl_app &m p :   
     exists (D1 : at1 -> (glob A) -> (unit * (glob A)) distr)
       (D2 : at2 -> unit * (glob A) -> (glob A) distr),
       (forall &m (M : unit * (glob A) -> bool) i1,
@@ -163,7 +163,7 @@ lemma exists_mem_init_run_glob &m M i1 i2 p:
        p < Pr[ RCR(A).main(i1,i2) @ &m : M (glob A) ] 
    => 0%r <= p
    => exists &n, p < Pr[ A.ex2(i2, tt) @ &n  : M (glob A)] .
-elim (www &m p). progress.
+elim (prob_refl_app &m p). progress.
 elim (H2 M i1 i2 _ _);auto. progress.
 have f1 : Pr[A.ex1(i1) @ &m : glob A = g] > 0%r.
 have f2 : mu (D1 i1 (glob A){m}) (fun x => snd x = g)  = Pr[A.ex1(i1) @ &m : (glob A) = g].

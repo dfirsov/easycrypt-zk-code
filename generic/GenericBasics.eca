@@ -11,6 +11,8 @@ op in_language (R:relation) statement: bool = exists witness, R statement witnes
 
 (* parameter functions *)
 op challenge_set : challenge list. 
+
+(* assumptions: non-empty and unique list of challenges  *)
 axiom challenge_set_size : 0 < size challenge_set.
 axiom challenge_set_unique : uniq challenge_set.
 

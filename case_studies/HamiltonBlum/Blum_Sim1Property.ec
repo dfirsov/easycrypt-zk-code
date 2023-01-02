@@ -332,7 +332,7 @@ qed.
 
 local lemma kikk' w l l' : equiv [DJM.main5 ~ M.main6' : arg{1} = (rep_path w l' l) /\ arg{2} = (l,l',w) ==> res{1} = res{2} ].
 bypr res{1} res{2}. auto.
-progress. rewrite H. rewrite H0.  simplify. rewrite pr1. rewrite pr2. rewrite rep_distr.
+progress. rewrite H. rewrite H0.  simplify. rewrite pr1. rewrite pr2. rewrite rep_path_distr.
 auto.
 qed.
 
@@ -388,13 +388,13 @@ rnd. wp. skip. progress. smt(djoinmap_weight Com_lossless). smt().
 rcondf {1} 1. progress. skip. progress. smt().
 rcondf {2} 7. progress. wp.  rnd. wp. wp. rnd.  skip. progress. smt().
 wp.  rnd. wp. rnd. wp. rnd. wp. skip. progress.
-rewrite permute_graph_prop1.
-rewrite lemma9. rewrite /permute_witness. smt (statGood @List). auto.
+rewrite permute_compl_graph.
+rewrite prj_path_compl_graph. rewrite /permute_witness. smt (statGood @List). auto.
 have <-: djoinmap Com
       (prj_path (permute_witness prm0L statWit)
          (permute_graph prm0L (compl_graph K))) = djoinmap Com (nseq K true).
-rewrite permute_graph_prop1. rewrite lemma9. rewrite /permute_witness. smt (statGood @List). auto. auto.
-smt(rep_map). smt(). smt().
+rewrite permute_compl_graph. rewrite prj_path_compl_graph. rewrite /permute_witness. smt (statGood @List). auto. auto.
+smt(rep_path_map). smt(). smt().
 qed.
 
 
@@ -432,27 +432,27 @@ simplify.
 have ->: (prmR \o mk_perm wa{2} \o inv (mk_perm wa{2}))
  = (prmR \o (mk_perm wa{2} \o inv (mk_perm wa{2}))). 
    apply fun_ext. move => x. rewrite /(\o). auto. 
-rewrite   (inv_prop1 (mk_perm wa{2}) K). 
-apply perm_d_in4. smt(). 
+rewrite   (inv_left (mk_perm wa{2}) K). 
+apply perm_d_mk_perm. smt(). 
 apply fun_ext. move => x. smt().
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite mu1_uni_ll. apply perm_d_uni. apply perm_d_lossless.
 rewrite H1. simplify.
-rewrite /compose. rewrite perm_d_comp.  apply H1. smt(perm_d_in4).
+rewrite /compose. rewrite perm_d_comp_closed.  apply H1. smt(perm_d_mk_perm).
 auto.
-apply perm_d_comp. auto.  apply perm_d_in0. smt(perm_d_in4).
+apply perm_d_comp_closed. auto.  apply perm_d_inv_closed. smt(perm_d_mk_perm).
 rewrite /compose.
 have ->: (prmL \o inv (mk_perm wa{2}) \o mk_perm wa{2})
  = (prmL \o (inv (mk_perm wa{2}) \o mk_perm wa{2})).
 apply fun_ext. move => x. rewrite /(\o). auto.
-rewrite   (inv_prop2 (mk_perm wa{2}) K). 
-apply perm_d_in4. smt(). 
+rewrite   (inv_right (mk_perm wa{2}) K). 
+apply perm_d_mk_perm. smt(). 
 apply fun_ext. move => x.  rewrite /(\o). auto.
-rewrite permute_graph_prop1. rewrite permute_graph_prop1. auto. 
-rewrite permute_graph_prop1. rewrite - (permute_graph_prop1 prmL). auto.
+rewrite permute_compl_graph. rewrite permute_compl_graph. auto. 
+rewrite permute_compl_graph. rewrite - (permute_compl_graph prmL). auto.
 rewrite /permute_witness /compose. 
 rewrite map_comp.
-rewrite inv_prop3.
+rewrite mk_perm_inv. 
 elim ishc. progress. smt(). smt().
 call D_guess_prop.
 call (_:true). call (_:true). wp.  skip. progress.
@@ -544,12 +544,12 @@ rnd.  wp. skip. progress. smt(djoinmap_weight Com_lossless). smt().
 rcondf {1} 1. progress. skip. progress. smt().
 rcondf {2} 7. progress. wp.  rnd. wp. wp. rnd.  skip. progress.  smt().
 wp.  rnd. wp. rnd. wp. rnd. wp. skip. progress.
-smt(statGood permute_graph_prop3).
+smt(statGood witness_under_permutation).
 have <-: djoinmap Com
       (prj_path (permute_witness prm0L statWit)
          (permute_graph prm0L statProb)) = djoinmap Com (nseq K true).
-smt(statGood permute_graph_prop3).
-smt(rep_map). smt(rep_map). smt(). smt().
+smt(statGood witness_under_permutation).
+smt(rep_path_map). smt(rep_path_map). smt(). smt().
 qed.
 
 

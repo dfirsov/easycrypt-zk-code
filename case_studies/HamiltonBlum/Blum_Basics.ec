@@ -15,6 +15,12 @@ clone import Djoinmap as DJM  with type a <- bool,
 op K : int.
 axiom K_pos : 0 < K.
 
+(* parameters needed for rewinding library  *)
+type sbits.
+op HB_pair_sbits : sbits * sbits -> sbits.
+op HB_unpair: sbits -> sbits * sbits.
+axiom HB_ips: injective HB_pair_sbits. 
+axiom HB_unpair_pair x : HB_unpair (HB_pair_sbits x) = x.
 
 (* K * K list representing K x K adjacency matrix. For technical
 reasons it is simpler to work with flat representation of an adjacency
@@ -90,7 +96,7 @@ op zk_relation = completeness_relation.
 
 
 (* cloning the generic definition with specific Blum details  *)
-clone export GenericSigmaProtocol as BlumProtocol with 
+clone include GenericSigmaProtocol with 
   type statement       <- hc_stat,
   type commitment      <- hc_com,  
   type witness         <- hc_wit,
@@ -100,8 +106,17 @@ clone export GenericSigmaProtocol as BlumProtocol with
   op verify_transcript <= fun p (x : transcript) => hc_verify p x.`1 x.`2 x.`3,
   op soundness_relation    <- soundness_relation,
   op completeness_relation <- completeness_relation,
-  op zk_relation           <- zk_relation.
- 
+  op zk_relation           <- zk_relation,
+    (* rewindability parameters *)
+  type sbits           <- sbits, 
+  op pair_sbits        <- HB_pair_sbits, 
+  op unpair            <- HB_unpair
+proof *.
+realize challenge_set_size. auto. qed.
+realize challenge_set_unique. auto. qed.
+realize ips. apply HB_ips. qed.          (* rewindability encoding  *)
+realize unpair_pair. apply HB_unpair_pair. qed. (* rewindability decoding *)
+
 
 (* Honest Prover  *)
 module HP : HonestProver  = {
@@ -131,34 +146,37 @@ module HP : HonestProver  = {
 
 
 (* Declarative specification of main functions: compl_graph, permute_graph, and prj_path.  *)
-axiom permute_graph_prop1 p n : permute_graph p (compl_graph n) = (compl_graph n).
 
-axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
+axiom prj_path_size ['a] : forall w (s : 'a list), size w <= size s => size (prj_path w s) = size w.
 
-axiom permute_graph_prop2 perm (g : graph) : size (permute_graph perm g) = size g.
+axiom prj_path_map ['a 'b] (f : 'a -> 'b)  w (s : 'a list): prj_path w (map f s) = map f (prj_path w s).
 
-axiom permute_graph_prop3 g perm w : perm  \in perm_d K =>
- completeness_relation g w = completeness_relation (permute_graph perm g) (permute_witness perm w).
+axiom prj_path_in x w (s : 'a list) : x \in prj_path w s => x \in s.
 
-axiom permute_graph_prop4  (g : graph) (perm : permutation) : perm \in perm_d K => size g = K * K =>
-  permute_graph (inv perm) (permute_graph perm g) = g.
+axiom prj_path_zip w (x : 'a list) (y : 'b list) : 
+  zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
 
-axiom lemma1 ['a] : forall w (s : 'a list), size w <= size s => size (prj_path w s) = size w.
-
-axiom lemma2 ['a 'b] (f : 'a -> 'b)  w (s : 'a list):  (prj_path  w (map f s)) = map f (prj_path  w s).
-
-axiom lemma5 x w (s : 'a list) : x \in prj_path w s => x \in s.
-
-axiom lemma7 w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
-
-axiom lemma8 w (x : 'a list) (y : 'b list) : zip (prj_path w x) (prj_path w y) = prj_path w (zip x y).
-
-axiom lemma9 w : size w = K => prj_path w (compl_graph K) = nseq K true.
+axiom prj_path_compl_graph w : size w = K => prj_path w (compl_graph K) = nseq K true.
 
 axiom prj_rep ['a] (g : 'a list) w:  g = rep_path w (prj_path w g) g.
 
 axiom rep_prj ['a] (g : 'a list) w l: l = (prj_path w (rep_path w g l)).
 
-axiom rep_map ['a 'b] (g : 'a list) w l l' (f : 'a -> 'b):map f (rep_path w l l') = rep_path w (map f l) (map f l').
+axiom permute_compl_graph p n : permute_graph p (compl_graph n) = (compl_graph n).
 
-axiom rep_distr w l l' : djoinmap Com (rep_path w l' l) = dapply (fun xx' => rep_path w (fst xx') (snd xx')) ((djoinmap Com l) `*` (djoinmap Com l')).
+axiom compl_graph_prop n : 0 <= n => completeness_relation (compl_graph n) (compl_graph_cyc n).
+
+axiom permute_graph_size perm (g : graph) : size (permute_graph perm g) = size g.
+
+axiom witness_under_permutation g perm w : perm  \in perm_d K =>
+ completeness_relation g w = completeness_relation (permute_graph perm g) (permute_witness perm w).
+
+axiom permute_graph_inv  (g : graph) (perm : permutation) : perm \in perm_d K => size g = K * K =>
+  permute_graph (inv perm) (permute_graph perm g) = g.
+
+axiom perm_eq_permute w prm : prm \in perm_d K => perm_eq w (range 0 K) => perm_eq (permute_witness prm w) w.
+
+axiom rep_path_map ['a 'b] (g : 'a list) w l l' (f : 'a -> 'b):map f (rep_path w l l') = rep_path w (map f l) (map f l').
+
+axiom rep_path_distr w l l' : djoinmap Com (rep_path w l' l) 
+  = dapply (fun x => rep_path w (fst x) (snd x)) ((djoinmap Com l) `*` (djoinmap Com l')).

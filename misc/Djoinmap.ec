@@ -5,8 +5,6 @@ require import AllCore Distr FSet StdRing StdOrder StdBigop List.
 (*---*) import RField RealOrder Bigreal BRA.
 import BRM.
 
-require import Permutation.
-
 type a, b.
 
 op d : a -> b distr.

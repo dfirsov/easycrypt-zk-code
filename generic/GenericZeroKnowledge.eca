@@ -70,13 +70,18 @@ abstract theory ZeroKnowledge.
 
 (* Number of repetitions in sequential composition.
 
-Ideally, this would be a parameter of the theory TODO below and not of ZeroKnowledge.
-However, we need to specify this already when cloning HybridArgumentWithParameter below and therefore it needs to be a parameter of ZeroKnowledge.
+Ideally, this would be a parameter of the theory TODO below and not of
+ZeroKnowledge.  However, we need to specify this already when cloning
+HybridArgumentWithParameter below and therefore it needs to be a
+parameter of ZeroKnowledge.
 *)
 op n : int.
 axiom n_pos : 1 <= n.
 
-(* We actually only need this in TODO below. However, if we clone this before defining the module TODO below, EasyCrypt will not assume that TODO and TODO have disjoint variables which breaks the proofs later. *)
+(* We actually only need this in TODO below. However, if we clone this
+before defining the module TODO below, EasyCrypt will not assume that
+TODO and TODO have disjoint variables which breaks the proofs
+later. *)
 clone import HybridArgumentWithParameter as Hyb with type input <- unit,
                                         type output <- summary,
                                         type outputA <- bool,

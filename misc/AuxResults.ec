@@ -312,7 +312,10 @@ pose lst := (to_seq (fun _ => true)).
 have f1 :  false \in lst. smt(@Finite @Distr).
 have f2 :  true \in lst . smt(@Finite @Distr).
 have f3 : size lst = 2. rewrite /lst.
-rewrite Bool.BoolFin.card_size_to_seq. auto.
+rewrite -  Bool.BoolFin.count_mem.
+apply uniq_to_seq.  rewrite /is_finite.
+exists [false; true]. progress. smt(). simplify. smt().
+auto.
 have f4 : forall (l : bool list), false \in l => true \in l => size l = 2 => l = [false ; true] \/ l = [true ; false]. 
 elim. smt(). move => x0. elim.  progress. move => x1. elim. smt().
 progress. smt(@List).

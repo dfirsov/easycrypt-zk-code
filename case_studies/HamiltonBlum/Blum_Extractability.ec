@@ -11,7 +11,7 @@ declare module P <: RewMaliciousProver {-HV}.
 declare axiom P_response_ll : islossless P.response.
 declare axiom P_commitment_ll : islossless P.commitment.
 
-op ss : hc_stat.
+op statement : hc_stat.
 
 declare axiom P_rewindable : exists (f : (glob P) -> sbits),
   injective f /\
@@ -23,12 +23,13 @@ declare axiom P_rewindable : exists (f : (glob P) -> sbits),
   islossless P.setState.
 
 
-clone import SSB as SSB with op ss <- ss.
+clone import SSB as SSB with op ss <- statement
+proof *.
 
 lemma hc_computational_PoK &m : 
-  Pr[Extractor(P).extract(ss) @ &m : soundness_relation ss res] >=
-   (Pr[Soundness(P, HV).run(ss) @ &m : res]^2
-   - (1%r/2%r) * Pr[Soundness(P, HV).run(ss) @ &m : res])
+  Pr[Extractor(P).extract(statement) @ &m : soundness_relation statement res] >=
+   (Pr[Soundness(P, HV).run(statement) @ &m : res]^2
+   - (1%r/2%r) * Pr[Soundness(P, HV).run(statement) @ &m : res])
      - Pr[BindingExperiment(SpecialSoundnessBinder(SpecialSoundnessAdversary(P))).main() @ &m : res].
 apply (Computational.computational_extractability P _ _ _ &m). apply P_response_ll.  apply P_commitment_ll. apply P_rewindable.
 apply (hc_computational_special_soundness_binding (SpecialSoundnessAdversary(P)) &m).

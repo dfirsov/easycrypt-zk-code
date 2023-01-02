@@ -10,7 +10,7 @@ local lemma prj_lemma (g : graph) (w : hc_wit) (perm : permutation) :
   => prj_path w g = prj_path (permute_witness perm w) (permute_graph perm g).
 progress.
 have : completeness_relation (permute_graph perm g) (permute_witness perm w).
-smt (permute_graph_prop3).
+smt (witness_under_permutation).
 elim. progress. elim H. progress.
 rewrite - H4. rewrite  - H7. auto.
 qed.
@@ -39,29 +39,29 @@ move => q.
 apply (sub_all (fun (xy : bool * (commitment * opening)) => xy.`2 \in Com xy.`1) Ver) .
 simplify. apply Com_sound.  auto.
 have f1 : size pi_gwco = size (permute_graph prm s{hr}).
-smt(size_map permute_graph_prop2 supp_djoin_size).
+smt(size_map permute_graph_size supp_djoin_size).
 have f2 : size pi_gwco = size (unzip1 pi_gwco).
 smt (size_map).
 rewrite - f2. 
 rewrite f1.
-rewrite permute_graph_prop2.
-split. smt(). split. smt(). split. smt(size_map permute_graph_prop2 supp_djoin_size).
+rewrite permute_graph_size.
+split. smt(). split. smt(). split. smt(size_map permute_graph_size supp_djoin_size).
 smt().
 move => p.
 have ->: b1 = false. smt().
 simplify. clear p. progress.
-elim ishc. progress. smt(size_map). smt(size_map permute_graph_prop2 supp_djoin_size).
-have : size pi_gwco = size (permute_graph prm s{hr}). smt(size_map permute_graph_prop2 supp_djoin_size lemma1).
-have ->: size (permute_graph prm s{hr}) = size s{hr}. smt (permute_graph_prop2). 
+elim ishc. progress. smt(size_map). smt(size_map permute_graph_size supp_djoin_size).
+have : size pi_gwco = size (permute_graph prm s{hr}). smt(size_map permute_graph_size supp_djoin_size prj_path_size).
+have ->: size (permute_graph prm s{hr}) = size s{hr}. smt (permute_graph_size). 
 have ->: size s{hr} = K * K. elim ishc. smt().
 move => q. 
 have qqq : size (prj_path (permute_witness prm w{hr}) pi_gwco) = K.   
-rewrite lemma1.  rewrite q. rewrite size_map. elim ishc. progress. smt(@StdOrder.IntOrder).
+rewrite prj_path_size.  rewrite q. rewrite size_map. elim ishc. progress. smt(@StdOrder.IntOrder).
 elim ishc. smt(size_map).
 smt (size_map).
 have ->: (prj_path (permute_witness prm w{hr}) (unzip1 pi_gwco))
   = (unzip1 (prj_path (permute_witness prm w{hr}) pi_gwco)).
-rewrite lemma2. auto.
+rewrite prj_path_map. auto.
 have ->: 
  (zip (unzip1 (prj_path (permute_witness prm w{hr}) pi_gwco))
         (unzip2 (prj_path (permute_witness prm w{hr}) pi_gwco)))
@@ -71,7 +71,7 @@ elim ishc. progress.
 apply allP.
 move => x1.
 have ->: (nseq K true) = (prj_path (permute_witness prm w{hr}) (permute_graph prm s{hr})).
-smt(permute_graph_prop3).
+smt(witness_under_permutation).
 progress.
 apply Com_sound.
 have : x1.`1 \in (nseq K true). 
@@ -82,7 +82,7 @@ smt (mem_zip_fst).
 have : x1.`2 \in (prj_path (permute_witness prm w{hr}) pi_gwco).
    smt(mem_zip_snd).
  move => qq.
-have : x1.`2 \in pi_gwco. apply (lemma5 x1.`2 (permute_witness prm w{hr})). auto.
+have : x1.`2 \in pi_gwco. apply (prj_path_in x1.`2 (permute_witness prm w{hr})). auto.
 move => qqq.
   have :   size (permute_graph prm s{hr}) = size pi_gwco /\ all (fun xy => snd xy \in Com xy.`1) (zip (permute_graph prm s{hr}) pi_gwco).
    apply (supp_djoinmap Com (permute_graph prm s{hr}) pi_gwco ). apply H0.
@@ -92,9 +92,9 @@ apply allP. apply H8.
 progress. apply H10. 
 have H6' : 
  x1 \in prj_path (permute_witness prm w{hr}) (zip (permute_graph prm s{hr}) pi_gwco).
-rewrite - lemma8. auto.
-rewrite  (lemma5 x1 (permute_witness prm w{hr})). apply H6'.
-smt(lemma7 perm_eq_trans).
+rewrite - prj_path_zip. auto.
+rewrite  (prj_path_in x1 (permute_witness prm w{hr})). apply H6'.
+smt(perm_eq_permute perm_eq_trans).
 smt().
 qed.
 

@@ -11,7 +11,7 @@ module type RunMain = {
 section.
 
 declare module A <: RunMain.
-local lemma zzz &m : forall (a : iat) (f : (glob A) -> int) 
+local lemma pr_interval_to_sum_lemma' &m : forall (a : iat) (f : (glob A) -> int) 
   (P : iat -> rt -> (glob A) -> bool) (s e : int),
   0 <= e =>
   Pr[ A.run(a) @ &m : s <= f (glob A) <= s + e /\ P a res (glob A) ]
@@ -66,7 +66,7 @@ proof. progress.
 case (s <= e). move => sep.
 have : exists e', 0 <= e' /\ e = s + e'.
 smt(). elim. progress.
-apply (zzz &m a). auto. 
+apply (pr_interval_to_sum_lemma' &m a). auto. 
 progress.
 rewrite range_geq. smt(). 
 rewrite big_nil.
