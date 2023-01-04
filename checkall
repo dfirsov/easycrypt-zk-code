@@ -3,11 +3,11 @@
 timeout=20
 
 ECO=
-#ECO=-no-eco
+ECO=-no-eco
 
 check() {
   echo checking $1;
-  if easycrypt $ECO -p "CVC4" -p "Z3" -p "Alt-Ergo"  -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic -timeout $timeout $1;
+  if easycrypt $ECO -p "CVC4"  -p "Z3" -p "Alt-Ergo"  -I .  -I ./rewinding  -I ./misc -I ./misc/while_props -I ./generic -timeout $timeout $1;
   then echo passed: $1;
        echo "";
   else echo failed: $1;

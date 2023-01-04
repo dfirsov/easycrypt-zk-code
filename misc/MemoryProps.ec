@@ -17,6 +17,10 @@ declare module A <: RewEx1Ex2.
 declare axiom A_run_ll : islossless A.ex1.    
 
 
+
+local lemma unit_rule x : x = tt.
+elim x. auto. qed.
+
 local lemma prob_refl_app &m p :   
     exists (D1 : at1 -> (glob A) -> (unit * (glob A)) distr)
       (D2 : at2 -> unit * (glob A) -> (glob A) distr),
@@ -55,7 +59,8 @@ have : Pr[RCR(A).main(i1, i2) @ &m : true ] = 0%r.
 rewrite -  (H1 &m predT). 
 rewrite dlet_mu_main. 
 apply sum0_eq. progress. 
- have -> : x = (tt, x.`2). smt().
+ have -> : x = (tt, x.`2). 
+ rewrite - (unit_rule x.`1). smt().
 rewrite - q22. smt(). smt(@Distr).
 elim q2. move => g gp.
 have : mu (dlet (D1 i1 (glob A){m}) (D2 i2)) M <= p.
@@ -76,7 +81,9 @@ have -> : sum
 apply fun_ext. move => x.  
 case (pred1 (tt, g) x). simplify. progress.
 rewrite H4. 
-have -> : mu1 (duniform [(tt, g)]) (tt, g) = 1%r. smt(@Distr). smt().
+have -> : mu1 (duniform [(tt, g)]) (tt, g) = 1%r. rewrite - H4. 
+smt(duniform1E_uniq). 
+smt().
 smt().
 rewrite sumZ. 
 rewrite - muE. progress.
@@ -90,11 +97,12 @@ have zzz : sum
      else 0%r).
 apply ler_sum. progress. 
 case (pred1 (tt, g) x). simplify. auto. simplify. progress.
-have ->: x = (tt,x.`2). smt().
+have ->: x = (tt,x.`2). 
+ rewrite - (unit_rule x.`1). smt().
 case (mu1 (D1 i1 (glob A){m}) (tt, x.`2) = 0%r). 
 smt().
 progress.  
-have jk : forall (a b c : real), a >= 0%r => b <= c => a * b <= a * c. smt(@Real).
+have jk : forall (a b c : real), a >= 0%r => b <= c => a * b <= a * c. smt().
 apply jk. smt(@Distr). apply q. smt(@Distr).
 have ->: (fun (x : unit * (glob A)) =>
      if ! pred1 (tt, g) x then mu1 (D1 i1 (glob A){m}) x * mu (D2 i2 x) M
@@ -153,9 +161,10 @@ have ->: (fun (x : unit * (glob A)) => mu1 (D1 i1 (glob A){m}) x)
  = (fun (x : unit * (glob A)) => if predT x then mu1 (D1 i1 (glob A){m}) x else 0%r).
 smt().
 rewrite - muE.
-smt(@Distr).
-smt().
-rewrite H1. smt().
+have : 0%r <= weight (D1 i1 (glob A){m}) <= 1%r. smt(@Distr).
+pose w := weight (D1 i1 (glob A){m}) .
+progress. clear zzz gp g q G g0 H1 H0 H. smt().
+ smt(). rewrite H1. smt().
 qed.
 
 
@@ -168,7 +177,10 @@ elim (H2 M i1 i2 _ _);auto. progress.
 have f1 : Pr[A.ex1(i1) @ &m : glob A = g] > 0%r.
 have f2 : mu (D1 i1 (glob A){m}) (fun x => snd x = g)  = Pr[A.ex1(i1) @ &m : (glob A) = g].
 rewrite (H &m). auto. rewrite - f2. 
-have ->: (fun (x : unit * (glob A)) => x.`2 = g) = pred1 (tt,g). apply fun_ext. smt(). apply H5.
+have ->: (fun (x : unit * (glob A)) => x.`2 = g) = pred1 (tt,g). apply fun_ext. 
+move => x. simplify.
+ rewrite - (unit_rule x.`1).
+smt(). apply H5.
 have f3: exists &n, g = (glob A){n}.
   have  f31: Pr[A.ex1(i1) @ &m : (glob A) = g /\ (exists &n, (glob A) = (glob A){n}) ] = Pr[A.ex1(i1) @ &m : (glob A) = g].
   have <- : Pr[A.ex1(i1) @ &m : (glob A) = g] = Pr[A.ex1(i1) @ &m : (glob A) = g /\ exists &n, (glob A) = (glob A){n}].
@@ -185,6 +197,9 @@ smt(). auto.
                          <= Pr[A.ex1(i1) @ &m : (glob A) = g]. rewrite Pr[mu_sub]. auto. auto.
 case (exists &n, g = (glob A){n}). 
 rewrite - (H &m  predT i1).  smt(@Distr).
+move => ne.  rewrite Pr[mu_false]. simplify.
+have c1 : Pr[A.ex1(i1) @ &m : (glob A) = g] = 0%r. rewrite - f32. 
+  rewrite  ne. simplify. rewrite Pr[mu_false]. simplify. auto.
 smt().
   clear f32 f31 f1    H2 H1 H0 H. 
   case (exists &n, g = (glob A){n}). auto.

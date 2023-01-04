@@ -213,7 +213,7 @@ have : K <= size (prj_path x.`1 p1.`2).
 elim p4. move => _. elim.
 progress. 
 have ->: size (prj_path x.`1 p1.`2) = K.
-smt (prj_path_size).
+rewrite prj_path_size. smt(). smt(). auto.
 auto.
 have : K <=  size x.`2.  smt().
 move => q g. 

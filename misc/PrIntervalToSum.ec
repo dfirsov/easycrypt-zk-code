@@ -65,7 +65,8 @@ lemma pr_interval_to_sum_lemma &m : forall (a : iat)
 proof. progress.
 case (s <= e). move => sep.
 have : exists e', 0 <= e' /\ e = s + e'.
-smt(). elim. progress.
+exists (e - s). progress.
+smt(). smt(). elim. progress.
 apply (pr_interval_to_sum_lemma' &m a). auto. 
 progress.
 rewrite range_geq. smt(). 
